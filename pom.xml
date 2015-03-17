@@ -24,6 +24,69 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
 
+	<dependencies>
+		<dependency>
+	        <groupId>org.bouncycastle</groupId>
+	        <artifactId>bcpkix-jdk15on</artifactId>
+	        <version>1.52</version>
+	     </dependency>
+	     <dependency>
+	        <groupId>org.bouncycastle</groupId>
+	        <artifactId>bcprov-jdk15on</artifactId>
+	        <version>1.52</version>
+	    </dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.3.6</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore</artifactId>
+			<version>4.3.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.10</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>1.7.10</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>1.7.10</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-library</artifactId>
+			<version>1.3</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>1.10.19</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
 	<build>
 		<pluginManagement>
@@ -95,6 +158,7 @@
 						<exclude>src/main/notice/NOTICE.template</exclude>
 						<exclude>**/*.pdf</exclude>
 						<exclude>**/*.xml</exclude>
+						<exclude>**/*.pem</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -162,27 +226,6 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>animal-sniffer-maven-plugin</artifactId>
-				<version>1.14</version>
-				<executions>
-					<execution>
-						<id>ensure-java7-compatible</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-						<configuration>
-							<signature>
-								<groupId>org.codehaus.mojo.signature</groupId>
-								<artifactId>java17</artifactId>
-								<version>1.0</version>
-							</signature>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<artifactId>maven-enforcer-plugin</artifactId>
 				<version>1.3.1</version>
 				<executions>
@@ -200,14 +243,21 @@
 									</excludes>
 									<includes>
 										<include>org.slf4j:slf4j-api</include>
-										<include>org.slf4j:jul-to-slf4j</include>
 										<include>org.slf4j:jcl-over-slf4j</include>
+										<include>org.slf4j:slf4j-simple</include>
 										<include>org.apache.commons:commons-lang3</include>
 										<include>ch.qos.logback:logback-core</include>
 										<include>ch.qos.logback:logback-classic</include>
 										<include>org.hamcrest:hamcrest-core</include>
 										<include>org.hamcrest:hamcrest-library</include>
 										<include>junit:junit</include>
+										<include>org.mockito:mockito-core</include>
+										<include>org.apache.httpcomponents:httpcore</include>
+										<include>org.apache.httpcomponents:httpclient</include>
+										<include>org.bouncycastle:bcprov-jdk15on</include>
+										<include>org.bouncycastle:bcpkix-jdk15on</include>
+										<include>commons-codec:commons-codec</include>
+										<include>org.objenesis:objenesis</include>
 									</includes>
 									<searchTransitive>true</searchTransitive>
 									<message>
