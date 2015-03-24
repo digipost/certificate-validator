@@ -18,15 +18,16 @@ package no.digipost.security;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.InputStream;
+import java.security.KeyStore;
 import java.security.Provider;
 import java.security.Security;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import java.security.cert.*;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static no.digipost.function.Functions.asUnchecked;
 
 public final class DigipostSecurity {
 
@@ -45,6 +46,11 @@ public final class DigipostSecurity {
 	 * String denoting the certificate type {@value #X509}.
 	 */
 	public static final String X509 = "X.509";
+
+	/**
+	 * String denoting the Java Cryptography Extension type of KeyStore ({@value #JCEKS}).
+	 */
+	public static final String JCEKS = "JCEKS";
 
 
 
@@ -124,6 +130,75 @@ public final class DigipostSecurity {
 
 
 	/**
+	 * Convert a {@link CertPath} to a stream of certificates. The certificates
+	 * are casted to {@link X509Certificate}.
+	 *
+	 * @param path the CertPath
+	 * @return stream of {@value #X509} certificates, aqcuired from {@link CertPath#getCertificates()}.
+	 */
+	public static Stream<X509Certificate> asStream(CertPath path) {
+		return path.getCertificates().stream().map(DigipostSecurity::requireX509);
+	}
+
+
+	/**
+	 * Put certificates into a new {@link KeyStore} of type {@value #JCEKS}.
+	 */
+	public static KeyStore asKeyStore(Iterable<X509Certificate> certificates) {
+		try {
+			KeyStore keystore = KeyStore.getInstance(JCEKS);
+			keystore.load(null, null);
+			for (X509Certificate cert : certificates) {
+				keystore.setCertificateEntry(cert.getSubjectDN().toString(), cert);
+			}
+			return keystore;
+		} catch (Exception e) {
+			throw asUnchecked.apply(e);
+		}
+	}
+
+
+	/**
+	 * Build a {@link CertPath} from the given certificates.
+	 *
+	 * @param certificates the {@value #X509} certificates.
+	 * @return the certification path
+	 */
+	public static CertPath asCertPath(Stream<X509Certificate> certificates) {
+		try {
+			return getX509CertificateFactory().generateCertPath(certificates.collect(toList()));
+		} catch (CertificateException e) {
+			throw asUnchecked.apply(e);
+		}
+	}
+
+
+	public static String describe(CertPath certPath) {
+		List<? extends Certificate> certificates = certPath.getCertificates();
+		if (!certificates.isEmpty()) {
+			return certificates.stream().map(DigipostSecurity::describe).collect(joining("\n ^-- Issued by: ", "CertPath with the following certificates:\nCertificate: ", ""));
+		} else {
+			return "CertPath with no certificates";
+		}
+	}
+
+	/**
+	 * Create a description of a certificate, applicable for logging and similar.
+	 *
+	 * @param certificate the certificate to describe
+	 * @return the description
+	 */
+	public static String describe(Certificate certificate) {
+		if (certificate instanceof X509Certificate) {
+			X509Certificate x509 = (X509Certificate) certificate;
+			return x509.getSubjectDN() + ", issuer: " + x509.getIssuerDN();
+		} else {
+			return certificate.getType() + "-certificate";
+		}
+	}
+
+
+	/**
 	 * This is called by the static initializer of the {@link DigipostSecurity} class,
 	 * and is not necessary to explicitly invoke.
 	 */
@@ -140,4 +215,5 @@ public final class DigipostSecurity {
 	}
 
 	private DigipostSecurity() {}
+
 }
