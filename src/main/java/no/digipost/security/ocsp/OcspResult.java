@@ -23,6 +23,12 @@ import org.bouncycastle.cert.ocsp.OCSPResp;
 import java.io.Closeable;
 import java.io.IOException;
 
+/**
+ * The result of a successful lookup against an OCSP responder.
+ * The entity from the response is retrieved using {@link #getResponseObject()}.
+ *
+ * @see BasicOCSPResp
+ */
 public final class OcspResult implements Closeable {
 
 	public final String uri;
@@ -33,11 +39,18 @@ public final class OcspResult implements Closeable {
 		this.response = response;
 	}
 
+
+	/**
+	 * @return a BasicOCSPResp
+	 */
 	public BasicOCSPResp getResponseObject() throws OCSPException, IllegalStateException, IOException {
 		OCSPResp oresp = new OCSPResp(response.getEntity().getContent());
 		return (BasicOCSPResp) oresp.getResponseObject();
 	}
 
+	/**
+	 * @return whether the http status code from the request was OK.
+	 */
 	public boolean isOkResponse() {
 		return response.getStatusLine().getStatusCode() == 200;
 	}

@@ -50,8 +50,16 @@ public final class OcspLookup {
 	private static final Logger LOG = LoggerFactory.getLogger(OcspLookup.class);
 
 
-	public static Optional<OcspLookup> newLookup(X509Certificate cert, X509Certificate issuer) {
-		return Optional.ofNullable(cert.getExtensionValue(AUTHORITY_INFO_ACCESS_OID))
+	/**
+	 * Prepare a new OCSP lookup request for the given certificate.
+	 *
+	 * @param certificate the certificate to lookup. It must contain an OCSP responder URI.
+	 * @param issuer the issuer of the certificate.
+	 * @return an OCSP request, ready to be {@link OcspLookup#executeUsing(CloseableHttpClient) executed},
+	 *         or {@link Optional#empty()} of no OCSP responder URI was found, or any other error occuring.
+	 */
+	public static Optional<OcspLookup> newLookup(X509Certificate certificate, X509Certificate issuer) {
+		return Optional.ofNullable(certificate.getExtensionValue(AUTHORITY_INFO_ACCESS_OID))
 
 			.flatMap(mayThrowException((byte[] data) -> {
 				DEROctetString base = (DEROctetString) ASN1Primitive.fromByteArray(data);
@@ -70,13 +78,13 @@ public final class OcspLookup {
 				}
 				throw new OCSPException("Object identifier " + OCSPObjectIdentifiers.id_pkix_ocsp + " not found");
 
-    		}, exception -> { LOG.warn("Failed to extract OCSP uri from " + cert, exception); }))
+    		}, exception -> { LOG.warn("Failed to extract OCSP uri from " + certificate, exception); }))
 
     		.flatMap(mayThrowException((String uri) -> {
-				CertificateID certificateId = new CertificateID(new Sha1Calculator(), new X509CertificateHolder(issuer.getEncoded()), cert.getSerialNumber());
+				CertificateID certificateId = new CertificateID(new Sha1Calculator(), new X509CertificateHolder(issuer.getEncoded()), certificate.getSerialNumber());
 				return new OcspLookup(uri, certificateId);
 
-    		}, exception -> { LOG.warn("Failed to create certificate ID from issuer " + issuer + " and certificate " + cert, exception); }));
+    		}, exception -> { LOG.warn("Failed to create certificate ID from issuer " + issuer + " and certificate " + certificate, exception); }));
 	}
 
 
@@ -89,6 +97,12 @@ public final class OcspLookup {
 		this.uri = uri;
 	}
 
+	/**
+	 * Execute the OCSP lookup request.
+	 *
+	 * @param client the http client to use for executing the lookup request.
+	 * @return the {@link OcspResult result} of the OCSP lookup.
+	 */
 	public OcspResult executeUsing(CloseableHttpClient client) {
 		return Optional.of(new OCSPReqBuilder().addRequest(certificateId))
 			.flatMap(mayThrowException(OCSPReqBuilder::build, rethrowAnyException))
@@ -104,7 +118,7 @@ public final class OcspLookup {
 
 	@Override
 	public String toString() {
-		return "OCSP-lookup mot " + uri;
+		return "OCSP-lookup to responder uri " + uri;
 	}
 
 }

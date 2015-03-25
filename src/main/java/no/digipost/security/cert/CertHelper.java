@@ -24,7 +24,7 @@ import java.security.cert.X509Certificate;
 import java.util.Optional;
 import java.util.Set;
 
-public final class CertHelper extends CertPathValidatorUtilities {
+final class CertHelper extends CertPathValidatorUtilities {
 
 	/**
 	 * Search the given Set of Trust Anchors for one that is the issuer of the
@@ -39,7 +39,7 @@ public final class CertHelper extends CertPathValidatorUtilities {
 	 * @throws SignatureException if a TrustAnchor was found but the signature verification on the given certificate has thrown an exception
 	 *                            (as per documentation of {@link CertPathValidatorUtilities#findTrustAnchor(X509Certificate, Set)}).
 	 */
-	public static Optional<X509Certificate> findTrustAchorCert(final X509Certificate cert, final Set<TrustAnchor> trust) throws SignatureException {
+	static Optional<X509Certificate> findTrustAchorCert(final X509Certificate cert, final Set<TrustAnchor> trust) throws SignatureException {
 		try {
 	        TrustAnchor trustAnchor = findTrustAnchor(cert, trust);
 			return Optional.ofNullable(trustAnchor).map(TrustAnchor::getTrustedCert);

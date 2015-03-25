@@ -26,14 +26,26 @@ import static no.digipost.security.DigipostSecurity.describe;
 public class InvalidState extends RuntimeException {
 
 	public InvalidState(String message) {
-		super(message);
+		this(message, (Throwable) null);
+	}
+
+	public InvalidState(String message, Throwable cause) {
+		super(message, cause);
 	}
 
 	public InvalidState(String message, CertPath certpath) {
-		super(message + " " + describe(certpath));
+		this(message, certpath, null);
+	}
+
+	public InvalidState(String message, CertPath certpath, Throwable cause) {
+		super(message + " " + describe(certpath), cause);
 	}
 
 	public InvalidState(String message, Certificate certificate) {
-		super(message + " " + describe(certificate));
+		this(message, certificate, null);
+	}
+
+	public InvalidState(String message, Certificate certificate, Throwable cause) {
+		super(message + " " + describe(certificate), cause);
 	}
 }

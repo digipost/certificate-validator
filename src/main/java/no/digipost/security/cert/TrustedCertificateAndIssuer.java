@@ -17,8 +17,11 @@ package no.digipost.security.cert;
 
 import java.security.cert.X509Certificate;
 
+
 /**
  * A certificate and its issuer, already determined to be trusted.
+ * This class is never instantiated unless the certificate and issuer
+ * has been validated as trusted, and passed the revocation check (OCSP).
  */
 public final class TrustedCertificateAndIssuer {
 

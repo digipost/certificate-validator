@@ -29,6 +29,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static no.digipost.function.Functions.asUnchecked;
 
+
 public final class DigipostSecurity {
 
 
@@ -173,6 +174,14 @@ public final class DigipostSecurity {
 	}
 
 
+	/**
+	 * Create a description of a certificate, applicable for logging and similar.
+	 * The description will be multiline, where the certificate is on the first line,
+	 * and each issuer will be on its own line below.
+	 *
+	 * @param certPath the certificate path to describe
+	 * @return the multiline description.
+	 */
 	public static String describe(CertPath certPath) {
 		List<? extends Certificate> certificates = certPath.getCertificates();
 		if (!certificates.isEmpty()) {

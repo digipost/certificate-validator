@@ -22,6 +22,12 @@ import java.security.cert.Certificate;
 
 import static java.util.stream.Collectors.joining;
 
+/**
+ * Thrown in cases where a certificate or certificate path is treated as trusted,
+ * but in fact cannot be trusted. If this exception is encountered, it typically
+ * indicates a programming error, where one should first query if the certificate
+ * is trusted, and <em>then</em> retrieve it.
+ */
 public class Untrusted extends RuntimeException {
 
 	Untrusted(CertPath certpath) {

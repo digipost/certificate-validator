@@ -24,7 +24,9 @@ import org.bouncycastle.operator.DigestCalculator;
 import java.io.OutputStream;
 
 public class Sha1Calculator implements DigestCalculator {
-	DigestOutputStream ouz = new DigestOutputStream(new SHA1Digest());
+
+	private final DigestOutputStream ouz = new DigestOutputStream(new SHA1Digest());
+
 	@Override
 	public OutputStream getOutputStream() {
 		return ouz;

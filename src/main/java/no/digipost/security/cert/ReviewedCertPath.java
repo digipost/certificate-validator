@@ -34,11 +34,11 @@ public final class ReviewedCertPath {
 
 	private final Optional<GeneralSecurityException> exception;
 
-	public ReviewedCertPath(CertPath path, Predicate<CertPath> trusted) {
+	ReviewedCertPath(CertPath path, Predicate<CertPath> trusted) {
 		this(Optional.of(path), trusted, empty());
 	}
 
-	public ReviewedCertPath(GeneralSecurityException exception) {
+	ReviewedCertPath(GeneralSecurityException exception) {
 		this(empty(), p -> false, Optional.of(exception));
 	}
 
