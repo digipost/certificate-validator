@@ -35,8 +35,7 @@ import static java.util.stream.Collectors.*;
 import static java.util.stream.Stream.concat;
 import static no.digipost.function.Functions.asUnchecked;
 import static no.digipost.function.Functions.exceptionNameAndMessage;
-import static no.digipost.security.DigipostSecurity.PKIX;
-import static no.digipost.security.DigipostSecurity.asKeyStore;
+import static no.digipost.security.DigipostSecurity.*;
 
 /**
  * The Trust contains the root certificates and any intermediate certificates you
@@ -87,7 +86,7 @@ public class Trust {
 			}
 
 		} catch (GeneralSecurityException e) {
-			LOG.warn("Error generating cert path. Certificate is not issued by trusted issuer. " + e.getClass().getSimpleName() + ": " + e.getMessage());
+			LOG.warn("Error generating cert path. Certificate {} is not issued by trusted issuer. {}: {}", describe(certificate), e.getClass().getSimpleName(), e.getMessage());
 			LOG.debug(exceptionNameAndMessage.apply(e), e);
 			return new ReviewedCertPath(e);
 		}
