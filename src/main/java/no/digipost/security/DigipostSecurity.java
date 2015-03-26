@@ -15,6 +15,7 @@
  */
 package no.digipost.security;
 
+import no.digipost.security.cert.CertificateNotFound;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.ByteArrayInputStream;
@@ -77,7 +78,7 @@ public final class DigipostSecurity {
 	 * @see CertificateFactory#generateCertificate(InputStream)
 	 */
 	public static X509Certificate readCertificate(String resourceName) {
-		return readCertificates(resourceName).findFirst().orElseThrow(() -> new RuntimeException("No certificates found in " + resourceName));
+		return readCertificates(resourceName).findFirst().orElseThrow(() -> new CertificateNotFound(resourceName));
 	}
 
 
@@ -97,7 +98,7 @@ public final class DigipostSecurity {
 	 * @see CertificateFactory#generateCertificate(InputStream)
 	 */
 	public static X509Certificate readCertificate(InputStream certificateResource) {
-		return readCertificates(certificateResource).findFirst().get();
+		return readCertificates(certificateResource).findFirst().orElseThrow(() -> new CertificateNotFound());
 	}
 
 
