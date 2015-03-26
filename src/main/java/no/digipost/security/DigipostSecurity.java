@@ -17,6 +17,7 @@ package no.digipost.security;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.Provider;
@@ -71,13 +72,24 @@ public final class DigipostSecurity {
 	/**
 	 * Read the first (or only) certificate from a resource.
 	 *
-	 * @param resourceName the name of the classpath resource containing the certificates.
+	 * @param resourceName the name of the classpath resource containing the certificate.
 	 *
 	 * @see CertificateFactory#generateCertificate(InputStream)
 	 */
 	public static X509Certificate readCertificate(String resourceName) {
 		return readCertificates(resourceName).findFirst().orElseThrow(() -> new RuntimeException("No certificates found in " + resourceName));
 	}
+
+
+	/**
+	 * Read the first (or only) certificate from an array of bytes.
+	 *
+	 * @param certificateBytes the bytes containing the certificate.
+	 */
+	public static X509Certificate readCertificate(byte[] certificateBytes) {
+		return readCertificate(new ByteArrayInputStream(certificateBytes));
+	}
+
 
 	/**
 	 * Read the first (or only) certificate from a resource.
@@ -87,6 +99,7 @@ public final class DigipostSecurity {
 	public static X509Certificate readCertificate(InputStream certificateResource) {
 		return readCertificates(certificateResource).findFirst().get();
 	}
+
 
 	/**
 	 * Read several certificates from a single resource.
@@ -103,6 +116,19 @@ public final class DigipostSecurity {
 		return readCertificates(certificateResource);
 	}
 
+
+	/**
+	 * Read several certificates from a byte array.
+	 *
+	 * @param certificatesBytes the bytes containing the certificates.
+	 *
+	 * @see CertificateFactory#generateCertificates(InputStream)
+	 */
+	public static Stream<X509Certificate> readCertificates(byte[] certificatesBytes) {
+		return readCertificates(new ByteArrayInputStream(certificatesBytes));
+	}
+
+
 	/**
 	 * Read several certificates from a single resource.
 	 *
@@ -115,6 +141,7 @@ public final class DigipostSecurity {
 	        throw new RuntimeException("Unable to generate certificate: " + e.getMessage(), e);
         }
 	}
+
 
 	/**
 	 * Cast Certificate to {@link X509Certificate}, or throw appropriate exception.
