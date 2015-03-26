@@ -15,6 +15,7 @@
  */
 package no.digipost.security.cert;
 
+import no.digipost.security.DigipostSecurity;
 import no.digipost.security.InvalidState;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,8 +24,10 @@ import org.junit.rules.ExpectedException;
 import java.security.GeneralSecurityException;
 import java.security.cert.CertPath;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateParsingException;
 import java.util.Iterator;
 
+import static no.digipost.function.Functions.exceptionNameAndMessage;
 import static no.digipost.security.DigipostSecurity.asCertPath;
 import static no.digipost.security.DigipostSecurity.readCertificates;
 import static org.hamcrest.Matchers.is;
@@ -101,4 +104,26 @@ public class ReviewedCertPathTest {
 		expectedException.expectMessage("No certificate found");
 		reviewedCertPath.getTrustedCertificateAndIssuer();
 	}
+
+	@Test
+	public void toStringForTrustedCertPath() {
+		CertPath certPath = asCertPath(readCertificates("digipost.no-certchain.pem"));
+		String description = new ReviewedCertPath(certPath, c -> true).toString();
+		assertThat(description, is("Trusted: " + DigipostSecurity.describe(certPath)));
+	}
+
+	@Test
+	public void toStringForUntrustedCertPath() {
+		CertPath certPath = asCertPath(readCertificates("digipost.no-certchain.pem"));
+		String description = new ReviewedCertPath(certPath, c -> false).toString();
+		assertThat(description, is("Untrusted: " + DigipostSecurity.describe(certPath)));
+	}
+
+	@Test
+	public void toStringForException() {
+		CertificateParsingException exception = new CertificateParsingException("bogus certificate");
+		String description = new ReviewedCertPath(exception).toString();
+		assertThat(description, is("Untrusted: " + exceptionNameAndMessage.apply(exception)));
+	}
+
 }
