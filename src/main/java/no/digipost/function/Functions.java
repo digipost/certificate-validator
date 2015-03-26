@@ -22,6 +22,16 @@ import java.util.function.Function;
 
 public final class Functions {
 
+	public static <T extends AutoCloseable, R> Function<T, R> autoClosing(CheckedExceptionFunction<T, R, ? extends Exception> function) {
+		return closeable -> {
+			try (T managed = closeable) {
+				return function.apply(managed);
+			} catch (Exception e) {
+				throw asUnchecked.apply(e);
+			}
+		};
+	}
+
 	public static final Function<Exception, String> exceptionNameAndMessage = e -> e.getClass().getSimpleName() + ": " + e.getMessage();
 
 	public static final Function<Exception, RuntimeException> asUnchecked = asUnchecked(exceptionNameAndMessage);
