@@ -18,6 +18,8 @@ package no.digipost.security;
 import org.junit.Test;
 
 import java.security.Principal;
+import java.security.cert.CertPath;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
 import static org.hamcrest.Matchers.containsString;
@@ -30,5 +32,11 @@ public class DigipostSecurityTest {
 		X509Certificate digipostCert = DigipostSecurity.readCertificate("digipost.pem");
 		Principal subject = digipostCert.getSubjectDN();
 		assertThat(subject.getName(), containsString("POSTEN NORGE AS"));
+	}
+
+	@Test
+	public void describeCertPathAndCertificateAreNullSafe() {
+		DigipostSecurity.describe((CertPath) null);
+		DigipostSecurity.describe((Certificate) null);
 	}
 }

@@ -183,6 +183,9 @@ public final class DigipostSecurity {
 	 * @return the multiline description.
 	 */
 	public static String describe(CertPath certPath) {
+		if (certPath == null) {
+			return "(null)";
+		}
 		List<? extends Certificate> certificates = certPath.getCertificates();
 		if (!certificates.isEmpty()) {
 			return certificates.stream().map(DigipostSecurity::describe).collect(joining("\n ^-- Issued by: ", "CertPath with the following certificates:\nCertificate: ", ""));
@@ -198,6 +201,9 @@ public final class DigipostSecurity {
 	 * @return the description
 	 */
 	public static String describe(Certificate certificate) {
+		if (certificate == null) {
+			return "(null)";
+		}
 		if (certificate instanceof X509Certificate) {
 			X509Certificate x509 = (X509Certificate) certificate;
 			return x509.getSubjectDN() + ", issuer: " + x509.getIssuerDN();
