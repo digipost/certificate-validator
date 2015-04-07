@@ -7,16 +7,23 @@
 	</prerequisites>
 
 	<parent>
-		<groupId>no.digipost</groupId>
-		<artifactId>digipost-open-super-pom</artifactId>
-		<version>0.3</version>
-		<relativePath />
+		<groupId>no.posten.dpost</groupId>
+		<artifactId>dpost-super-pom</artifactId>
+		<version>1.2</version>
 	</parent>
 
 	<artifactId>certificate-validator</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<name>Digipost Certificate Validator</name>
 	<description>Library for validating certificates.</description>
+
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -125,7 +132,7 @@
 				</plugin>
 				<plugin>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.2</version>
+					<version>3.3</version>
 				</plugin>
 				<plugin>
 					<artifactId>maven-surefire-plugin</artifactId>
