@@ -226,7 +226,7 @@
 				<version>2.10.2</version>
 				<executions>
 					<execution>
-						<id>attach-javadoc</id>
+						<id>attach-javadocs</id>
 						<goals>
 							<goal>jar</goal>
 						</goals>
@@ -244,9 +244,9 @@
 				</configuration>
 				<executions>
 					<execution>
-						<id>attach-source</id>
+						<id>attach-sources</id>
 						<goals>
-							<goal>jar</goal>
+							<goal>jar-no-fork</goal>
 						</goals>
 					</execution>
 				</executions>
