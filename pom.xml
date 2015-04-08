@@ -228,6 +228,9 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<additionalparam>-Xdoclint:-missing</additionalparam>
+				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-source-plugin</artifactId>
@@ -285,26 +288,6 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<profiles>
-		<profile>
-			<id>doclint-java8-disable</id>
-			<activation>
-				<jdk>[1.8,</jdk>
-			</activation>
-
-			<build>
-				<plugins>
-					<plugin>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<configuration>
-							<additionalparam>-Xdoclint:none</additionalparam>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 
 	<scm>
 		<connection>scm:git:git@github.com:digipost/certcheck.git</connection>

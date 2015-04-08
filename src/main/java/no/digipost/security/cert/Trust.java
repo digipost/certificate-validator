@@ -100,7 +100,6 @@ public class Trust {
 	/**
 	 * Determine if a certificate path is trusted or not
 	 *
-	 * @param certPath
 	 * @return <code>true</code> if the path is trusted, <code>false</code> otherwise.
 	 */
 	public boolean trusts(final CertPath certPath) {
