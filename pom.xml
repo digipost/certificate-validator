@@ -131,6 +131,41 @@
 					</configuration>
 				</plugin>
 				<plugin>
+					<artifactId>maven-enforcer-plugin</artifactId>
+					<version>1.4</version>
+					<configuration>
+						<rules>
+							<bannedDependencies>
+								<excludes>
+									<exclude>*:*</exclude>
+								</excludes>
+								<includes>
+									<include>org.slf4j:slf4j-api</include>
+									<include>org.slf4j:jcl-over-slf4j</include>
+									<include>org.slf4j:slf4j-simple</include>
+									<include>org.apache.commons:commons-lang3</include>
+									<include>ch.qos.logback:logback-core</include>
+									<include>ch.qos.logback:logback-classic</include>
+									<include>org.hamcrest:hamcrest-core</include>
+									<include>org.hamcrest:hamcrest-library</include>
+									<include>junit:junit</include>
+									<include>org.mockito:mockito-core</include>
+									<include>org.apache.httpcomponents:httpcore</include>
+									<include>org.apache.httpcomponents:httpclient</include>
+									<include>org.bouncycastle:bcprov-jdk15on</include>
+									<include>org.bouncycastle:bcpkix-jdk15on</include>
+									<include>commons-codec:commons-codec</include>
+									<include>org.objenesis:objenesis</include>
+								</includes>
+								<searchTransitive>true</searchTransitive>
+								<message>
+									Detected unknown dependencies! Verify that all licenses are OK, and run mvn notice:generate to update the NOTICE file.
+								</message>
+							</bannedDependencies>
+						</rules>
+					</configuration>
+				</plugin>
+				<plugin>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>3.3</version>
 				</plugin>
@@ -238,7 +273,6 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>1.4</version>
 				<executions>
 					<execution>
 						<id>test</id>
@@ -246,37 +280,6 @@
 							<goal>enforce</goal>
 						</goals>
 						<phase>test</phase>
-						<configuration>
-							<rules>
-								<bannedDependencies>
-									<excludes>
-										<exclude>*:*</exclude>
-									</excludes>
-									<includes>
-										<include>org.slf4j:slf4j-api</include>
-										<include>org.slf4j:jcl-over-slf4j</include>
-										<include>org.slf4j:slf4j-simple</include>
-										<include>org.apache.commons:commons-lang3</include>
-										<include>ch.qos.logback:logback-core</include>
-										<include>ch.qos.logback:logback-classic</include>
-										<include>org.hamcrest:hamcrest-core</include>
-										<include>org.hamcrest:hamcrest-library</include>
-										<include>junit:junit</include>
-										<include>org.mockito:mockito-core</include>
-										<include>org.apache.httpcomponents:httpcore</include>
-										<include>org.apache.httpcomponents:httpclient</include>
-										<include>org.bouncycastle:bcprov-jdk15on</include>
-										<include>org.bouncycastle:bcpkix-jdk15on</include>
-										<include>commons-codec:commons-codec</include>
-										<include>org.objenesis:objenesis</include>
-									</includes>
-									<searchTransitive>true</searchTransitive>
-									<message>
-										Detected unknown dependencies! Verify that all licenses are OK, and run mvn notice:generate to update the NOTICE file.
-									</message>
-								</bannedDependencies>
-							</rules>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>
