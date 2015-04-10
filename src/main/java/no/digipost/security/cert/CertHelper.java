@@ -15,16 +15,21 @@
  */
 package no.digipost.security.cert;
 
-import org.bouncycastle.jce.provider.AnnotatedException;
-import org.bouncycastle.jce.provider.CertPathValidatorUtilities;
+import javax.security.auth.x500.X500Principal;
 
+import java.io.IOException;
+import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.cert.TrustAnchor;
+import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 import java.util.Set;
 
-final class CertHelper extends CertPathValidatorUtilities {
+import static java.util.Optional.empty;
+
+
+final class CertHelper {
 
 	/**
 	 * Search the given Set of Trust Anchors for one that is the issuer of the
@@ -40,13 +45,55 @@ final class CertHelper extends CertPathValidatorUtilities {
 	 *                            (as per documentation of {@link CertPathValidatorUtilities#findTrustAnchor(X509Certificate, Set)}).
 	 */
 	static Optional<X509Certificate> findTrustAchorCert(final X509Certificate cert, final Set<TrustAnchor> trust) throws SignatureException {
-		try {
-	        TrustAnchor trustAnchor = findTrustAnchor(cert, trust);
-			return Optional.ofNullable(trustAnchor).map(TrustAnchor::getTrustedCert);
-        } catch (AnnotatedException e) {
-	        throw new SignatureException("" + e.getMessage(), e);
-        }
+        return findTrustAnchor(cert, trust).map(TrustAnchor::getTrustedCert);
 	}
+
+
+
+    /**
+     * Code based on protected method findTrustAnchor in {@link CertPathValidatorUtilities}
+     */
+    static Optional<TrustAnchor> findTrustAnchor(X509Certificate cert, Set<TrustAnchor> trustAnchors) throws SignatureException {
+
+    	PublicKey trustPublicKey = null;
+        X509CertSelector certSelectX509 = new X509CertSelector();
+        X500Principal certIssuer = cert.getIssuerX500Principal();
+
+        try {
+            certSelectX509.setSubject(certIssuer.getEncoded());
+        } catch (IOException ex) {
+            throw new SignatureException("Cannot set subject search criteria for trust anchor.", ex);
+        }
+
+        for (TrustAnchor trust : trustAnchors) {
+
+            if (trust.getTrustedCert() != null) {
+                if (certSelectX509.match(trust.getTrustedCert())) {
+                    trustPublicKey = trust.getTrustedCert().getPublicKey();
+                }
+            } else if (trust.getCAName() != null && trust.getCAPublicKey() != null) {
+                try {
+                    X500Principal caName = new X500Principal(trust.getCAName());
+                    if (certIssuer.equals(caName)) {
+                        trustPublicKey = trust.getCAPublicKey();
+                    }
+                } catch (IllegalArgumentException ex) {
+                	continue;
+                }
+            }
+
+            if (trustPublicKey != null) {
+                try {
+                    cert.verify(trustPublicKey);
+                    return Optional.of(trust);
+                } catch (Exception ex) {
+                	throw new SignatureException("TrustAnchor found but certificate validation failed.", ex);
+                }
+            }
+        }
+        return empty();
+    }
+
 
 
 	private CertHelper() {}
