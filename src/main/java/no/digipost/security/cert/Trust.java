@@ -80,11 +80,8 @@ public class Trust {
 			if (certpath.getCertificates().size() > 1) {
 				return new ReviewedCertPath(certpath, this::trusts);
 			} else {
-				Logger thisShouldNeverHappen = LoggerFactory.getLogger(LOG.getName() + ".ThisShouldNeverHappen");
-				thisShouldNeverHappen.warn("The resolved CertPath did not contain any trusted issuer, only the certificate [{}], supposedly issued by [{}]. " +
-										   "This is not expected to happen, but we will try to find trust anchor certificate with some nasty use of BouncyCastle.", certificate.getSubjectDN(), certificate.getIssuerX500Principal());
-				thisShouldNeverHappen.info("The hypthesis is that this else-code block can be removed (or replaced with logging an error and returning UNDECIDED). " +
-										   "However, if this log message happens in production, and the sertificate validates OK, it must be kept in place. Talk to Rune if you need more information.");
+				// Use alternative method to create certpath. This is used for non-buypass certificates, for example
+				// certificates issues by Digipost's own CA-certificate
 				CertificateFactory cf = DigipostSecurity.getX509CertificateFactory();
 				Optional<X509Certificate> issuer = CertHelper.findTrustAchorCert(certificate, getTrustAnchors());
 				return new ReviewedCertPath(cf.generateCertPath(concat(Stream.of(certificate), issuer.map(Stream::of).orElse(Stream.empty())).collect(toList())), path -> issuer.isPresent());
