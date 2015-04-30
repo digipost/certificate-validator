@@ -14,7 +14,7 @@
 
 	<groupId>no.digipost</groupId>
 	<artifactId>certificate-validator</artifactId>
-	<version>1.1-SNAPSHOT</version>
+	<version>1.0.2</version>
 	<name>Digipost Certificate Validator</name>
 	<description>Library for validating certificates.</description>
 
@@ -297,7 +297,7 @@
 		<connection>scm:git:git@github.com:digipost/certificate-validator.git</connection>
 		<developerConnection>scm:git:git@github.com:digipost/certificate-validator.git</developerConnection>
 		<url>https://github.com/digipost/certificate-validator/</url>
-		<tag>HEAD</tag>
+		<tag>1.0.2</tag>
 	</scm>
 
 </project>
