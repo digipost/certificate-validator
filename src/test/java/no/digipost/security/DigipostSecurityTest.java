@@ -15,7 +15,9 @@
  */
 package no.digipost.security;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.security.Principal;
 import java.security.cert.CertPath;
@@ -24,8 +26,12 @@ import java.security.cert.X509Certificate;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class DigipostSecurityTest {
+
+	@Rule
+	public final ExpectedException expectedException = ExpectedException.none();
 
 	@Test
 	public void readOneCertificate() {
@@ -38,5 +44,11 @@ public class DigipostSecurityTest {
 	public void describeCertPathAndCertificateAreNullSafe() {
 		DigipostSecurity.describe((CertPath) null);
 		DigipostSecurity.describe((Certificate) null);
+	}
+
+	@Test
+	public void domainSpecificCastingOfX509Certificate() {
+		expectedException.expect(IllegalCertificateType.class);
+		DigipostSecurity.requireX509(mock(Certificate.class));
 	}
 }
