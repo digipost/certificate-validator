@@ -20,6 +20,19 @@ import java.security.cert.Certificate;
 public class IllegalCertificateType extends RuntimeException {
 
 	IllegalCertificateType(Certificate illegalCertificate) {
-		super("Not a " + DigipostSecurity.X509 + " certificate. The given certificate of type " + illegalCertificate.getType() + " can not be used.");
+		super(message(illegalCertificate));
 	}
+
+	IllegalCertificateType(Object unexpectedObject) {
+		super(unexpectedObject instanceof Certificate ? message((Certificate) unexpectedObject) : message(unexpectedObject));
+	}
+
+	private static String message(Object unexpectedObject) {
+		return "Expected a " + DigipostSecurity.X509 + " certificate, but got a " + unexpectedObject.getClass().getName();
+	}
+
+	private static String message(Certificate illegalCertificate) {
+		return "Not a " + DigipostSecurity.X509 + " certificate. The given certificate of type " + illegalCertificate.getType() + " can not be used.";
+	}
+
 }
