@@ -82,6 +82,12 @@
 			<version>1.7.12</version>
 			<scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>19.0-rc2</version>
+            <scope>test</scope>
+        </dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -137,6 +143,7 @@
 							<exclude>**/*.pdf</exclude>
 							<exclude>**/*.xml</exclude>
 							<exclude>**/*.pem</exclude>
+							<exclude>**/*.response</exclude>
 						</excludes>
 					</configuration>
 				</plugin>

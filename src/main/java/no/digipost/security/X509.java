@@ -15,9 +15,12 @@
  */
 package no.digipost.security;
 
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 import java.util.function.Function;
@@ -69,6 +72,19 @@ public final class X509 {
         	LOG.trace("Orgnr ikke funnet i '{}' v.h.a. regex '{}'", text, extractPattern);
         }
 		return extracted;
+    }
+
+    private static final JcaX509CertificateConverter JCA_X509_CERTIFICATE_CONVERTER = new JcaX509CertificateConverter().setProvider(DigipostSecurity.PROVIDER_NAME);
+
+    public static final X509Certificate getCertificateFromHolder(X509CertificateHolder holder) {
+        try {
+            return JCA_X509_CERTIFICATE_CONVERTER.getCertificate(holder);
+        } catch (CertificateException e) {
+            throw new RuntimeException(
+                    "Error retrieving " + X509Certificate.class.getName() +
+                    " from BouncyCastle " + X509CertificateHolder.class.getSimpleName() + ". " +
+                    "Reason: " + e.getMessage(), e);
+        }
     }
 
     private X509() {}
