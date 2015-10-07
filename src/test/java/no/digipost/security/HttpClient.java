@@ -29,8 +29,8 @@ public final class HttpClient {
         return create(Optional.empty());
     }
 
-    public static final CloseableHttpClient create(String host, int port) {
-        return create(Optional.of(new HttpHost(host, port)));
+    public static final CloseableHttpClient createWithProxy(String proxyHost, int port) {
+        return create(Optional.of(new HttpHost(proxyHost, port)));
     }
 
     public static final CloseableHttpClient create(Optional<HttpHost> proxy) {

@@ -28,7 +28,7 @@ import static org.junit.Assert.assertThat;
 
 public class RealOCSPCertificateValidatorTest {
 
-    private static final CertificateValidator validator = new CertificateValidator(BuypassCommfidesCertificates.createProdTrust(), HttpClient.create());
+    private static final CertificateValidator validator = new CertificateValidator(BuypassCommfidesCertificates.createProdTrust(), HttpClient.createWithProxy("proxy.ergogroup.no", 3128));
 
 
     @Test
