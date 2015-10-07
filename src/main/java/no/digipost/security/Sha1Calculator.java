@@ -25,20 +25,20 @@ import java.io.OutputStream;
 
 public class Sha1Calculator implements DigestCalculator {
 
-	private final DigestOutputStream ouz = new DigestOutputStream(new SHA1Digest());
+    private final DigestOutputStream ouz = new DigestOutputStream(new SHA1Digest());
 
-	@Override
-	public OutputStream getOutputStream() {
-		return ouz;
-	}
+    @Override
+    public OutputStream getOutputStream() {
+        return ouz;
+    }
 
-	@Override
-	public byte[] getDigest() {
-		return ouz.getDigest();
-	}
+    @Override
+    public byte[] getDigest() {
+        return ouz.getDigest();
+    }
 
-	@Override
-	public AlgorithmIdentifier getAlgorithmIdentifier() {
-		return CertificateID.HASH_SHA1;
-	}
+    @Override
+    public AlgorithmIdentifier getAlgorithmIdentifier() {
+        return CertificateID.HASH_SHA1;
+    }
 }

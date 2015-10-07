@@ -56,7 +56,7 @@ public class X509Test {
 
 
     private String orgnr(String certificate) {
-    	X509Certificate cert = DigipostSecurity.readCertificate(certificate.getBytes());
+        X509Certificate cert = DigipostSecurity.readCertificate(certificate.getBytes());
         return findOrganisasjonsnummer(cert).get();
 
     }

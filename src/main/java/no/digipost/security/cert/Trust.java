@@ -45,94 +45,94 @@ import static no.digipost.security.DigipostSecurity.*;
  */
 public class Trust {
 
-	private static final Logger LOG = LoggerFactory.getLogger(Trust.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Trust.class);
 
-	private final Set<X509Certificate> trustedCerts;
-	private final Map<X500Principal, List<X509Certificate>> trustedIntermediateCerts;
+    private final Set<X509Certificate> trustedCerts;
+    private final Map<X500Principal, List<X509Certificate>> trustedIntermediateCerts;
 
-	public Trust(Stream<X509Certificate> rootCertificates, Stream<X509Certificate> intermediateCertificates) {
-		this.trustedCerts = unmodifiableSet(rootCertificates.collect(toSet()));
-		this.trustedIntermediateCerts = unmodifiableMap(intermediateCertificates.collect(groupingBy(X509Certificate::getSubjectX500Principal)));
-	}
+    public Trust(Stream<X509Certificate> rootCertificates, Stream<X509Certificate> intermediateCertificates) {
+        this.trustedCerts = unmodifiableSet(rootCertificates.collect(toSet()));
+        this.trustedIntermediateCerts = unmodifiableMap(intermediateCertificates.collect(groupingBy(X509Certificate::getSubjectX500Principal)));
+    }
 
 
-	/**
-	 * Resolve the certificate path of an X.509 certificate.
-	 *
-	 * @param certificate the certificate to resolve the whole path for.
-	 * @return the certificate path, wrapped as a {@link ReviewedCertPath}, with methods
-	 *         to determine if it {@link ReviewedCertPath#isTrusted() is trusted}, and to retrieve the
-	 *         {@link ReviewedCertPath#getTrustedCertificateAndIssuer() trusted certificate and its issuer}.
-	 */
-	public ReviewedCertPath resolveCertPath(X509Certificate certificate) {
-		try {
-			CollectionCertStoreParameters certStoreParams = new CollectionCertStoreParameters(getAllTrustedCertificatesFor(certificate.getIssuerX500Principal()).collect(toSet()));
-	        CertStore certStore = CertStore.getInstance("Collection", certStoreParams);
-	        X509CertSelector certSelector = new X509CertSelector();
-	        certSelector.setCertificate(certificate);
-	        certSelector.setSubject(certificate.getSubjectX500Principal());
+    /**
+     * Resolve the certificate path of an X.509 certificate.
+     *
+     * @param certificate the certificate to resolve the whole path for.
+     * @return the certificate path, wrapped as a {@link ReviewedCertPath}, with methods
+     *         to determine if it {@link ReviewedCertPath#isTrusted() is trusted}, and to retrieve the
+     *         {@link ReviewedCertPath#getTrustedCertificateAndIssuer() trusted certificate and its issuer}.
+     */
+    public ReviewedCertPath resolveCertPath(X509Certificate certificate) {
+        try {
+            CollectionCertStoreParameters certStoreParams = new CollectionCertStoreParameters(getAllTrustedCertificatesFor(certificate.getIssuerX500Principal()).collect(toSet()));
+            CertStore certStore = CertStore.getInstance("Collection", certStoreParams);
+            X509CertSelector certSelector = new X509CertSelector();
+            certSelector.setCertificate(certificate);
+            certSelector.setSubject(certificate.getSubjectX500Principal());
 
-			PKIXBuilderParameters params = new PKIXBuilderParameters(getTrustAnchors(), certSelector);
-			params.addCertStore(certStore);
+            PKIXBuilderParameters params = new PKIXBuilderParameters(getTrustAnchors(), certSelector);
+            params.addCertStore(certStore);
             params.setSigProvider(DigipostSecurity.PROVIDER_NAME);
             params.setRevocationEnabled(false);
-			CertPath certpath = CertPathBuilder.getInstance(PKIX).build(params).getCertPath();
-			if (certpath.getCertificates().size() > 1) {
-				return new ReviewedCertPath(certpath, this::trusts);
-			} else {
-				// Use alternative method to create certpath. This is used for non-buypass certificates, for example
-				// certificates issues by Digipost's own CA-certificate
-				CertificateFactory cf = DigipostSecurity.getX509CertificateFactory();
-				Optional<X509Certificate> issuer = CertHelper.findTrustAchorCert(certificate, getTrustAnchors());
-				return new ReviewedCertPath(cf.generateCertPath(concat(Stream.of(certificate), issuer.map(Stream::of).orElse(Stream.empty())).collect(toList())), path -> issuer.isPresent());
-			}
+            CertPath certpath = CertPathBuilder.getInstance(PKIX).build(params).getCertPath();
+            if (certpath.getCertificates().size() > 1) {
+                return new ReviewedCertPath(certpath, this::trusts);
+            } else {
+                // Use alternative method to create certpath. This is used for non-buypass certificates, for example
+                // certificates issues by Digipost's own CA-certificate
+                CertificateFactory cf = DigipostSecurity.getX509CertificateFactory();
+                Optional<X509Certificate> issuer = CertHelper.findTrustAnchorCert(certificate, getTrustAnchors());
+                return new ReviewedCertPath(cf.generateCertPath(concat(Stream.of(certificate), issuer.map(Stream::of).orElse(Stream.empty())).collect(toList())), path -> issuer.isPresent());
+            }
 
-		} catch (GeneralSecurityException e) {
-			LOG.warn("Error generating cert path. Certificate {} is not issued by trusted issuer. {}: {}", describe(certificate), e.getClass().getSimpleName(), e.getMessage());
-			LOG.debug(exceptionNameAndMessage(e), e);
-			return new ReviewedCertPath(e);
-		}
-	}
+        } catch (GeneralSecurityException e) {
+            LOG.warn("Error generating cert path. Certificate {} is not issued by trusted issuer. {}: {}", describe(certificate), e.getClass().getSimpleName(), e.getMessage());
+            LOG.debug(exceptionNameAndMessage(e), e);
+            return new ReviewedCertPath(e);
+        }
+    }
 
-	/**
-	 * Determine if a certificate path is trusted or not
-	 *
-	 * @return <code>true</code> if the path is trusted, <code>false</code> otherwise.
-	 */
-	public boolean trusts(final CertPath certPath) {
-		try {
-			Set<TrustAnchor> trustAnchors = getTrustAnchors();
-			PKIXParameters params = new PKIXParameters(trustAnchors);
+    /**
+     * Determine if a certificate path is trusted or not
+     *
+     * @return <code>true</code> if the path is trusted, <code>false</code> otherwise.
+     */
+    public boolean trusts(final CertPath certPath) {
+        try {
+            Set<TrustAnchor> trustAnchors = getTrustAnchors();
+            PKIXParameters params = new PKIXParameters(trustAnchors);
             params.setSigProvider(DigipostSecurity.PROVIDER_NAME);
             params.setRevocationEnabled(false);
             CertPathValidator.getInstance(PKIX).validate(certPath, params);
             return true;
-		} catch (CertPathValidatorException e) {
-			return false;
-		} catch (GeneralSecurityException e) {
-			throw Exceptions.asUnchecked(e);
-		}
-	}
+        } catch (CertPathValidatorException e) {
+            return false;
+        } catch (GeneralSecurityException e) {
+            throw Exceptions.asUnchecked(e);
+        }
+    }
 
 
-	public Set<TrustAnchor> getTrustAnchors() {
-		return getTrustAnchorCertificates().stream().map(c -> new TrustAnchor(c, null)).collect(toSet());
-	}
+    public Set<TrustAnchor> getTrustAnchors() {
+        return getTrustAnchorCertificates().stream().map(c -> new TrustAnchor(c, null)).collect(toSet());
+    }
 
-	public Set<X509Certificate> getTrustAnchorCertificates() {
-		return trustedCerts;
-	}
+    public Set<X509Certificate> getTrustAnchorCertificates() {
+        return trustedCerts;
+    }
 
-	public KeyStore getTrustAnchorsKeyStore() {
-		return asKeyStore(this.getTrustAnchorCertificates());
-	}
+    public KeyStore getTrustAnchorsKeyStore() {
+        return asKeyStore(this.getTrustAnchorCertificates());
+    }
 
-	public Map<X500Principal, List<X509Certificate>> getTrustedIntermediateCertificates() {
-		return trustedIntermediateCerts;
-	}
+    public Map<X500Principal, List<X509Certificate>> getTrustedIntermediateCertificates() {
+        return trustedIntermediateCerts;
+    }
 
-	public Stream<X509Certificate> getAllTrustedCertificatesFor(X500Principal principal) {
-		return concat(getTrustAnchorCertificates().stream(), getTrustedIntermediateCertificates().getOrDefault(principal, emptyList()).stream());
-	}
+    public Stream<X509Certificate> getAllTrustedCertificatesFor(X500Principal principal) {
+        return concat(getTrustAnchorCertificates().stream(), getTrustedIntermediateCertificates().getOrDefault(principal, emptyList()).stream());
+    }
 
 }

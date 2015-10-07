@@ -31,32 +31,32 @@ import java.io.IOException;
  */
 public final class OcspResult implements Closeable {
 
-	public final String uri;
-	public final CloseableHttpResponse response;
+    public final String uri;
+    public final CloseableHttpResponse response;
 
-	OcspResult(String uri, CloseableHttpResponse response) {
-		this.uri = uri;
-		this.response = response;
-	}
+    OcspResult(String uri, CloseableHttpResponse response) {
+        this.uri = uri;
+        this.response = response;
+    }
 
 
-	/**
-	 * @return a BasicOCSPResp
-	 */
-	public BasicOCSPResp getResponseObject() throws OCSPException, IllegalStateException, IOException {
-		OCSPResp oresp = new OCSPResp(response.getEntity().getContent());
-		return (BasicOCSPResp) oresp.getResponseObject();
-	}
+    /**
+     * @return a BasicOCSPResp
+     */
+    public BasicOCSPResp getResponseObject() throws OCSPException, IllegalStateException, IOException {
+        OCSPResp oresp = new OCSPResp(response.getEntity().getContent());
+        return (BasicOCSPResp) oresp.getResponseObject();
+    }
 
-	/**
-	 * @return whether the http status code from the request was OK.
-	 */
-	public boolean isOkResponse() {
-		return response.getStatusLine().getStatusCode() == 200;
-	}
+    /**
+     * @return whether the http status code from the request was OK.
+     */
+    public boolean isOkResponse() {
+        return response.getStatusLine().getStatusCode() == 200;
+    }
 
-	@Override
+    @Override
     public void close() throws IOException {
-		response.close();
+        response.close();
     }
 }

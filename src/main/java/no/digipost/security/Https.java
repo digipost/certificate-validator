@@ -33,32 +33,32 @@ import java.security.cert.X509Certificate;
  */
 public class Https {
 
-	/**
-	 * The attribute key for retrieving the client {@link X509Certificate} set by a servlet container for secure
-	 * (https) requests.
-	 *
-	 * @see ServletRequest#getAttribute(String)
-	 */
-	public static final String REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE = "javax.servlet.request.X509Certificate";
+    /**
+     * The attribute key for retrieving the client {@link X509Certificate} set by a servlet container for secure
+     * (https) requests.
+     *
+     * @see ServletRequest#getAttribute(String)
+     */
+    public static final String REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE = "javax.servlet.request.X509Certificate";
 
 
-	public static X509Certificate extractClientCertificate(ServletRequest request) {
-		if (!request.isSecure()) {
-			throw new NotSecure(request);
-		}
+    public static X509Certificate extractClientCertificate(ServletRequest request) {
+        if (!request.isSecure()) {
+            throw new NotSecure(request);
+        }
 
-		Object certObj = request.getAttribute(REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE);
-		if(certObj instanceof Object[] && ((Object[]) certObj).length > 0) {
-			certObj = ((Object[])certObj)[0];
-		}
+        Object certObj = request.getAttribute(REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE);
+        if(certObj instanceof Object[] && ((Object[]) certObj).length > 0) {
+            certObj = ((Object[])certObj)[0];
+        }
 
-		if (certObj instanceof X509Certificate) {
-			return (X509Certificate) certObj;
-		} else {
-			throw new IllegalCertificateType(certObj);
-		}
-	}
+        if (certObj instanceof X509Certificate) {
+            return (X509Certificate) certObj;
+        } else {
+            throw new IllegalCertificateType(certObj);
+        }
+    }
 
 
-	private Https() {}
+    private Https() {}
 }

@@ -39,93 +39,93 @@ import static org.mockito.Mockito.mock;
 
 public class ReviewedCertPathTest {
 
-	@Rule
-	public final ExpectedException expectedException = ExpectedException.none();
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
-	@Test
-	public void exceptionIsUntrusted() {
-		ReviewedCertPath certPath = new ReviewedCertPath(new GeneralSecurityException());
-		assertFalse(certPath.isTrusted());
-	}
+    @Test
+    public void exceptionIsUntrusted() {
+        ReviewedCertPath certPath = new ReviewedCertPath(new GeneralSecurityException());
+        assertFalse(certPath.isTrusted());
+    }
 
-	@Test
-	public void nullCertificateIsNotAllowed() {
-		expectedException.expect(NullPointerException.class);
-		new ReviewedCertPath(null, p -> true);
-	}
+    @Test
+    public void nullCertificateIsNotAllowed() {
+        expectedException.expect(NullPointerException.class);
+        new ReviewedCertPath(null, p -> true);
+    }
 
-	@Test
-	public void trustedCertificate() {
-		CertPath certpath = mock(CertPath.class);
-		ReviewedCertPath reviewedPath = new ReviewedCertPath(certpath, p -> true);
-		assertTrue(reviewedPath.isTrusted());
-		assertThat(reviewedPath.getTrustedPath(), sameInstance(certpath));
-	}
+    @Test
+    public void trustedCertificate() {
+        CertPath certpath = mock(CertPath.class);
+        ReviewedCertPath reviewedPath = new ReviewedCertPath(certpath, p -> true);
+        assertTrue(reviewedPath.isTrusted());
+        assertThat(reviewedPath.getTrustedPath(), sameInstance(certpath));
+    }
 
-	@Test
-	public void untrustedCertificate() {
-		assertFalse(new ReviewedCertPath(mock(CertPath.class), p -> false).isTrusted());
-	}
+    @Test
+    public void untrustedCertificate() {
+        assertFalse(new ReviewedCertPath(mock(CertPath.class), p -> false).isTrusted());
+    }
 
-	@Test
-	public void cannotExtractCertificateAndIssuerWhenUntrusted() {
-		CertPath certpath = asCertPath(DigipostSecurity.readCertificates("digipost.no-certchain.pem"));
-		ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> false);
+    @Test
+    public void cannotExtractCertificateAndIssuerWhenUntrusted() {
+        CertPath certpath = asCertPath(DigipostSecurity.readCertificates("digipost.no-certchain.pem"));
+        ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> false);
 
-		expectedException.expect(Untrusted.class);
-		reviewedCertPath.getTrustedCertificateAndIssuer();
-	}
+        expectedException.expect(Untrusted.class);
+        reviewedCertPath.getTrustedCertificateAndIssuer();
+    }
 
-	@Test
-	public void extractsCertificateAndIssuerWhenTrusted() {
-		CertPath certpath = asCertPath(readCertificates("digipost.no-certchain.pem"));
-		ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> true);
+    @Test
+    public void extractsCertificateAndIssuerWhenTrusted() {
+        CertPath certpath = asCertPath(readCertificates("digipost.no-certchain.pem"));
+        ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> true);
 
-		Iterator<? extends Certificate> certsInPath = certpath.getCertificates().iterator();
-		TrustedCertificateAndIssuer certAndIssuer = reviewedCertPath.getTrustedCertificateAndIssuer();
-		assertThat(certAndIssuer.certificate, is(certsInPath.next()));
-		assertThat(certAndIssuer.issuer, is(certsInPath.next()));
-	}
+        Iterator<? extends Certificate> certsInPath = certpath.getCertificates().iterator();
+        TrustedCertificateAndIssuer certAndIssuer = reviewedCertPath.getTrustedCertificateAndIssuer();
+        assertThat(certAndIssuer.certificate, is(certsInPath.next()));
+        assertThat(certAndIssuer.issuer, is(certsInPath.next()));
+    }
 
-	@Test
-	public void trustingCertificatePathWithOnlyOneCertificateIsInvalid() {
-		CertPath certpath = asCertPath(Stream.of(digipostVirksomhetssertifikat()));
-		ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> true);
+    @Test
+    public void trustingCertificatePathWithOnlyOneCertificateIsInvalid() {
+        CertPath certpath = asCertPath(Stream.of(digipostVirksomhetssertifikat()));
+        ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> true);
 
-		expectedException.expect(InvalidState.class);
-		expectedException.expectMessage("No issuer found");
-		reviewedCertPath.getTrustedCertificateAndIssuer();
-	}
+        expectedException.expect(InvalidState.class);
+        expectedException.expectMessage("No issuer found");
+        reviewedCertPath.getTrustedCertificateAndIssuer();
+    }
 
-	@Test
-	public void trustingCertificatePathWithNocertificatesIsObviouslyInvalid() {
-		CertPath certpath = mock(CertPath.class);
-		ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> true);
+    @Test
+    public void trustingCertificatePathWithNocertificatesIsObviouslyInvalid() {
+        CertPath certpath = mock(CertPath.class);
+        ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> true);
 
-		expectedException.expect(InvalidState.class);
-		expectedException.expectMessage("No certificate found");
-		reviewedCertPath.getTrustedCertificateAndIssuer();
-	}
+        expectedException.expect(InvalidState.class);
+        expectedException.expectMessage("No certificate found");
+        reviewedCertPath.getTrustedCertificateAndIssuer();
+    }
 
-	@Test
-	public void toStringForTrustedCertPath() {
-		CertPath certPath = asCertPath(Stream.of(digipostVirksomhetssertifikat()));
-		String description = new ReviewedCertPath(certPath, c -> true).toString();
-		assertThat(description, is("Trusted: " + DigipostSecurity.describe(certPath)));
-	}
+    @Test
+    public void toStringForTrustedCertPath() {
+        CertPath certPath = asCertPath(Stream.of(digipostVirksomhetssertifikat()));
+        String description = new ReviewedCertPath(certPath, c -> true).toString();
+        assertThat(description, is("Trusted: " + DigipostSecurity.describe(certPath)));
+    }
 
-	@Test
-	public void toStringForUntrustedCertPath() {
-		CertPath certPath = asCertPath(Stream.of(Certificates.digipostVirksomhetssertifikat()));
-		String description = new ReviewedCertPath(certPath, c -> false).toString();
-		assertThat(description, is("Untrusted: " + DigipostSecurity.describe(certPath)));
-	}
+    @Test
+    public void toStringForUntrustedCertPath() {
+        CertPath certPath = asCertPath(Stream.of(Certificates.digipostVirksomhetssertifikat()));
+        String description = new ReviewedCertPath(certPath, c -> false).toString();
+        assertThat(description, is("Untrusted: " + DigipostSecurity.describe(certPath)));
+    }
 
-	@Test
-	public void toStringForException() {
-		CertificateParsingException exception = new CertificateParsingException("bogus certificate");
-		String description = new ReviewedCertPath(exception).toString();
-		assertThat(description, is("Untrusted: " + exceptionNameAndMessage(exception)));
-	}
+    @Test
+    public void toStringForException() {
+        CertificateParsingException exception = new CertificateParsingException("bogus certificate");
+        String description = new ReviewedCertPath(exception).toString();
+        assertThat(description, is("Untrusted: " + exceptionNameAndMessage(exception)));
+    }
 
 }

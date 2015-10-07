@@ -21,16 +21,16 @@ package no.digipost.security;
  */
 public class NotSecure extends RuntimeException {
 
-	public NotSecure(Object resource) {
-		this(resource.getClass().getSimpleName());
-	}
+    public NotSecure(Object resource) {
+        this(resource.getClass().getSimpleName());
+    }
 
-	public NotSecure(String resourceType) {
-		this(resourceType, null);
-	}
+    public NotSecure(String resourceType) {
+        this(resourceType, null);
+    }
 
-	public NotSecure(String resourceType, Throwable cause) {
-		super("A secure " + resourceType + " was expected, but it was not.", cause);
-	}
+    public NotSecure(String resourceType, Throwable cause) {
+        super("A secure " + resourceType + " was expected, but it was not.", cause);
+    }
 
 }

@@ -24,32 +24,32 @@ import static java.util.Objects.requireNonNull;
 
 public final class OcspResponses {
 
-	private static final byte[] OK;
-	private static final byte[] UNKNOWN;
-	private static final byte[] REVOKED;
+    private static final byte[] OK;
+    private static final byte[] UNKNOWN;
+    private static final byte[] REVOKED;
 
-	static {
-		try {
-	        OK = toByteArray(requireNonNull(OcspResponses.class.getResourceAsStream("/ocsp/ok.response")));
-	        UNKNOWN = toByteArray(requireNonNull(OcspResponses.class.getResourceAsStream("/ocsp/unknown.response")));
-	        REVOKED = toByteArray(requireNonNull(OcspResponses.class.getResourceAsStream("/ocsp/revoked.response")));
+    static {
+        try {
+            OK = toByteArray(requireNonNull(OcspResponses.class.getResourceAsStream("/ocsp/ok.response")));
+            UNKNOWN = toByteArray(requireNonNull(OcspResponses.class.getResourceAsStream("/ocsp/unknown.response")));
+            REVOKED = toByteArray(requireNonNull(OcspResponses.class.getResourceAsStream("/ocsp/revoked.response")));
         } catch (IOException e) {
-	        throw new RuntimeException(e.getMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
         }
-	}
+    }
 
-	public static InputStream ok() {
-		return new ByteArrayInputStream(OK);
-	}
+    public static InputStream ok() {
+        return new ByteArrayInputStream(OK);
+    }
 
-	public static InputStream unknown() {
-		return new ByteArrayInputStream(UNKNOWN);
-	}
+    public static InputStream unknown() {
+        return new ByteArrayInputStream(UNKNOWN);
+    }
 
-	public static InputStream revoked() {
-		return new ByteArrayInputStream(REVOKED);
-	}
+    public static InputStream revoked() {
+        return new ByteArrayInputStream(REVOKED);
+    }
 
-	private OcspResponses() {}
+    private OcspResponses() {}
 
 }

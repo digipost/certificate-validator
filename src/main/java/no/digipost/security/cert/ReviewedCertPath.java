@@ -30,54 +30,54 @@ import static no.digipost.security.DigipostSecurity.asStream;
 
 public final class ReviewedCertPath {
 
-	private final Optional<CertPath> path;
-	private final Predicate<CertPath> isTrusted;
+    private final Optional<CertPath> path;
+    private final Predicate<CertPath> isTrusted;
 
-	public final Optional<GeneralSecurityException> exception;
+    public final Optional<GeneralSecurityException> exception;
 
-	ReviewedCertPath(CertPath path, Predicate<CertPath> trusted) {
-		this(Optional.of(path), trusted, empty());
-	}
+    ReviewedCertPath(CertPath path, Predicate<CertPath> trusted) {
+        this(Optional.of(path), trusted, empty());
+    }
 
-	ReviewedCertPath(GeneralSecurityException exception) {
-		this(empty(), p -> false, Optional.of(exception));
-	}
+    ReviewedCertPath(GeneralSecurityException exception) {
+        this(empty(), p -> false, Optional.of(exception));
+    }
 
-	private ReviewedCertPath(Optional<CertPath> path, Predicate<CertPath> trusted, Optional<GeneralSecurityException> exception) {
-		this.path = path;
-		this.isTrusted = trusted;
-		this.exception = exception;
-	}
+    private ReviewedCertPath(Optional<CertPath> path, Predicate<CertPath> trusted, Optional<GeneralSecurityException> exception) {
+        this.path = path;
+        this.isTrusted = trusted;
+        this.exception = exception;
+    }
 
 
-	public CertPath getPath() {
-		return path.orElseThrow(() -> exception.map(Exceptions::asUnchecked).get());
-	}
+    public CertPath getPath() {
+        return path.orElseThrow(() -> exception.map(Exceptions::asUnchecked).get());
+    }
 
-	public boolean isTrusted() {
-		return path.filter(isTrusted).isPresent();
-	}
+    public boolean isTrusted() {
+        return path.filter(isTrusted).isPresent();
+    }
 
-	public CertPath getTrustedPath() {
-		CertPath certpath = getPath();
-		if (isTrusted()) return certpath;
-		throw new Untrusted(certpath, exception.orElse(null));
-	}
+    public CertPath getTrustedPath() {
+        CertPath certpath = getPath();
+        if (isTrusted()) return certpath;
+        throw new Untrusted(certpath, exception.orElse(null));
+    }
 
-	public TrustedCertificateAndIssuer getTrustedCertificateAndIssuer() {
-		CertPath trustedCertPath = getTrustedPath();
-		X509Certificate certificate = asStream(trustedCertPath).findFirst()
-				.orElseThrow(() -> new InvalidState("No certificate found at all in supposedly trusted CertPath!", trustedCertPath));
-		X509Certificate issuer = asStream(trustedCertPath).skip(1).findFirst()
-				.orElseThrow(() -> new InvalidState("No issuer found for supposedly trusted certificate", certificate));
-		return new TrustedCertificateAndIssuer(certificate, issuer);
-	}
+    public TrustedCertificateAndIssuer getTrustedCertificateAndIssuer() {
+        CertPath trustedCertPath = getTrustedPath();
+        X509Certificate certificate = asStream(trustedCertPath).findFirst()
+                .orElseThrow(() -> new InvalidState("No certificate found at all in supposedly trusted CertPath!", trustedCertPath));
+        X509Certificate issuer = asStream(trustedCertPath).skip(1).findFirst()
+                .orElseThrow(() -> new InvalidState("No issuer found for supposedly trusted certificate", certificate));
+        return new TrustedCertificateAndIssuer(certificate, issuer);
+    }
 
-	@Override
-	public String toString() {
-		return new StringBuilder(isTrusted() ? "Trusted: " : "Untrusted: ")
-			.append(path.map(DigipostSecurity::describe).orElse(exception.map(Exceptions::exceptionNameAndMessage).orElse("No certpath or exception")))
-			.toString();
-	}
+    @Override
+    public String toString() {
+        return new StringBuilder(isTrusted() ? "Trusted: " : "Untrusted: ")
+            .append(path.map(DigipostSecurity::describe).orElse(exception.map(Exceptions::exceptionNameAndMessage).orElse("No certpath or exception")))
+            .toString();
+    }
 
 }

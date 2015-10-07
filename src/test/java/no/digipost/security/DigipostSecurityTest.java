@@ -32,32 +32,32 @@ import static org.mockito.Mockito.mock;
 
 public class DigipostSecurityTest {
 
-	@Rule
-	public final ExpectedException expectedException = ExpectedException.none();
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
-	@Test
-	public void readOneCertificate() {
-		X509Certificate digipostCert = DigipostSecurity.readCertificate("digipost.no-certchain.pem");
-		Principal subject = digipostCert.getSubjectDN();
-		assertThat(subject.getName(), containsString("POSTEN NORGE AS"));
-	}
+    @Test
+    public void readOneCertificate() {
+        X509Certificate digipostCert = DigipostSecurity.readCertificate("digipost.no-certchain.pem");
+        Principal subject = digipostCert.getSubjectDN();
+        assertThat(subject.getName(), containsString("POSTEN NORGE AS"));
+    }
 
     @Test
     @SuppressWarnings("unchecked")
     public void readAChainOfCertificatesFromOnePem() {
-	    Stream<String> certs = DigipostSecurity.readCertificates("digipost.no-certchain.pem").map(c -> c.getSubjectDN().getName());
+        Stream<String> certs = DigipostSecurity.readCertificates("digipost.no-certchain.pem").map(c -> c.getSubjectDN().getName());
         assertThat(certs.collect(toList()), contains(containsString("POSTEN NORGE AS"), any(String.class), containsString("VeriSign")));
     }
 
-	@Test
-	public void describeCertPathAndCertificateAreNullSafe() {
-		DigipostSecurity.describe((CertPath) null);
-		DigipostSecurity.describe((Certificate) null);
-	}
+    @Test
+    public void describeCertPathAndCertificateAreNullSafe() {
+        DigipostSecurity.describe((CertPath) null);
+        DigipostSecurity.describe((Certificate) null);
+    }
 
-	@Test
-	public void failFastCastingOfX509Certificate() {
-		expectedException.expect(IllegalCertificateType.class);
-		DigipostSecurity.requireX509(mock(Certificate.class));
-	}
+    @Test
+    public void failFastCastingOfX509Certificate() {
+        expectedException.expect(IllegalCertificateType.class);
+        DigipostSecurity.requireX509(mock(Certificate.class));
+    }
 }

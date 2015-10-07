@@ -28,20 +28,20 @@ import java.security.cert.Certificate;
  */
 public class Untrusted extends RuntimeException {
 
-	Untrusted(CertPath certpath) {
-		this(certpath, null);
-	}
+    Untrusted(CertPath certpath) {
+        this(certpath, null);
+    }
 
-	Untrusted(CertPath certpath, Throwable cause) {
-		super(DigipostSecurity.describe(certpath), cause);
-	}
+    Untrusted(CertPath certpath, Throwable cause) {
+        super(DigipostSecurity.describe(certpath), cause);
+    }
 
-	Untrusted(Certificate certificate) {
-		this(certificate, null);
-	}
+    Untrusted(Certificate certificate) {
+        this(certificate, null);
+    }
 
-	Untrusted(Certificate certificate, Throwable cause) {
-		super("The certificate is not trusted: " + DigipostSecurity.describe(certificate), cause);
-	}
+    Untrusted(Certificate certificate, Throwable cause) {
+        super("The certificate is not trusted: " + DigipostSecurity.describe(certificate), cause);
+    }
 
 }

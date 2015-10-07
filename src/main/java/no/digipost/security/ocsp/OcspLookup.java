@@ -45,80 +45,80 @@ import static org.apache.http.client.methods.RequestBuilder.post;
  */
 public final class OcspLookup {
 
-	static final String AUTHORITY_INFO_ACCESS_OID = "1.3.6.1.5.5.7.1.1";
+    static final String AUTHORITY_INFO_ACCESS_OID = "1.3.6.1.5.5.7.1.1";
 
-	private static final Logger LOG = LoggerFactory.getLogger(OcspLookup.class);
-
-
-	/**
-	 * Prepare a new OCSP lookup request for the given certificate.
-	 *
-	 * @param certificate the certificate to lookup. It must contain an OCSP responder URI.
-	 * @param issuer the issuer of the certificate.
-	 * @return an OCSP request, ready to be {@link OcspLookup#executeUsing(CloseableHttpClient) executed},
-	 *         or {@link Optional#empty()} of no OCSP responder URI was found, or any other error occuring.
-	 */
-	public static Optional<OcspLookup> newLookup(X509Certificate certificate, X509Certificate issuer) {
-		return Optional.ofNullable(certificate.getExtensionValue(AUTHORITY_INFO_ACCESS_OID))
-
-			.flatMap(mayThrowException((byte[] data) -> {
-				DEROctetString base = (DEROctetString) ASN1Primitive.fromByteArray(data);
-				DLSequence seq = (DLSequence) ASN1Primitive.fromByteArray(base.getOctets());
-				Enumeration<?> objects = seq.getObjects();
-				while (objects.hasMoreElements()) {
-					Object elm = objects.nextElement();
-					if (elm instanceof DLSequence) {
-						ASN1Encodable id = ((DLSequence)elm).getObjectAt(0);
-						if (OCSPObjectIdentifiers.id_pkix_ocsp.equals(id)) {
-							DERTaggedObject dt = (DERTaggedObject)((DLSequence)elm).getObjectAt(1);
-							DEROctetString dos =  (DEROctetString)dt.getObjectParser(dt.getTagNo(), true);
-							return new String(dos.getOctets());
-						}
-					}
-				}
-				throw new OCSPException("Object identifier " + OCSPObjectIdentifiers.id_pkix_ocsp + " not found");
-
-    		}, exception -> { LOG.warn("Failed to extract OCSP uri from " + certificate, exception); }))
-
-    		.flatMap(mayThrowException((String uri) -> {
-				CertificateID certificateId = new CertificateID(new Sha1Calculator(), new X509CertificateHolder(issuer.getEncoded()), certificate.getSerialNumber());
-				return new OcspLookup(uri, certificateId);
-
-    		}, exception -> { LOG.warn("Failed to create certificate ID from issuer " + issuer + " and certificate " + certificate, exception); }));
-	}
+    private static final Logger LOG = LoggerFactory.getLogger(OcspLookup.class);
 
 
+    /**
+     * Prepare a new OCSP lookup request for the given certificate.
+     *
+     * @param certificate the certificate to lookup. It must contain an OCSP responder URI.
+     * @param issuer the issuer of the certificate.
+     * @return an OCSP request, ready to be {@link OcspLookup#executeUsing(CloseableHttpClient) executed},
+     *         or {@link Optional#empty()} of no OCSP responder URI was found, or any other error occuring.
+     */
+    public static Optional<OcspLookup> newLookup(X509Certificate certificate, X509Certificate issuer) {
+        return Optional.ofNullable(certificate.getExtensionValue(AUTHORITY_INFO_ACCESS_OID))
 
-	public final String uri;
-	public final CertificateID certificateId;
+            .flatMap(mayThrowException((byte[] data) -> {
+                DEROctetString base = (DEROctetString) ASN1Primitive.fromByteArray(data);
+                DLSequence seq = (DLSequence) ASN1Primitive.fromByteArray(base.getOctets());
+                Enumeration<?> objects = seq.getObjects();
+                while (objects.hasMoreElements()) {
+                    Object elm = objects.nextElement();
+                    if (elm instanceof DLSequence) {
+                        ASN1Encodable id = ((DLSequence)elm).getObjectAt(0);
+                        if (OCSPObjectIdentifiers.id_pkix_ocsp.equals(id)) {
+                            DERTaggedObject dt = (DERTaggedObject)((DLSequence)elm).getObjectAt(1);
+                            DEROctetString dos =  (DEROctetString)dt.getObjectParser(dt.getTagNo(), true);
+                            return new String(dos.getOctets());
+                        }
+                    }
+                }
+                throw new OCSPException("Object identifier " + OCSPObjectIdentifiers.id_pkix_ocsp + " not found");
 
-	private OcspLookup(String uri, CertificateID certificateId) {
-		this.certificateId = certificateId;
-		this.uri = uri;
-	}
+            }, exception -> { LOG.warn("Failed to extract OCSP uri from " + certificate, exception); }))
 
-	/**
-	 * Execute the OCSP lookup request.
-	 *
-	 * @param client the http client to use for executing the lookup request.
-	 * @return the {@link OcspResult result} of the OCSP lookup.
-	 */
-	public OcspResult executeUsing(CloseableHttpClient client) {
-		return Optional.of(new OCSPReqBuilder().addRequest(certificateId))
-			.flatMap(mayThrowException(OCSPReqBuilder::build, rethrowAnyException))
-			.flatMap(mayThrowException(OCSPReq::getEncoded, rethrowAnyException))
-			.map(requestEntity -> post()
+            .flatMap(mayThrowException((String uri) -> {
+                CertificateID certificateId = new CertificateID(new Sha1Calculator(), new X509CertificateHolder(issuer.getEncoded()), certificate.getSerialNumber());
+                return new OcspLookup(uri, certificateId);
+
+            }, exception -> { LOG.warn("Failed to create certificate ID from issuer " + issuer + " and certificate " + certificate, exception); }));
+    }
+
+
+
+    public final String uri;
+    public final CertificateID certificateId;
+
+    private OcspLookup(String uri, CertificateID certificateId) {
+        this.certificateId = certificateId;
+        this.uri = uri;
+    }
+
+    /**
+     * Execute the OCSP lookup request.
+     *
+     * @param client the http client to use for executing the lookup request.
+     * @return the {@link OcspResult result} of the OCSP lookup.
+     */
+    public OcspResult executeUsing(CloseableHttpClient client) {
+        return Optional.of(new OCSPReqBuilder().addRequest(certificateId))
+            .flatMap(mayThrowException(OCSPReqBuilder::build, rethrowAnyException))
+            .flatMap(mayThrowException(OCSPReq::getEncoded, rethrowAnyException))
+            .map(requestEntity -> post()
                                   .setUri(uri)
                                   .addHeader("Content-Type", "application/ocsp-request")
                                   .setEntity(new ByteArrayEntity(requestEntity)).build())
             .flatMap(mayThrowException(client::execute, rethrowAnyException))
             .map(response -> new OcspResult(uri, response))
             .get();
-	}
+    }
 
-	@Override
-	public String toString() {
-		return "OCSP-lookup to responder uri " + uri;
-	}
+    @Override
+    public String toString() {
+        return "OCSP-lookup to responder uri " + uri;
+    }
 
 }

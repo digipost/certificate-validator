@@ -31,22 +31,22 @@ import static java.util.Optional.empty;
 
 final class CertHelper {
 
-	/**
-	 * Search the given Set of Trust Anchors for one that is the issuer of the
-	 * given X509 certificate. Uses the default provider for signature verification.
-	 *
-	 *
-	 * @param cert the certificate to find the issuer for
-	 * @param trust the Trust Anchors
-	 *
-	 * @return the found issuer certificate, or <code>{@link Optional#empty()}</code> if no was found.
-	 *
-	 * @throws SignatureException if a TrustAnchor was found but the signature verification on the given certificate has thrown an exception
-	 *                            (as per documentation of {@link CertPathValidatorUtilities#findTrustAnchor(X509Certificate, Set)}).
-	 */
-	static Optional<X509Certificate> findTrustAchorCert(final X509Certificate cert, final Set<TrustAnchor> trust) throws SignatureException {
+    /**
+     * Search the given Set of Trust Anchors for one that is the issuer of the
+     * given X509 certificate. Uses the default provider for signature verification.
+     *
+     *
+     * @param cert the certificate to find the issuer for
+     * @param trust the Trust Anchors
+     *
+     * @return the found issuer certificate, or <code>{@link Optional#empty()}</code> if no was found.
+     *
+     * @throws SignatureException if a TrustAnchor was found but the signature verification on the given certificate has thrown an exception
+     *                            (as per documentation of {@link CertPathValidatorUtilities#findTrustAnchor(X509Certificate, Set)}).
+     */
+    static Optional<X509Certificate> findTrustAnchorCert(final X509Certificate cert, final Set<TrustAnchor> trust) throws SignatureException {
         return findTrustAnchor(cert, trust).map(TrustAnchor::getTrustedCert);
-	}
+    }
 
 
 
@@ -55,7 +55,7 @@ final class CertHelper {
      */
     static Optional<TrustAnchor> findTrustAnchor(X509Certificate cert, Set<TrustAnchor> trustAnchors) throws SignatureException {
 
-    	PublicKey trustPublicKey = null;
+        PublicKey trustPublicKey = null;
         X509CertSelector certSelectX509 = new X509CertSelector();
         X500Principal certIssuer = cert.getIssuerX500Principal();
 
@@ -78,7 +78,7 @@ final class CertHelper {
                         trustPublicKey = trust.getCAPublicKey();
                     }
                 } catch (IllegalArgumentException ex) {
-                	continue;
+                    continue;
                 }
             }
 
@@ -87,7 +87,7 @@ final class CertHelper {
                     cert.verify(trustPublicKey);
                     return Optional.of(trust);
                 } catch (Exception ex) {
-                	throw new SignatureException("TrustAnchor found but certificate validation failed.", ex);
+                    throw new SignatureException("TrustAnchor found but certificate validation failed.", ex);
                 }
             }
         }
@@ -96,5 +96,5 @@ final class CertHelper {
 
 
 
-	private CertHelper() {}
+    private CertHelper() {}
 }

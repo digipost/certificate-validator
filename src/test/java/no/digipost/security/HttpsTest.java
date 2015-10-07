@@ -34,57 +34,57 @@ import static org.mockito.Mockito.mock;
 
 public class HttpsTest {
 
-	private static final X509Certificate x509Cert = DigipostSecurity.readCertificate("verisign.pem");
+    private static final X509Certificate x509Cert = DigipostSecurity.readCertificate("verisign.pem");
 
-	@Rule
-	public final MockitoRule mockito = MockitoJUnit.rule();
+    @Rule
+    public final MockitoRule mockito = MockitoJUnit.rule();
 
-	@Rule
-	public final ExpectedException expectedException = ExpectedException.none();
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
-	@Mock
-	private ServletRequest request;
+    @Mock
+    private ServletRequest request;
 
 
-	@Test
-	public void doesNotAllowNonSecureRequest() {
-		expectedException.expect(NotSecure.class);
-		Https.extractClientCertificate(request);
-	}
+    @Test
+    public void doesNotAllowNonSecureRequest() {
+        expectedException.expect(NotSecure.class);
+        Https.extractClientCertificate(request);
+    }
 
-	@Test
-	public void extractsSingleX509Certificate() {
-		given(request.isSecure()).willReturn(true);
-		given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(x509Cert);
+    @Test
+    public void extractsSingleX509Certificate() {
+        given(request.isSecure()).willReturn(true);
+        given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(x509Cert);
 
-		assertThat(Https.extractClientCertificate(request), is(x509Cert));
-	}
+        assertThat(Https.extractClientCertificate(request), is(x509Cert));
+    }
 
-	@Test
-	public void extractFirstOfMultipleX509Certificates() {
-		given(request.isSecure()).willReturn(true);
-		given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[]{x509Cert, "garbage"});
+    @Test
+    public void extractFirstOfMultipleX509Certificates() {
+        given(request.isSecure()).willReturn(true);
+        given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[]{x509Cert, "garbage"});
 
-		assertThat(Https.extractClientCertificate(request), is(x509Cert));
-	}
+        assertThat(Https.extractClientCertificate(request), is(x509Cert));
+    }
 
-	@Test
-	public void failsIfNotX509Certificate() {
-		given(request.isSecure()).willReturn(true);
-		given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[]{mock(Certificate.class)});
+    @Test
+    public void failsIfNotX509Certificate() {
+        given(request.isSecure()).willReturn(true);
+        given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[]{mock(Certificate.class)});
 
-		expectedException.expect(IllegalCertificateType.class);
-		Https.extractClientCertificate(request);
-	}
+        expectedException.expect(IllegalCertificateType.class);
+        Https.extractClientCertificate(request);
+    }
 
-	@Test
-	public void failsOnEmptyArray() {
-		given(request.isSecure()).willReturn(true);
-		given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[0]);
+    @Test
+    public void failsOnEmptyArray() {
+        given(request.isSecure()).willReturn(true);
+        given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[0]);
 
-		expectedException.expect(IllegalCertificateType.class);
-		Https.extractClientCertificate(request);
-	}
+        expectedException.expect(IllegalCertificateType.class);
+        Https.extractClientCertificate(request);
+    }
 
 
 

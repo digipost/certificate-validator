@@ -25,19 +25,19 @@ import java.security.cert.X509Certificate;
  */
 public final class TrustedCertificateAndIssuer {
 
-	/**
-	 * The trusted certificate.
-	 */
-	public final X509Certificate certificate;
+    /**
+     * The trusted certificate.
+     */
+    public final X509Certificate certificate;
 
-	/**
-	 * The trusted issuer of {@link #certificate}.
-	 */
-	public final X509Certificate issuer;
+    /**
+     * The trusted issuer of {@link #certificate}.
+     */
+    public final X509Certificate issuer;
 
 
-	TrustedCertificateAndIssuer(X509Certificate trustedCertificate, X509Certificate trustedIssuer) {
-		certificate = trustedCertificate;
-		issuer = trustedIssuer;
-	}
+    TrustedCertificateAndIssuer(X509Certificate trustedCertificate, X509Certificate trustedIssuer) {
+        certificate = trustedCertificate;
+        issuer = trustedIssuer;
+    }
 }

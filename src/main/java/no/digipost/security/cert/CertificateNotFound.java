@@ -17,11 +17,11 @@ package no.digipost.security.cert;
 
 public class CertificateNotFound extends RuntimeException {
 
-	public CertificateNotFound() {
-		this(null);
-	}
+    public CertificateNotFound() {
+        this(null);
+    }
 
-	public CertificateNotFound(String resourceName) {
-		super(resourceName != null ? "not found in '" + resourceName + "'" : null);
-	}
+    public CertificateNotFound(String resourceName) {
+        super(resourceName != null ? "not found in '" + resourceName + "'" : null);
+    }
 }

@@ -32,7 +32,7 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 public final class X509 {
 
-	private static final Logger LOG = LoggerFactory.getLogger(X509.class);
+    private static final Logger LOG = LoggerFactory.getLogger(X509.class);
 
     /**
      * Used by some obscure cases to embed Norwegian "organisasjonsnummer" in certificates.
@@ -69,9 +69,9 @@ public final class X509 {
     private static final Optional<String> tryFindOrgnr(CharSequence text, Pattern extractPattern) {
         Optional<String> extracted = Optional.of(text).map(extractPattern::matcher).filter(Matcher::find).map(m -> m.group(1));
         if (!extracted.isPresent()) {
-        	LOG.trace("Orgnr ikke funnet i '{}' v.h.a. regex '{}'", text, extractPattern);
+            LOG.trace("Orgnr ikke funnet i '{}' v.h.a. regex '{}'", text, extractPattern);
         }
-		return extracted;
+        return extracted;
     }
 
     private static final JcaX509CertificateConverter JCA_X509_CERTIFICATE_CONVERTER = new JcaX509CertificateConverter().setProvider(DigipostSecurity.PROVIDER_NAME);

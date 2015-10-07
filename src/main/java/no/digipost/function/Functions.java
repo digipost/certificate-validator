@@ -24,25 +24,25 @@ import java.util.function.Function;
 
 public final class Functions {
 
-	public static final Consumer<Exception> rethrowAnyException = rethrow(Exceptions::asUnchecked);
+    public static final Consumer<Exception> rethrowAnyException = rethrow(Exceptions::asUnchecked);
 
-	public static final <T extends Throwable> Consumer<T> rethrow(Function<T, RuntimeException> createUnchecked) { return e -> { throw createUnchecked.apply(e);}; }
+    public static final <T extends Throwable> Consumer<T> rethrow(Function<T, RuntimeException> createUnchecked) { return e -> { throw createUnchecked.apply(e);}; }
 
-	public static <T, R> Function<T, Optional<R>> mayThrowException(ThrowingFunction<T, R, ? extends Exception> function, Consumer<Exception> exceptionHandler) {
-		return mayThrowException(function, (t, e) -> exceptionHandler.accept(e));
-	}
+    public static <T, R> Function<T, Optional<R>> mayThrowException(ThrowingFunction<T, R, ? extends Exception> function, Consumer<Exception> exceptionHandler) {
+        return mayThrowException(function, (t, e) -> exceptionHandler.accept(e));
+    }
 
-	public static <T, R> Function<T, Optional<R>> mayThrowException(ThrowingFunction<T, R, ? extends Exception> function, BiConsumer<? super T, Exception> exceptionHandler) {
-		return t -> {
-			try {
-				return Optional.of(function.apply(t));
-			} catch (Exception e) {
-				exceptionHandler.accept(t, e);
-				return Optional.empty();
-			}
-		};
-	}
+    public static <T, R> Function<T, Optional<R>> mayThrowException(ThrowingFunction<T, R, ? extends Exception> function, BiConsumer<? super T, Exception> exceptionHandler) {
+        return t -> {
+            try {
+                return Optional.of(function.apply(t));
+            } catch (Exception e) {
+                exceptionHandler.accept(t, e);
+                return Optional.empty();
+            }
+        };
+    }
 
-	private Functions() {}
+    private Functions() {}
 
 }

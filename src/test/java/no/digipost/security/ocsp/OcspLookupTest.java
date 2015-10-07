@@ -43,89 +43,89 @@ import static org.mockito.Mockito.when;
 
 public class OcspLookupTest {
 
-	@Rule
-	public final MockitoRule mockito = MockitoJUnit.rule();
+    @Rule
+    public final MockitoRule mockito = MockitoJUnit.rule();
 
-	@Rule
-	public final ExpectedException expectedException = ExpectedException.none();
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
-	@Mock
-	private CloseableHttpClient httpClient;
+    @Mock
+    private CloseableHttpClient httpClient;
 
-	@Mock
-	private CloseableHttpResponse response;
+    @Mock
+    private CloseableHttpResponse response;
 
-	@Mock
-	private StatusLine ocspResponseStatus;
+    @Mock
+    private StatusLine ocspResponseStatus;
 
-	@Mock
-	private HttpEntity ocspResponseEntity;
+    @Mock
+    private HttpEntity ocspResponseEntity;
 
-	private X509Certificate digipostCertificate;
+    private X509Certificate digipostCertificate;
 
-	private X509Certificate verisignCertificate;
-
-
-	@Before
-	public void wireUpStubbedHttpClient() {
-		when(response.getStatusLine()).thenReturn(ocspResponseStatus);
-	}
-
-	@Before
-	public void loadCertificates() {
-		List<X509Certificate> certificates = DigipostSecurity.readCertificates("digipost.no-certchain.pem").collect(toList());
-		assertThat(certificates, hasSize(3));
-		Iterator<X509Certificate> certIterator = certificates.iterator();
-		digipostCertificate = certIterator.next();
-		certIterator.next();
-		verisignCertificate = certIterator.next();
-	}
+    private X509Certificate verisignCertificate;
 
 
+    @Before
+    public void wireUpStubbedHttpClient() {
+        when(response.getStatusLine()).thenReturn(ocspResponseStatus);
+    }
 
-	@Test
-	public void extractsTheOcspResponderUriFromCertificate() throws Exception {
-		OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
-		assertThat(lookup.uri, is("http://sr.symcd.com"));
-	}
+    @Before
+    public void loadCertificates() {
+        List<X509Certificate> certificates = DigipostSecurity.readCertificates("digipost.no-certchain.pem").collect(toList());
+        assertThat(certificates, hasSize(3));
+        Iterator<X509Certificate> certIterator = certificates.iterator();
+        digipostCertificate = certIterator.next();
+        certIterator.next();
+        verisignCertificate = certIterator.next();
+    }
 
-	@Test
-	public void certificateIdSerialnumberFromCertificate() {
-		OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
-		assertThat(lookup.certificateId.getSerialNumber(), is(digipostCertificate.getSerialNumber()));
-	}
 
-	@Test
-	public void exceptionFromHttpRequestAreRethrown() throws Exception {
-		given(httpClient.execute(any())).will(i -> { throw new SocketTimeoutException("timed out"); });
 
-		OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
-		expectedException.expectMessage(SocketTimeoutException.class.getSimpleName());
-		expectedException.expectMessage("timed out");
-		lookup.executeUsing(httpClient);
-	}
+    @Test
+    public void extractsTheOcspResponderUriFromCertificate() throws Exception {
+        OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
+        assertThat(lookup.uri, is("http://sr.symcd.com"));
+    }
 
-	@Test
-	public void non200ResponseIsNotOk() throws Exception {
-		when(httpClient.execute(any())).thenReturn(response);
+    @Test
+    public void certificateIdSerialnumberFromCertificate() {
+        OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
+        assertThat(lookup.certificateId.getSerialNumber(), is(digipostCertificate.getSerialNumber()));
+    }
 
-		given(ocspResponseStatus.getStatusCode()).willReturn(500);
+    @Test
+    public void exceptionFromHttpRequestAreRethrown() throws Exception {
+        given(httpClient.execute(any())).will(i -> { throw new SocketTimeoutException("timed out"); });
 
-		OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
-		OcspResult result = lookup.executeUsing(httpClient);
-		assertFalse(result.isOkResponse());
-	}
+        OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
+        expectedException.expectMessage(SocketTimeoutException.class.getSimpleName());
+        expectedException.expectMessage("timed out");
+        lookup.executeUsing(httpClient);
+    }
 
-	@Test
-	public void a200ResponseIsOk() throws Exception {
-		when(httpClient.execute(any())).thenReturn(response);
+    @Test
+    public void non200ResponseIsNotOk() throws Exception {
+        when(httpClient.execute(any())).thenReturn(response);
 
-		given(ocspResponseStatus.getStatusCode()).willReturn(200);
+        given(ocspResponseStatus.getStatusCode()).willReturn(500);
 
-		OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
-		try (OcspResult result = lookup.executeUsing(httpClient)) {
-			assertTrue(result.isOkResponse());
-		}
-	}
+        OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
+        OcspResult result = lookup.executeUsing(httpClient);
+        assertFalse(result.isOkResponse());
+    }
+
+    @Test
+    public void a200ResponseIsOk() throws Exception {
+        when(httpClient.execute(any())).thenReturn(response);
+
+        given(ocspResponseStatus.getStatusCode()).willReturn(200);
+
+        OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
+        try (OcspResult result = lookup.executeUsing(httpClient)) {
+            assertTrue(result.isOkResponse());
+        }
+    }
 
 }
