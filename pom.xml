@@ -34,6 +34,11 @@
 
 	<dependencies>
         <dependency>
+            <groupId>no.digipost</groupId>
+            <artifactId>digg</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>3.1.0</version>
@@ -94,9 +99,46 @@
 			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.junit.contrib</groupId>
+            <artifactId>junit-theories</artifactId>
+            <version>5.0-alpha-3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.pholser</groupId>
+            <artifactId>junit-quickcheck-core</artifactId>
+            <version>0.5-beta-1</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>javassist</groupId>
+                    <artifactId>javassist</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <!-- Depends explicitly on newer version because missing license in version depended on by junit-quickcheck-core -->
+            <groupId>org.javassist</groupId>
+            <artifactId>javassist</artifactId>
+            <version>3.20.0-GA</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.pholser</groupId>
+            <artifactId>junit-quickcheck-generators</artifactId>
+            <version>0.5-beta-1</version>
+            <scope>test</scope>
+        </dependency>
 		<dependency>
 			<groupId>org.hamcrest</groupId>
 			<artifactId>hamcrest-library</artifactId>
+			<version>1.3</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-core</artifactId>
 			<version>1.3</version>
 			<scope>test</scope>
 		</dependency>
@@ -143,6 +185,7 @@
 							<exclude>**/*.pdf</exclude>
 							<exclude>**/*.xml</exclude>
 							<exclude>**/*.pem</exclude>
+							<exclude>**/*.cer</exclude>
 							<exclude>**/*.response</exclude>
 						</excludes>
 					</configuration>
@@ -157,6 +200,7 @@
 									<exclude>*:*</exclude>
 								</excludes>
 								<includes>
+                                    <include>no.digipost:digg</include>
 									<include>org.slf4j:slf4j-api</include>
 									<include>org.slf4j:jcl-over-slf4j</include>
 									<include>org.slf4j:slf4j-simple</include>

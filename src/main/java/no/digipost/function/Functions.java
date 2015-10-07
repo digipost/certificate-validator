@@ -15,6 +15,8 @@
  */
 package no.digipost.function;
 
+import no.digipost.exceptions.Exceptions;
+
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -22,33 +24,15 @@ import java.util.function.Function;
 
 public final class Functions {
 
-	public static <T extends AutoCloseable, R> Function<T, R> autoClosing(CheckedExceptionFunction<T, R, ? extends Exception> function) {
-		return closeable -> {
-			try (T managed = closeable) {
-				return function.apply(managed);
-			} catch (Exception e) {
-				throw asUnchecked.apply(e);
-			}
-		};
-	}
+	public static final Consumer<Exception> rethrowAnyException = rethrow(Exceptions::asUnchecked);
 
-	public static final Function<Exception, String> exceptionNameAndMessage = e -> e.getClass().getSimpleName() + ": " + e.getMessage();
+	public static final <T extends Throwable> Consumer<T> rethrow(Function<T, RuntimeException> createUnchecked) { return e -> { throw createUnchecked.apply(e);}; }
 
-	public static final Function<Exception, RuntimeException> asUnchecked = asUnchecked(exceptionNameAndMessage);
-
-	public static final Function<Exception, RuntimeException> asUnchecked(Function<Exception, String> message) {
-		return e ->	e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(message.apply(e), e);
-	}
-
-	public static final Consumer<Exception> rethrowAnyException = rethrow(asUnchecked);
-
-	public static final <T extends Throwable> Consumer<T> rethrow(Function<T, RuntimeException> createUnchecked) { return e -> {throw createUnchecked.apply(e);}; }
-
-	public static <T, R> Function<T, Optional<R>> mayThrowException(CheckedExceptionFunction<T, R, ? extends Exception> function, Consumer<Exception> exceptionHandler) {
+	public static <T, R> Function<T, Optional<R>> mayThrowException(ThrowingFunction<T, R, ? extends Exception> function, Consumer<Exception> exceptionHandler) {
 		return mayThrowException(function, (t, e) -> exceptionHandler.accept(e));
 	}
 
-	public static <T, R> Function<T, Optional<R>> mayThrowException(CheckedExceptionFunction<T, R, ? extends Exception> function, BiConsumer<? super T, Exception> exceptionHandler) {
+	public static <T, R> Function<T, Optional<R>> mayThrowException(ThrowingFunction<T, R, ? extends Exception> function, BiConsumer<? super T, Exception> exceptionHandler) {
 		return t -> {
 			try {
 				return Optional.of(function.apply(t));

@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package no.digipost.function;
+package no.digipost.security.cert;
 
 
-@FunctionalInterface
-public interface CheckedExceptionFunction<T, R, E extends Exception> {
-	R apply(T t) throws E;
+public enum CertStatus {
+    OK,
+    REVOKED,
+    UNDECIDED,
+    UNTRUSTED
 }

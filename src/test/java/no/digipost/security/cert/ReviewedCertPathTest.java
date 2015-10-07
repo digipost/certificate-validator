@@ -26,10 +26,12 @@ import java.security.cert.CertPath;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateParsingException;
 import java.util.Iterator;
+import java.util.stream.Stream;
 
-import static no.digipost.function.Functions.exceptionNameAndMessage;
+import static no.digipost.exceptions.Exceptions.exceptionNameAndMessage;
 import static no.digipost.security.DigipostSecurity.asCertPath;
 import static no.digipost.security.DigipostSecurity.readCertificates;
+import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.*;
@@ -67,7 +69,7 @@ public class ReviewedCertPathTest {
 
 	@Test
 	public void cannotExtractCertificateAndIssuerWhenUntrusted() {
-		CertPath certpath = asCertPath(readCertificates("digipost.no-certchain.pem"));
+		CertPath certpath = asCertPath(DigipostSecurity.readCertificates("digipost.no-certchain.pem"));
 		ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> false);
 
 		expectedException.expect(Untrusted.class);
@@ -87,7 +89,7 @@ public class ReviewedCertPathTest {
 
 	@Test
 	public void trustingCertificatePathWithOnlyOneCertificateIsInvalid() {
-		CertPath certpath = asCertPath(readCertificates("digipost.pem"));
+		CertPath certpath = asCertPath(Stream.of(digipostVirksomhetssertifikat()));
 		ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> true);
 
 		expectedException.expect(InvalidState.class);
@@ -107,14 +109,14 @@ public class ReviewedCertPathTest {
 
 	@Test
 	public void toStringForTrustedCertPath() {
-		CertPath certPath = asCertPath(readCertificates("digipost.no-certchain.pem"));
+		CertPath certPath = asCertPath(Stream.of(digipostVirksomhetssertifikat()));
 		String description = new ReviewedCertPath(certPath, c -> true).toString();
 		assertThat(description, is("Trusted: " + DigipostSecurity.describe(certPath)));
 	}
 
 	@Test
 	public void toStringForUntrustedCertPath() {
-		CertPath certPath = asCertPath(readCertificates("digipost.no-certchain.pem"));
+		CertPath certPath = asCertPath(Stream.of(Certificates.digipostVirksomhetssertifikat()));
 		String description = new ReviewedCertPath(certPath, c -> false).toString();
 		assertThat(description, is("Untrusted: " + DigipostSecurity.describe(certPath)));
 	}
@@ -123,7 +125,7 @@ public class ReviewedCertPathTest {
 	public void toStringForException() {
 		CertificateParsingException exception = new CertificateParsingException("bogus certificate");
 		String description = new ReviewedCertPath(exception).toString();
-		assertThat(description, is("Untrusted: " + exceptionNameAndMessage.apply(exception)));
+		assertThat(description, is("Untrusted: " + exceptionNameAndMessage(exception)));
 	}
 
 }

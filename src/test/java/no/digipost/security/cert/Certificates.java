@@ -15,35 +15,75 @@
  */
 package no.digipost.security.cert;
 
+import no.digipost.security.DigipostSecurity;
+
+import java.io.ByteArrayInputStream;
+import java.security.cert.X509Certificate;
+
 public final class Certificates {
 
-    public static final String DIGIPOST_VIRKSOMHETSSERTIFIKAT = "-----BEGIN CERTIFICATE-----" + "\n"
-            + "MIIElTCCA32gAwIBAgIDDUL8MA0GCSqGSIb3DQEBBQUAMEsxCzAJBgNVBAYTAk5P" + "\n"
-            + "MR0wGwYDVQQKDBRCdXlwYXNzIEFTLTk4MzE2MzMyNzEdMBsGA1UEAwwUQnV5cGFz" + "\n"
-            + "cyBDbGFzcyAzIENBIDEwHhcNMTEwNTEzMTI0MjU3WhcNMTQwNTEzMTI0MjUzWjBo" + "\n"
-            + "MQswCQYDVQQGEwJOTzEYMBYGA1UECgwPUE9TVEVOIE5PUkdFIEFTMREwDwYDVQQL" + "\n"
-            + "DAhEaWdpcG9zdDEYMBYGA1UEAwwPUE9TVEVOIE5PUkdFIEFTMRIwEAYDVQQFEwk5" + "\n"
-            + "ODQ2NjExODUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC68mb3nPMY" + "\n"
-            + "KPN+jOLJCQ8x2it9PxMh8eiZ0cr5oK7C2fPs/3ywwWpav1yQdsLc5zSMQupzmqXN" + "\n"
-            + "OoAirP42sO+MonAmsBbgAmJfKepQCBg5CX3qZUuId6kn7BZcPIMzTWF44wc5UrF1" + "\n"
-            + "TlE2Ib/1ZS05lJCyLkdqpobBBKXoh2PP3xai5hFo8i+bohhyR+RWNxDnjPyp1mMX" + "\n"
-            + "2bLjmD+/g/0QQM3SbwKdjmy7Ylr/2EDrAQ+S0OSjR3G0BnpRCOvhVLcXfjDM1GWq" + "\n"
-            + "KIWKnQYFSTMB1cSpkqk9AxMY3MNT/DwUFWOihVlWvVWGjKrTBJC7FZpIqJBchNF4" + "\n"
-            + "hiWv4iNI7vYfAgMBAAGjggFjMIIBXzAJBgNVHRMEAjAAMB8GA1UdIwQYMBaAFDgU" + "\n"
-            + "5sjwqaQD9E4+IqNb8tbgrUB0MB0GA1UdDgQWBBQQPwlTXTPvyhFL30Sf3TxwhBHM" + "\n"
-            + "KjAOBgNVHQ8BAf8EBAMCBLAwFQYDVR0gBA4wDDAKBghghEIBGgEDAjCBpQYDVR0f" + "\n"
-            + "BIGdMIGaMC+gLaArhilodHRwOi8vY3JsLmJ1eXBhc3Mubm8vY3JsL0JQQ2xhc3Mz" + "\n"
-            + "Q0ExLmNybDBnoGWgY4ZhbGRhcDovL2xkYXAuYnV5cGFzcy5uby9kYz1CdXlwYXNz" + "\n"
-            + "LGRjPU5PLENOPUJ1eXBhc3MlMjBDbGFzcyUyMDMlMjBDQSUyMDE/Y2VydGlmaWNh" + "\n"
-            + "dGVSZXZvY2F0aW9uTGlzdDBDBggrBgEFBQcBAQQ3MDUwMwYIKwYBBQUHMAGGJ2h0" + "\n"
-            + "dHA6Ly9vY3NwLmJ1eXBhc3Mubm8vb2NzcC9CUENsYXNzM0NBMTANBgkqhkiG9w0B" + "\n"
-            + "AQUFAAOCAQEAivJd3hg5+16QOv638JlKixMivlZjbtAj8TGDKhnB6sXBw4bNbHQS" + "\n"
-            + "GDVdO07JKzBeYcohiYKPSn6+6NAEhJaetwVrhZgMQxNluUSOj+KSxzVVD6NLC3ga" + "\n"
-            + "wswK6i3OruBvpynXViNVCTjlmQzi/4pp5NjRNFcbJrfeONZwzClmIqhJorDqhw2T" + "\n"
-            + "/55OBEC+FxtQ9bEFBwHT0Qrx4L+HHJP7Vkk0CLWY5Ib89PZHFke/X/ad/HEla8F3" + "\n"
-            + "UjKB02xxs2OKEmE0gQrn3SYjOtONfQDK377RiQPiY3eKV4CBVUcidbfqPyjY/rbZ" + "\n" //
-            + "TaPOXIYao3VFv6RCTO80zn1qw1JqGvDgNg==" + "\n" //
-            + "-----END CERTIFICATE-----";
+
+    public static final String DIGIPOST_TESTSERTIFIKAT =
+            "-----BEGIN CERTIFICATE-----\n" +
+            "MIIE7jCCA9agAwIBAgIKGBj1bv99Jpi+EzANBgkqhkiG9w0BAQsFADBRMQswCQYD\n" +
+            "VQQGEwJOTzEdMBsGA1UECgwUQnV5cGFzcyBBUy05ODMxNjMzMjcxIzAhBgNVBAMM\n" +
+            "GkJ1eXBhc3MgQ2xhc3MgMyBUZXN0NCBDQSAzMB4XDTE0MDQyNDEyMzExMVoXDTE3\n" +
+            "MDQyNDIxNTkwMFowVTELMAkGA1UEBhMCTk8xGDAWBgNVBAoMD1BPU1RFTiBOT1JH\n" +
+            "RSBBUzEYMBYGA1UEAwwPUE9TVEVOIE5PUkdFIEFTMRIwEAYDVQQFEwk5ODQ2NjEx\n" +
+            "ODUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDLTnQryf2bmiyQ9q3y\n" +
+            "lQ6xMl7EhGIbjuziXkRTfL+M94m3ceAiko+r2piefKCiquLMK4j+UDcOapUtLC4d\n" +
+            "T4c6GhRH4FIOEn5aNS2I/njTenBypWka/VEhQUj7zvIh5G4UXIDIXYvLd7gideeM\n" +
+            "tkX24KUh2XVlh+PcqLGHirqBwVfFiTn5SKhr/ojhYYEb2xxTk3AY9nLd1MMffKQw\n" +
+            "UWmfoTos4scREYGI2R2vWxKWPcDqk+jig2DISWSJSuerz3HMYAAmp+Gjt0oFJNiy\n" +
+            "OFaFyGwT3DvqwOMQWwWXdmLh1NxMgTpghXAaXae76ucm9GDQ9E7ytf+JA096RWoi\n" +
+            "+5GtAgMBAAGjggHCMIIBvjAJBgNVHRMEAjAAMB8GA1UdIwQYMBaAFD+u9XgLkqNw\n" +
+            "IDVfWvr3JKBSAfBBMB0GA1UdDgQWBBTVyVLqcjWf1Qd0gsmCTrhXiWeqVDAOBgNV\n" +
+            "HQ8BAf8EBAMCBLAwFgYDVR0gBA8wDTALBglghEIBGgEAAwIwgbsGA1UdHwSBszCB\n" +
+            "sDA3oDWgM4YxaHR0cDovL2NybC50ZXN0NC5idXlwYXNzLm5vL2NybC9CUENsYXNz\n" +
+            "M1Q0Q0EzLmNybDB1oHOgcYZvbGRhcDovL2xkYXAudGVzdDQuYnV5cGFzcy5uby9k\n" +
+            "Yz1CdXlwYXNzLGRjPU5PLENOPUJ1eXBhc3MlMjBDbGFzcyUyMDMlMjBUZXN0NCUy\n" +
+            "MENBJTIwMz9jZXJ0aWZpY2F0ZVJldm9jYXRpb25MaXN0MIGKBggrBgEFBQcBAQR+\n" +
+            "MHwwOwYIKwYBBQUHMAGGL2h0dHA6Ly9vY3NwLnRlc3Q0LmJ1eXBhc3Mubm8vb2Nz\n" +
+            "cC9CUENsYXNzM1Q0Q0EzMD0GCCsGAQUFBzAChjFodHRwOi8vY3J0LnRlc3Q0LmJ1\n" +
+            "eXBhc3Mubm8vY3J0L0JQQ2xhc3MzVDRDQTMuY2VyMA0GCSqGSIb3DQEBCwUAA4IB\n" +
+            "AQCmMpAGaNplOgx3b4Qq6FLEcpnMOnPlSWBC7pQEDWx6OtNUHDm56fBoyVQYKR6L\n" +
+            "uGfalnnOKuB/sGSmO3eYlh7uDK9WA7bsNU/W8ZiwYwF6PBRui2rrqYk3kj4NLTNl\n" +
+            "yh/AOO1a2FDFHu369W0zcjj5ns7qs0K3peXtLX8pVxA8RmjwdGe69P/2r6s2A5CB\n" +
+            "j7oXZJD0Yo2dJFdsZzonT900sUi+MWzlhj3LxU5/684NWc2NI6ZPof/dyYpy3K/A\n" +
+            "FzpDLWGSmaDO66hPl7EfoJxEiX0DNBaQzNIyRFPh0ir0jM+32ZQ4goR8bAtyhKeT\n" +
+            "yA/4+Qx1WQXS3wURCC0lsbMh\n" +
+            "-----END CERTIFICATE-----";
+
+    public static final String DIGIPOST_VIRKSOMHETSSERTIFIKAT =
+            "-----BEGIN CERTIFICATE-----\n" +
+            "MIIE1DCCA7ygAwIBAgILA+jTV+nCPcYeg9wwDQYJKoZIhvcNAQELBQAwSzELMAkG\n" +
+            "A1UEBhMCTk8xHTAbBgNVBAoMFEJ1eXBhc3MgQVMtOTgzMTYzMzI3MR0wGwYDVQQD\n" +
+            "DBRCdXlwYXNzIENsYXNzIDMgQ0EgMzAeFw0xNDA2MjQxMjU0NDlaFw0xNzA2MjQy\n" +
+            "MTU5MDBaMGgxCzAJBgNVBAYTAk5PMRgwFgYDVQQKDA9QT1NURU4gTk9SR0UgQVMx\n" +
+            "ETAPBgNVBAsMCERpZ2lwb3N0MRgwFgYDVQQDDA9QT1NURU4gTk9SR0UgQVMxEjAQ\n" +
+            "BgNVBAUTCTk4NDY2MTE4NTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB\n" +
+            "AK1twtu2WT2T5GPYtwm8kbdCKkTu1qIIm7T+11RWk9NjQG+IqWZhJYUj+Myx/uoZ\n" +
+            "oYxcjgoeLDilQq5pFJA9Oq0I26ZLuv8fi25660GlNfB07J0j9lbJs8uFxV/4+MUf\n" +
+            "6zZ+h9JthTpa5HGkQSImm+UJ+AMLaaxXY8+P7RcPeVPPQIN2A212dSTVruMWbOP4\n" +
+            "DF5683kIXfizuyI8bAC2Ytp3Mxy6bQdEBNc8gNSUmTRBTrqxmkfenM1fGknrMUvV\n" +
+            "tYmT/OGm+6tWvIspIsGYOqFVTaMQUPlOEF6eqkXEnCRIbEZNNtVb7L9o60R2SNKf\n" +
+            "X6OnJRTJjFmJ4DzCP4GfBCsCAwEAAaOCAZowggGWMAkGA1UdEwQCMAAwHwYDVR0j\n" +
+            "BBgwFoAUzMP4B7ecbXpO9acrHQX5s0cckdEwHQYDVR0OBBYEFC4S7wHxmoiYgbix\n" +
+            "YfsK3uBZIEXqMA4GA1UdDwEB/wQEAwIEsDAVBgNVHSAEDjAMMAoGCGCEQgEaAQMC\n" +
+            "MIGlBgNVHR8EgZ0wgZowL6AtoCuGKWh0dHA6Ly9jcmwuYnV5cGFzcy5uby9jcmwv\n" +
+            "QlBDbGFzczNDQTMuY3JsMGegZaBjhmFsZGFwOi8vbGRhcC5idXlwYXNzLm5vL2Rj\n" +
+            "PUJ1eXBhc3MsZGM9Tk8sQ049QnV5cGFzcyUyMENsYXNzJTIwMyUyMENBJTIwMz9j\n" +
+            "ZXJ0aWZpY2F0ZVJldm9jYXRpb25MaXN0MHoGCCsGAQUFBwEBBG4wbDAzBggrBgEF\n" +
+            "BQcwAYYnaHR0cDovL29jc3AuYnV5cGFzcy5uby9vY3NwL0JQQ2xhc3MzQ0EzMDUG\n" +
+            "CCsGAQUFBzAChilodHRwOi8vY3J0LmJ1eXBhc3Mubm8vY3J0L0JQQ2xhc3MzQ0Ez\n" +
+            "LmNlcjANBgkqhkiG9w0BAQsFAAOCAQEAYxPhuUmFnazKTqlpBtCIxcEt0wWHLEpv\n" +
+            "5LRUGzcTts+O/JuUSrg3Hbwj1pNjXktZVwiGl1xn54Aq+q/NXopnESkcTNCWSyOw\n" +
+            "fQ3nNOpeTypw5qPXg+D16GxAFeFCf+ln3VMgveTT+nAp37aFUqtLCc6VEnGnTB9V\n" +
+            "d+4xpWxQ15Pb2SsougTwX8q9E7cAn0S/nnKDECLbwn+pNfjNys1T90sGZqjaDT4O\n" +
+            "2DzIBVI5ubwMsG8+LCI4NhYcoiiKvgjNu9IMKGIYIoktyXNMKSGo5ZnPCE27Q54U\n" +
+            "8MoXZAJn4jWMa0kV92iO0yNaOFJ732QKimgVJ7wsrBYv9K8+ZEhxmg==\n" +
+            "-----END CERTIFICATE-----";
+
 
     public static final String DIFI = "-----BEGIN CERTIFICATE-----\n" +
             "MIIFOjCCBCKgAwIBAgIKGQqI22LuZ+0U6TANBgkqhkiG9w0BAQsFADBRMQswCQYD\n" +
@@ -144,4 +184,108 @@ public final class Certificates {
             "RtlGQ25hKNhpVTmvPjclm1QEy6FXOVesowVoYLvzX93x88HWMFnDJnLoBm3SpZ1U\n" +
             "Bc6vWn44lPAXyrr1byDp/R69H4/lVrlJU23SPgY3i9ksErmL\n" +
             "-----END CERTIFICATE-----";
+
+
+
+
+    /**
+     * Revoked certificate, acquired from <tt>revoked.grc.com</tt> using
+     * <blockquote>
+     * <tt>openssl s_client -host revoked.grc.com -port 443 -prexit -showcerts</tt>
+     * </blockquote>
+     */
+    public static final String REVOKED =
+            "-----BEGIN CERTIFICATE-----\n" +
+            "MIIE7jCCA9agAwIBAgISESFVaI04B3XaNMXfl0M+0/anMA0GCSqGSIb3DQEBBQUA\n" +
+            "MFcxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS0wKwYD\n" +
+            "VQQDEyRHbG9iYWxTaWduIERvbWFpbiBWYWxpZGF0aW9uIENBIC0gRzIwHhcNMTQw\n" +
+            "NDIzMTUzNzUyWhcNMTcwNDIzMTUzNzUyWjBKMQswCQYDVQQGEwJVUzEhMB8GA1UE\n" +
+            "CxMYRG9tYWluIENvbnRyb2wgVmFsaWRhdGVkMRgwFgYDVQQDEw9yZXZva2VkLmdy\n" +
+            "Yy5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDemi+5M5XRD7PR\n" +
+            "/4177a6x7upbXMm2b79x/PwBELElAsUq+qtmoBs0FXiMmOfxp1BUW3KO4fJGjMuE\n" +
+            "G0UxJNo4YOYuNTW4PQnWpLqsGh8epcLi7DDQax+yKU4VaTOnHqJDjyQjiVvqojkJ\n" +
+            "nzaSMSrUgbr7gfQwrmUVlSYhMb1j4HMQUPEyvRtkeevwBU5PHsUEIZBheTo0P8RC\n" +
+            "1BvxXl6cSAdKiOgiloDGEAKwAa1u8ZJWtuPQbp2fbOIyMygwjo8F1JC7ybw4lT6c\n" +
+            "UluSPZew2LPLRIJea8nYjGl1jEbCm3I8gnWAcOywjgSCv3egvxDA1NrgGjKBszXd\n" +
+            "pZdnZLmDAgMBAAGjggG/MIIBuzAOBgNVHQ8BAf8EBAMCBaAwSQYDVR0gBEIwQDA+\n" +
+            "BgZngQwBAgEwNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2lnbi5j\n" +
+            "b20vcmVwb3NpdG9yeS8wKAYDVR0RBCEwH4IPcmV2b2tlZC5ncmMuY29tggxtYWls\n" +
+            "LmdyYy5jb20wCQYDVR0TBAIwADAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUH\n" +
+            "AwIwPwYDVR0fBDgwNjA0oDKgMIYuaHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9n\n" +
+            "cy9nc2RvbWFpbnZhbGcyLmNybDCBiAYIKwYBBQUHAQEEfDB6MEEGCCsGAQUFBzAC\n" +
+            "hjVodHRwOi8vc2VjdXJlLmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2RvbWFpbnZh\n" +
+            "bGcyLmNydDA1BggrBgEFBQcwAYYpaHR0cDovL29jc3AyLmdsb2JhbHNpZ24uY29t\n" +
+            "L2dzZG9tYWludmFsZzIwHQYDVR0OBBYEFHI8mO4OWDHnVO+3VJ6CsEaSE1JfMB8G\n" +
+            "A1UdIwQYMBaAFJat+rBbuYNkKnbCHIpp2kLc/v0oMA0GCSqGSIb3DQEBBQUAA4IB\n" +
+            "AQCSJwP5JwWeGblum7enlfmALaBZ+HpA7GwaCopvR2+oEI/saMalUYTog8B+m9Xr\n" +
+            "zF4iCkAnxoe3PYlfSAONioXQA9qVrsJsrQhdfgWuFsQOwu30bwhpolxk0M50wYPE\n" +
+            "FxAIfwW/FsCkUFQ/5t0yUuiGCAIhGQ6mU39RkC6t43NyzVAWy1cDL30VSRRtppjl\n" +
+            "WnHI9r3t8wPyu0nVOWq1IQ+BWnrO9F7Eb8dvgbSRa+ZL+p6eDX+6OEp8IxVToTa7\n" +
+            "4LN/oqAYvkOh5k8sBrwqUZWUV0emBPI0vcT2LoBQDjziBk/PcssQj8XK2VLJ8smp\n" +
+            "iitPBGOk/ZlPIIN9//bfyVn+\n" +
+            "-----END CERTIFICATE-----";
+
+
+    /**
+     * The issuer of the {@link #REVOKED} certificate.
+     */
+    public static final String REVOKED_ISSUER =
+            "-----BEGIN CERTIFICATE-----\n" +
+            "MIIEWjCCA0KgAwIBAgILBAAAAAABL07hQUMwDQYJKoZIhvcNAQEFBQAwVzELMAkG\n" +
+            "A1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNVBAsTB1Jv\n" +
+            "b3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0MTMxMDAw\n" +
+            "MDBaFw0yMjA0MTMxMDAwMDBaMFcxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i\n" +
+            "YWxTaWduIG52LXNhMS0wKwYDVQQDEyRHbG9iYWxTaWduIERvbWFpbiBWYWxpZGF0\n" +
+            "aW9uIENBIC0gRzIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCxo83A\n" +
+            "3zNAJuveWteUZtQBY8wzRIng4rjCRw2PrWmGHKhzQgvxcvstrLURcoMi9lbnLsVn\n" +
+            "cZ0AHDK84+0uCEWp5vrdyIyDBcFvS9AmSgv2G0XATX6TvA0nhO0wo+nGJibdLR/Y\n" +
+            "i8POGdBb/Aif5NjiNeSgaKb2DaN0YEKyl4IkjkGk8i5eto6nbtlsfw07JDVq0Ktb\n" +
+            "aveXAgA/UaanbnPKdw12fJu2MBoanPcfKHsOi0cf538FjMbJyLvP6dx6QS6hhtrU\n" +
+            "ObLiE0CmqDr6D1MeT+xumAkbypp3s1WFhekuFrWdXlTxSnpsObpuFwY0s7JC4ffz\n" +
+            "nJoLEUTeaniOsRNPAgMBAAGjggElMIIBITAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0T\n" +
+            "AQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQUlq36sFu5g2QqdsIcimnaQtz+/SgwRwYD\n" +
+            "VR0gBEAwPjA8BgRVHSAAMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh\n" +
+            "bHNpZ24uY29tL3JlcG9zaXRvcnkvMDMGA1UdHwQsMCowKKAmoCSGImh0dHA6Ly9j\n" +
+            "cmwuZ2xvYmFsc2lnbi5uZXQvcm9vdC5jcmwwPQYIKwYBBQUHAQEEMTAvMC0GCCsG\n" +
+            "AQUFBzABhiFodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9yb290cjEwHwYDVR0j\n" +
+            "BBgwFoAUYHtmGkUNl8qJUC99BM00qP/8/UswDQYJKoZIhvcNAQEFBQADggEBADrn\n" +
+            "/K6vBUOAJ3VBX6jwKI8fj4N+sri6rnUxJ4il5blOBEPSregTAKPbGQEwnmw8Un9c\n" +
+            "3qtnw4QEVFGZnmMvvdW3wNXaAw5J0+Gzkk/fkk59riJqzti8/Hyua7aK6kVikBHT\n" +
+            "C3GnXgYi/0046rk6bs1nGgJ/S/O/DnlvvtUpMllZHZYIm3CP9x5cRntO0J20U8gS\n" +
+            "AhsNuzLrWVO5PhtWjRXI8UI/d/4f5W2eZh+r2rKDV7QMItKGvNoy18DtcIV8k6rw\n" +
+            "l9w5EdLYieuNkKO2UCXLbNmmw2/7iFS45JJwh855O/DeNr8DBAA9+e+eqWek9IY+\n" +
+            "I5e4KnHi7f5piGe/Jlw=\n" +
+            "-----END CERTIFICATE-----";
+
+
+
+    public static X509Certificate digipostVirksomhetssertifikat() {
+        return DigipostSecurity.readCertificate(new ByteArrayInputStream(DIGIPOST_VIRKSOMHETSSERTIFIKAT.getBytes()));
+    }
+
+    public static X509Certificate digipostTestsertifikat() {
+        return DigipostSecurity.readCertificate(new ByteArrayInputStream(DIGIPOST_TESTSERTIFIKAT.getBytes()));
+    }
+
+
+    /**
+     * Revoked certificate, acquired using from revoked.grc.com
+     * openssl s_client -host revoked.grc.com -port 443 -prexit -showcerts
+     *
+     * @see #REVOKED
+     */
+    public static X509Certificate revoked() {
+        return DigipostSecurity.readCertificate(new ByteArrayInputStream(REVOKED.getBytes()));
+    }
+
+
+    /**
+     * The issuer of the {@link #revoked()} certificate.
+     *
+     * @see #REVOKED_ISSUER
+     */
+    public static X509Certificate revokedIssuer() {
+        return DigipostSecurity.readCertificate(new ByteArrayInputStream(REVOKED_ISSUER.getBytes()));
+    }
+
 }

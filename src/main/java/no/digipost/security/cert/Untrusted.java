@@ -20,8 +20,6 @@ import no.digipost.security.DigipostSecurity;
 import java.security.cert.CertPath;
 import java.security.cert.Certificate;
 
-import static java.util.stream.Collectors.joining;
-
 /**
  * Thrown in cases where a certificate or certificate path is treated as trusted,
  * but in fact cannot be trusted. If this exception is encountered, it typically
@@ -35,7 +33,7 @@ public class Untrusted extends RuntimeException {
 	}
 
 	Untrusted(CertPath certpath, Throwable cause) {
-		super("The certificate path is not trusted:\n" + certpath.getCertificates().stream().map(DigipostSecurity::describe).collect(joining("\n ^-- Issued by: ", "Certificate: ", "")), cause);
+		super(DigipostSecurity.describe(certpath), cause);
 	}
 
 	Untrusted(Certificate certificate) {

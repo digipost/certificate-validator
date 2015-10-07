@@ -23,8 +23,10 @@ import java.security.Principal;
 import java.security.cert.CertPath;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.stream.Stream;
 
-import static org.hamcrest.Matchers.containsString;
+import static java.util.stream.Collectors.toList;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -35,10 +37,17 @@ public class DigipostSecurityTest {
 
 	@Test
 	public void readOneCertificate() {
-		X509Certificate digipostCert = DigipostSecurity.readCertificate("digipost.pem");
+		X509Certificate digipostCert = DigipostSecurity.readCertificate("digipost.no-certchain.pem");
 		Principal subject = digipostCert.getSubjectDN();
 		assertThat(subject.getName(), containsString("POSTEN NORGE AS"));
 	}
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void readAChainOfCertificatesFromOnePem() {
+	    Stream<String> certs = DigipostSecurity.readCertificates("digipost.no-certchain.pem").map(c -> c.getSubjectDN().getName());
+        assertThat(certs.collect(toList()), contains(containsString("POSTEN NORGE AS"), any(String.class), containsString("VeriSign")));
+    }
 
 	@Test
 	public void describeCertPathAndCertificateAreNullSafe() {
@@ -47,7 +56,7 @@ public class DigipostSecurityTest {
 	}
 
 	@Test
-	public void domainSpecificCastingOfX509Certificate() {
+	public void failFastCastingOfX509Certificate() {
 		expectedException.expect(IllegalCertificateType.class);
 		DigipostSecurity.requireX509(mock(Certificate.class));
 	}
