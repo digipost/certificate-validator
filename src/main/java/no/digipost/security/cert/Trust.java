@@ -66,7 +66,8 @@ public class Trust {
      */
     public ReviewedCertPath resolveCertPath(X509Certificate certificate) {
         try {
-            CollectionCertStoreParameters certStoreParams = new CollectionCertStoreParameters(getAllTrustedCertificatesFor(certificate.getIssuerX500Principal()).collect(toSet()));
+            CollectionCertStoreParameters certStoreParams = new CollectionCertStoreParameters(
+                    getTrustAnchorsAndAnyIntermediateCertificatesFor(certificate.getIssuerX500Principal()).collect(toSet()));
             CertStore certStore = CertStore.getInstance("Collection", certStoreParams);
             X509CertSelector certSelector = new X509CertSelector();
             certSelector.setCertificate(certificate);
@@ -131,7 +132,7 @@ public class Trust {
         return trustedIntermediateCerts;
     }
 
-    public Stream<X509Certificate> getAllTrustedCertificatesFor(X500Principal principal) {
+    public Stream<X509Certificate> getTrustAnchorsAndAnyIntermediateCertificatesFor(X500Principal principal) {
         return concat(getTrustAnchorCertificates().stream(), getTrustedIntermediateCertificates().getOrDefault(principal, emptyList()).stream());
     }
 
