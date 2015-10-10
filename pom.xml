@@ -187,6 +187,7 @@
                             <exclude>**/*.pem</exclude>
                             <exclude>**/*.cer</exclude>
                             <exclude>**/*.response</exclude>
+                            <exclude>.editorconfig</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
