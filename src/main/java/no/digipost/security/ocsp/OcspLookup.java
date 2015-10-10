@@ -16,6 +16,7 @@
 package no.digipost.security.ocsp;
 
 import no.digipost.security.Sha1Calculator;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.bouncycastle.asn1.*;
@@ -32,8 +33,8 @@ import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 import java.util.Optional;
 
-import static no.digipost.function.Functions.mayThrowException;
-import static no.digipost.function.Functions.rethrowAnyException;
+import static no.digipost.exceptions.Exceptions.mayThrow;
+import static no.digipost.exceptions.Exceptions.rethrowAnyException;
 import static org.apache.http.client.methods.RequestBuilder.post;
 
 /**
@@ -61,7 +62,7 @@ public final class OcspLookup {
     public static Optional<OcspLookup> newLookup(X509Certificate certificate, X509Certificate issuer) {
         return Optional.ofNullable(certificate.getExtensionValue(AUTHORITY_INFO_ACCESS_OID))
 
-            .flatMap(mayThrowException((byte[] data) -> {
+            .flatMap(mayThrow((byte[] data) -> {
                 DEROctetString base = (DEROctetString) ASN1Primitive.fromByteArray(data);
                 DLSequence seq = (DLSequence) ASN1Primitive.fromByteArray(base.getOctets());
                 Enumeration<?> objects = seq.getObjects();
@@ -78,13 +79,13 @@ public final class OcspLookup {
                 }
                 throw new OCSPException("Object identifier " + OCSPObjectIdentifiers.id_pkix_ocsp + " not found");
 
-            }, exception -> { LOG.warn("Failed to extract OCSP uri from " + certificate, exception); }))
+            }).ifException(exception -> { LOG.warn("Failed to extract OCSP uri from " + certificate, exception); }))
 
-            .flatMap(mayThrowException((String uri) -> {
+            .flatMap(mayThrow((String uri) -> {
                 CertificateID certificateId = new CertificateID(new Sha1Calculator(), new X509CertificateHolder(issuer.getEncoded()), certificate.getSerialNumber());
                 return new OcspLookup(uri, certificateId);
 
-            }, exception -> { LOG.warn("Failed to create certificate ID from issuer " + issuer + " and certificate " + certificate, exception); }));
+            }).ifException(exception -> { LOG.warn("Failed to create certificate ID from issuer " + issuer + " and certificate " + certificate, exception); }));
     }
 
 
@@ -105,13 +106,13 @@ public final class OcspLookup {
      */
     public OcspResult executeUsing(CloseableHttpClient client) {
         return Optional.of(new OCSPReqBuilder().addRequest(certificateId))
-            .flatMap(mayThrowException(OCSPReqBuilder::build, rethrowAnyException))
-            .flatMap(mayThrowException(OCSPReq::getEncoded, rethrowAnyException))
+            .flatMap(mayThrow((OCSPReqBuilder b) -> b.build()).ifException(rethrowAnyException))
+            .flatMap(mayThrow(OCSPReq::getEncoded).ifException(rethrowAnyException))
             .map(requestEntity -> post()
                                   .setUri(uri)
                                   .addHeader("Content-Type", "application/ocsp-request")
                                   .setEntity(new ByteArrayEntity(requestEntity)).build())
-            .flatMap(mayThrowException(client::execute, rethrowAnyException))
+            .flatMap(mayThrow((HttpUriRequest r) -> client.execute(r)).ifException(rethrowAnyException))
             .map(response -> new OcspResult(uri, response))
             .get();
     }
