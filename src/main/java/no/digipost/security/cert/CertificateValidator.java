@@ -17,7 +17,6 @@ package no.digipost.security.cert;
 
 import no.digipost.function.ThrowingFunction;
 import no.digipost.security.DigipostSecurity;
-import no.digipost.security.cert.*;
 import no.digipost.security.ocsp.OcspLookup;
 import no.digipost.security.ocsp.OcspResult;
 import no.digipost.security.ocsp.OcspUtils;
