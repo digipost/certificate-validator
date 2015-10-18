@@ -21,8 +21,8 @@ package no.digipost.security;
  */
 public class NotSecure extends RuntimeException {
 
-    public NotSecure(Object resource) {
-        this(resource.getClass().getSimpleName());
+    public NotSecure(Class<?> resourceType, Object instance) {
+        this(resourceType.getSimpleName() + " (" + instance + ")");
     }
 
     public NotSecure(String resourceType) {

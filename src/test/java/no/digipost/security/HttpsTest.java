@@ -22,7 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
@@ -43,7 +43,7 @@ public class HttpsTest {
     public final ExpectedException expectedException = ExpectedException.none();
 
     @Mock
-    private ServletRequest request;
+    private HttpServletRequest request;
 
 
     @Test

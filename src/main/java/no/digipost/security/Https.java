@@ -16,6 +16,7 @@
 package no.digipost.security;
 
 import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 import java.security.cert.X509Certificate;
 
@@ -42,9 +43,9 @@ public class Https {
     public static final String REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE = "javax.servlet.request.X509Certificate";
 
 
-    public static X509Certificate extractClientCertificate(ServletRequest request) {
+    public static X509Certificate extractClientCertificate(HttpServletRequest request) {
         if (!request.isSecure()) {
-            throw new NotSecure(request);
+            throw new NotSecure(ServletRequest.class, request.getMethod() + ": " + request.getRequestURI());
         }
 
         Object certObj = request.getAttribute(REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE);
