@@ -43,9 +43,16 @@ public class Https {
     public static final String REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE = "javax.servlet.request.X509Certificate";
 
 
-    public static X509Certificate extractClientCertificate(HttpServletRequest request) {
+    public static X509Certificate extractClientCertificate(ServletRequest request) {
         if (!request.isSecure()) {
-            throw new NotSecure(ServletRequest.class, request.getMethod() + ": " + request.getRequestURI());
+            String resourceDescription;
+            if (request instanceof HttpServletRequest) {
+                HttpServletRequest httpRequest = (HttpServletRequest) request;
+                resourceDescription = httpRequest.getMethod() + ": " + httpRequest.getRequestURI();
+            } else {
+                resourceDescription = request.toString();
+            }
+            throw new NotSecure(ServletRequest.class, resourceDescription);
         }
 
         Object certObj = request.getAttribute(REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE);
