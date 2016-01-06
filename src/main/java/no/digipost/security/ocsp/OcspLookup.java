@@ -33,8 +33,8 @@ import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 import java.util.Optional;
 
-import static no.digipost.exceptions.Exceptions.mayThrow;
-import static no.digipost.exceptions.Exceptions.rethrowAnyException;
+import static no.digipost.DiggExceptions.mayThrow;
+import static no.digipost.DiggExceptions.rethrowAnyException;
 import static org.apache.http.client.methods.RequestBuilder.post;
 
 /**

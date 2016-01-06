@@ -28,7 +28,7 @@ import java.security.cert.CertificateParsingException;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
-import static no.digipost.exceptions.Exceptions.exceptionNameAndMessage;
+import static no.digipost.DiggExceptions.exceptionNameAndMessage;
 import static no.digipost.security.DigipostSecurity.asCertPath;
 import static no.digipost.security.DigipostSecurity.readCertificates;
 import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;

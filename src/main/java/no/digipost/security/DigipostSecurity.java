@@ -15,7 +15,7 @@
  */
 package no.digipost.security;
 
-import no.digipost.exceptions.Exceptions;
+import no.digipost.DiggExceptions;
 import no.digipost.security.cert.CertificateNotFound;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static no.digipost.exceptions.Exceptions.applyUnchecked;
+import static no.digipost.DiggExceptions.applyUnchecked;
 
 
 public final class DigipostSecurity {
@@ -183,7 +183,7 @@ public final class DigipostSecurity {
             }
             return keystore;
         } catch (Exception e) {
-            throw Exceptions.asUnchecked(e);
+            throw DiggExceptions.asUnchecked(e);
         }
     }
 

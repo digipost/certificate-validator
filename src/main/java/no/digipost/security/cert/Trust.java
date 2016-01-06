@@ -15,7 +15,7 @@
  */
 package no.digipost.security.cert;
 
-import no.digipost.exceptions.Exceptions;
+import no.digipost.DiggExceptions;
 import no.digipost.security.DigipostSecurity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.*;
 import static java.util.stream.Stream.concat;
-import static no.digipost.exceptions.Exceptions.exceptionNameAndMessage;
+import static no.digipost.DiggExceptions.exceptionNameAndMessage;
 import static no.digipost.security.DigipostSecurity.*;
 
 /**
@@ -111,7 +111,7 @@ public class Trust {
         } catch (CertPathValidatorException e) {
             return false;
         } catch (GeneralSecurityException e) {
-            throw Exceptions.asUnchecked(e);
+            throw DiggExceptions.asUnchecked(e);
         }
     }
 
