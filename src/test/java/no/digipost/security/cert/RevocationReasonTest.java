@@ -15,10 +15,8 @@
  */
 package no.digipost.security.cert;
 
-import com.pholser.junit.quickcheck.ForAll;
-import no.digipost.security.cert.RevocationReason;
-import org.junit.contrib.theories.Theories;
-import org.junit.contrib.theories.Theory;
+import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 
 import java.util.stream.Stream;
@@ -29,21 +27,21 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
-@RunWith(Theories.class)
+@RunWith(JUnitQuickcheck.class)
 public class RevocationReasonTest {
 
-    @Theory
-    public void managesToResolveAnyReason(@ForAll int code) {
+    @Property
+    public void managesToResolveAnyReason(int code) {
         assertThat(RevocationReason.resolve(code), notNullValue());
     }
 
-    @Theory
-    public void resolveParticularReason(@ForAll RevocationReason reason) {
+    @Property
+    public void resolveParticularReason(RevocationReason reason) {
         assertThat(RevocationReason.resolve(reason.code), sameInstance(reason));
     }
 
-    @Theory
-    public void unknownReasonCodes(@ForAll int unknownCode) {
+    @Property
+    public void unknownReasonCodes(int unknownCode) {
         assumeThat(unknownCode, not(isIn(Stream.of(RevocationReason.values()).filter(r -> r != UNKNOWN).map(r -> r.code).collect(toList()))));
         assertThat(RevocationReason.resolve(unknownCode), is(UNKNOWN));
     }

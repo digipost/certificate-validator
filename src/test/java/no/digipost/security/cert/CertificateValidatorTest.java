@@ -16,8 +16,9 @@
 package no.digipost.security.cert;
 
 import com.google.common.io.ByteStreams;
-import com.pholser.junit.quickcheck.ForAll;
+import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
+import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import no.digipost.security.FilesAndDirs;
 import no.digipost.security.HttpClient;
 import no.digipost.security.ocsp.OcspLookup;
@@ -36,8 +37,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.contrib.theories.Theories;
-import org.junit.contrib.theories.Theory;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -70,7 +69,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
-@RunWith(Theories.class)
+@RunWith(JUnitQuickcheck.class)
 public class CertificateValidatorTest {
 
     private static final Trust PROD_TRUST = BuypassCommfidesCertificates.createProdTrust();
@@ -132,8 +131,8 @@ public class CertificateValidatorTest {
     }
 
 
-    @Theory
-    public void ocspLookupReturningAnythingButStatus200IsUndecidedForProductionAndOKForOtherEnvironments(@ForAll(sampleSize=5) @InRange(min="100", max="599") int otherThan200) throws Exception {
+    @Property
+    public void ocspLookupReturningAnythingButStatus200IsUndecidedForProductionAndOKForOtherEnvironments(@InRange(min="100", max="599") int otherThan200) throws Exception {
         assumeThat(otherThan200, not(200));
 
         given(ocspResponseStatus.getStatusCode()).willReturn(otherThan200);
