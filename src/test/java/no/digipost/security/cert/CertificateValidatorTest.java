@@ -28,7 +28,7 @@ import no.digipost.time.ControllableClock;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cert.ocsp.OCSPResp;
@@ -65,8 +65,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(JUnitQuickcheck.class)
@@ -101,7 +101,7 @@ public class CertificateValidatorTest {
     public void stubHttpClientAndInitCertificateValidator() throws Exception {
         when(response.getStatusLine()).thenReturn(ocspResponseStatus);
         when(response.getEntity()).thenReturn(ocspResponseEntity);
-        when(httpClient.execute(any(HttpPost.class))).thenReturn(response);
+        when(httpClient.execute(any(HttpUriRequest.class))).thenReturn(response);
         when(ocspResponseStatus.toString()).thenAnswer(i -> "status " + ocspResponseStatus.getStatusCode());
 
         prodValidator = new CertificateValidator(MOST_STRICT, PROD_TRUST, httpClient, clock);
