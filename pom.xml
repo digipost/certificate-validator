@@ -188,6 +188,7 @@
                             <exclude>**/*.cer</exclude>
                             <exclude>**/*.response</exclude>
                             <exclude>.editorconfig</exclude>
+                            <exclude>.drone.yml</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
