@@ -1,0 +1,21 @@
+pipeline:
+  clone:
+    image: plugins/git
+    recursive: false
+    volumes:
+      - /data/git/certificate-validator/.git:/drone/src/github.com/digipost/certificate-validator/.git
+  build:
+    image: digipost/docker-maven:3.3.9-jdk-8
+    volumes:
+      - /data/maven:/home/maven/.m2
+      - /data/git/certificate-validator/.git:/drone/src/github.com/digipost/certificate-validator/.git
+    commands:
+      - export WORKSPACE=$(pwd)
+      - chown maven:maven ${WORKSPACE}
+      - chown -R maven:maven ${WORKSPACE}/*
+      - export HOME=/home/maven
+      - export USER=maven
+      - export PROXY_HOST=proxy.dgp.st
+      - export PROXY_PORT=80
+      - export MAVEN_OPTS="${MAVEN_OPTS} -DproxySet=true -DproxyHost=$PROXY_HOST -DproxyPort=$PROXY_PORT -DnonProxyHosts=repo.dgp.st"
+      - su -p maven -c "mvn clean deploy -V -B -Dhttps_proxy=$PROXY_HOST:$PROXY_PORT"
