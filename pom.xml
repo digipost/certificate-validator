@@ -8,8 +8,8 @@
 
     <parent>
         <groupId>no.posten.dpost</groupId>
-        <artifactId>dpost-super-pom</artifactId>
-        <version>1.2</version>
+        <artifactId>digipost-internal-super-pom</artifactId>
+        <version>10</version>
     </parent>
 
     <groupId>no.digipost</groupId>
