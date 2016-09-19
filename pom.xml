@@ -33,11 +33,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>no.digipost</groupId>
-            <artifactId>digg</artifactId>
-            <version>0.1</version>
-        </dependency>
-        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>3.1.0</version>
@@ -86,6 +81,12 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.21</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>no.digipost</groupId>
+            <artifactId>digg</artifactId>
+            <version>0.9</version>
             <scope>test</scope>
         </dependency>
         <dependency>

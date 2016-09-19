@@ -28,7 +28,6 @@ import java.security.cert.CertificateParsingException;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
-import static no.digipost.DiggExceptions.exceptionNameAndMessage;
 import static no.digipost.security.DigipostSecurity.asCertPath;
 import static no.digipost.security.DigipostSecurity.readCertificates;
 import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;
@@ -125,7 +124,7 @@ public class ReviewedCertPathTest {
     public void toStringForException() {
         CertificateParsingException exception = new CertificateParsingException("bogus certificate");
         String description = new ReviewedCertPath(exception).toString();
-        assertThat(description, is("Untrusted: " + exceptionNameAndMessage(exception)));
+        assertThat(description, is("Untrusted: " + CertificateParsingException.class.getSimpleName() + ": 'bogus certificate'"));
     }
 
 }

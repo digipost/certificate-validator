@@ -15,8 +15,8 @@
  */
 package no.digipost.security.cert;
 
-import no.digipost.DiggExceptions;
 import no.digipost.security.DigipostSecurity;
+import no.digipost.security.DigipostSecurityException;
 import no.digipost.security.InvalidState;
 
 import java.security.GeneralSecurityException;
@@ -51,7 +51,7 @@ public final class ReviewedCertPath {
 
 
     public CertPath getPath() {
-        return path.orElseThrow(() -> exception.map(DiggExceptions::asUnchecked).get());
+        return path.orElseThrow(() -> exception.map(DigipostSecurityException::new).orElseGet(() -> new DigipostSecurityException("no certpath or exception")));
     }
 
     public boolean isTrusted() {
@@ -76,7 +76,8 @@ public final class ReviewedCertPath {
     @Override
     public String toString() {
         return new StringBuilder(isTrusted() ? "Trusted: " : "Untrusted: ")
-            .append(path.map(DigipostSecurity::describe).orElse(exception.map(DiggExceptions::exceptionNameAndMessage).orElse("No certpath or exception")))
+            .append(path.map(DigipostSecurity::describe)
+                        .orElse(exception.map(e -> e.getClass().getSimpleName() + ": '" + e.getMessage() + "'").orElse("No certpath or exception")))
             .toString();
     }
 

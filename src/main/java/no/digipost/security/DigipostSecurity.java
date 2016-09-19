@@ -15,7 +15,6 @@
  */
 package no.digipost.security;
 
-import no.digipost.DiggExceptions;
 import no.digipost.security.cert.CertificateNotFound;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -30,7 +29,6 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static no.digipost.DiggExceptions.applyUnchecked;
 
 
 public final class DigipostSecurity {
@@ -183,7 +181,7 @@ public final class DigipostSecurity {
             }
             return keystore;
         } catch (Exception e) {
-            throw DiggExceptions.asUnchecked(e);
+            throw e instanceof RuntimeException ? (RuntimeException) e : new DigipostSecurityException(e);
         }
     }
 
@@ -196,7 +194,11 @@ public final class DigipostSecurity {
      */
     public static CertPath asCertPath(Stream<X509Certificate> certificates) {
         List<X509Certificate> collectedCertificates = certificates.collect(toList());
-        return applyUnchecked(getX509CertificateFactory()::generateCertPath, collectedCertificates);
+        try {
+            return getX509CertificateFactory().generateCertPath(collectedCertificates);
+        } catch (CertificateException e) {
+            throw new DigipostSecurityException(e);
+        }
     }
 
 

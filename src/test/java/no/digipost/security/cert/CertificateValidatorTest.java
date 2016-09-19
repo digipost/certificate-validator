@@ -56,7 +56,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 import static java.util.Optional.ofNullable;
-import static no.digipost.io.IO.autoClosing;
+import static no.digipost.DiggIO.autoClosing;
 import static no.digipost.security.cert.CertStatus.*;
 import static no.digipost.security.cert.CertificateValidatorConfig.MOST_STRICT;
 import static no.digipost.security.cert.Certificates.digipostTestsertifikat;

@@ -26,6 +26,7 @@ import static no.digipost.security.cert.CertStatus.*;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+@SuppressWarnings("unused")
 public class RealOCSPCertificateValidatorTest {
 
     private static final CertificateValidator validator = new CertificateValidator(BuypassCommfidesCertificates.createProdTrust(), HttpClient.createWithProxy("proxy.dgp.st", 80));
