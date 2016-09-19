@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <prerequisites>
-        <maven>2.2.1</maven>
+        <maven>3.3</maven>
     </prerequisites>
 
     <parent>
@@ -151,10 +151,7 @@
             <plugins>
                 <plugin>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5.1</version>
-                    <configuration>
-                        <tagNameFormat>@{project.version}</tagNameFormat>
-                    </configuration>
+                    <version>2.5.3</version>
                 </plugin>
                 <plugin>
                     <groupId>org.jasig.maven</groupId>
@@ -170,7 +167,7 @@
                 <plugin>
                     <groupId>com.mycila</groupId>
                     <artifactId>license-maven-plugin</artifactId>
-                    <version>2.11</version>
+                    <version>3.0</version>
                     <configuration>
                         <header>src/main/license-header.txt</header>
                         <strictCheck>true</strictCheck>
@@ -178,7 +175,6 @@
                             <exclude>LICENSE*</exclude>
                             <exclude>NOTICE</exclude>
                             <exclude>src/main/notice/NOTICE.template</exclude>
-                            <exclude>**/*.pdf</exclude>
                             <exclude>**/*.xml</exclude>
                             <exclude>**/*.pem</exclude>
                             <exclude>**/*.cer</exclude>
@@ -223,11 +219,11 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.3</version>
+                    <version>3.5.1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.18.1</version>
+                    <version>2.19.1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-deploy-plugin</artifactId>
@@ -235,7 +231,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-clean-plugin</artifactId>
-                    <version>2.6.1</version>
+                    <version>3.0.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-dependency-plugin</artifactId>
@@ -247,15 +243,15 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>2.7</version>
+                    <version>3.0.1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.4</version>
+                    <version>3.5.1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>2.6</version>
+                    <version>3.0.1</version>
                 </plugin>
                 <plugin>
                     <groupId>com.github.siom79.japicmp</groupId>
@@ -292,7 +288,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.2</version>
+                <version>2.10.4</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -307,7 +303,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.4</version>
+                <version>3.0.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
