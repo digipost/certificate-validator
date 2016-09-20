@@ -17,18 +17,22 @@ package no.digipost.security.cert;
 
 import no.digipost.security.DigipostSecurity;
 import no.digipost.security.HttpClient;
+import org.apache.http.HttpHost;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.security.cert.X509Certificate;
+import java.util.Optional;
 
 import static no.digipost.security.cert.CertStatus.*;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+@SuppressWarnings("unused")
 public class RealOCSPCertificateValidatorTest {
 
-    private static final CertificateValidator validator = new CertificateValidator(BuypassCommfidesCertificates.createProdTrust(), HttpClient.createWithProxy("proxy.dgp.st", 80));
+    private static final Optional<HttpHost> proxy =  Optional.ofNullable(System.getProperty("https_proxy")).map(HttpHost::create);
+    private static final CertificateValidator validator = new CertificateValidator(BuypassCommfidesCertificates.createProdTrust(), HttpClient.create(proxy));
 
 
     @Test

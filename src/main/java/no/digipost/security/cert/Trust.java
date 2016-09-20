@@ -15,8 +15,8 @@
  */
 package no.digipost.security.cert;
 
-import no.digipost.DiggExceptions;
 import no.digipost.security.DigipostSecurity;
+import no.digipost.security.DigipostSecurityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,6 @@ import java.util.stream.Stream;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.*;
 import static java.util.stream.Stream.concat;
-import static no.digipost.DiggExceptions.exceptionNameAndMessage;
 import static no.digipost.security.DigipostSecurity.*;
 
 /**
@@ -90,7 +89,9 @@ public class Trust {
 
         } catch (GeneralSecurityException e) {
             LOG.warn("Error generating cert path. Certificate {} is not issued by trusted issuer. {}: {}", describe(certificate), e.getClass().getSimpleName(), e.getMessage());
-            LOG.debug(exceptionNameAndMessage(e), e);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(e.getClass().getSimpleName() + ": '" + e.getMessage() + "'", e);
+            }
             return new ReviewedCertPath(e);
         }
     }
@@ -111,7 +112,7 @@ public class Trust {
         } catch (CertPathValidatorException e) {
             return false;
         } catch (GeneralSecurityException e) {
-            throw DiggExceptions.asUnchecked(e);
+            throw new DigipostSecurityException(e);
         }
     }
 

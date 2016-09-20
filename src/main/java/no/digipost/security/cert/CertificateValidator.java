@@ -15,8 +15,8 @@
  */
 package no.digipost.security.cert;
 
-import no.digipost.function.ThrowingFunction;
 import no.digipost.security.DigipostSecurity;
+import no.digipost.security.DigipostSecurityException;
 import no.digipost.security.ocsp.OcspLookup;
 import no.digipost.security.ocsp.OcspResult;
 import no.digipost.security.ocsp.OcspUtils;
@@ -29,6 +29,7 @@ import org.bouncycastle.cert.ocsp.SingleResp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.time.Clock;
@@ -39,7 +40,6 @@ import java.util.Optional;
 
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;
-import static no.digipost.io.IO.autoClosing;
 import static no.digipost.security.DigipostSecurity.describe;
 import static no.digipost.security.cert.CertStatus.*;
 import static no.digipost.security.cert.OcspSetting.OCSP_ACTIVATED;
@@ -136,60 +136,69 @@ public class CertificateValidator {
         X509Certificate certificate = certificateAndIssuer.certificate;
         X509Certificate issuer = certificateAndIssuer.issuer;
 
-        ThrowingFunction<OcspLookup, OcspResult, Exception> executeLookup = lookup -> lookup.executeUsing(client);
-
         return OcspLookup.newLookup(certificate, issuer)
-                .flatMap(executeLookup.ifException((lookup, exception) -> {
-                    LOG.warn("Feilet {} {}: {}", lookup, describe(certificate), exception.getMessage());
-                    LOG.debug(exception.getMessage(), exception);
-                }))
-                .map(autoClosing(ocspResult -> {
-                    if (!ocspResult.isOkResponse()) {
-                        LOG.warn("Unexpected OCSP response ({}) from {} for certificate {}.", ocspResult.response.getStatusLine(), ocspResult.uri, describe(certificate));
-                        return UNDECIDED;
-                    }
-                    BasicOCSPResp basix;
+                .flatMap(lookup -> {
                     try {
-                        basix = ocspResult.getResponseObject();
-                    } catch (OCSPException | CertIOException | IllegalStateException e) {
-                        LOG.warn("OCSP from {} for certificate {}, error reading the response because: {} '{}'", ocspResult.uri, describe(certificate), e.getClass().getSimpleName(), e.getMessage());
-                        return UNDECIDED;
-                    }
-
-                    X509Certificate ocspSignatureValidationCertificate;
-                    Optional<X509Certificate> ocspSigningCertificate = findOcspSigningCertificate(basix, config);
-                    if (ocspSigningCertificate.isPresent()) {
-                        ocspSignatureValidationCertificate = ocspSigningCertificate.get();
-                        CertStatus certStatus = validateCert(ocspSignatureValidationCertificate, config.with(OcspSetting.NO_OCSP));
-                        if (certStatus != OK) {
-                            LOG.warn("OCSP signing certificate {} is not OK: '{}'", describe(ocspSignatureValidationCertificate), certStatus);
-                            return certStatus;
+                        return Optional.of(lookup.executeUsing(client));
+                    } catch (RuntimeException e) {
+                        LOG.warn("Feilet {} {}: {}", lookup, describe(certificate), e.getMessage());
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug(e.getClass().getSimpleName() + ": '" + e.getMessage() + "'", e);
                         }
-                    } else {
-                        ocspSignatureValidationCertificate = issuer;
+                        return Optional.empty();
                     }
+                })
+                .map(result -> {
+                    try (OcspResult ocspResult = result) {
+                        if (!ocspResult.isOkResponse()) {
+                            LOG.warn("Unexpected OCSP response ({}) from {} for certificate {}.", ocspResult.response.getStatusLine(), ocspResult.uri, describe(certificate));
+                            return UNDECIDED;
+                        }
+                        BasicOCSPResp basix;
+                        try {
+                            basix = ocspResult.getResponseObject();
+                        } catch (OCSPException | CertIOException | IllegalStateException e) {
+                            LOG.warn("OCSP from {} for certificate {}, error reading the response because: {} '{}'", ocspResult.uri, describe(certificate), e.getClass().getSimpleName(), e.getMessage());
+                            return UNDECIDED;
+                        }
 
-                    if (!config.ocspSignatureValidator.isValidSignature(basix, ocspSignatureValidationCertificate)) {
-                        LOG.warn("OCSP from {} for certificate {} returnerte et svar som feilet signaturvalidering", ocspResult.uri, describe(certificate));
-                        return UNDECIDED;
-                    }
+                        X509Certificate ocspSignatureValidationCertificate;
+                        Optional<X509Certificate> ocspSigningCertificate = findOcspSigningCertificate(basix, config);
+                        if (ocspSigningCertificate.isPresent()) {
+                            ocspSignatureValidationCertificate = ocspSigningCertificate.get();
+                            CertStatus certStatus = validateCert(ocspSignatureValidationCertificate, config.with(OcspSetting.NO_OCSP));
+                            if (certStatus != OK) {
+                                LOG.warn("OCSP signing certificate {} is not OK: '{}'", describe(ocspSignatureValidationCertificate), certStatus);
+                                return certStatus;
+                            }
+                        } else {
+                            ocspSignatureValidationCertificate = issuer;
+                        }
 
-                    for (SingleResp cresp : basix.getResponses()) {
-                        if (cresp.getCertStatus() != GOOD) {
-                            if (cresp.getCertStatus() instanceof RevokedStatus) {
-                                RevokedStatus s = (RevokedStatus) cresp.getCertStatus();
-                                RevocationReason reason = Optional.of(s).filter(RevokedStatus::hasRevocationReason).map(r -> resolve(r.getRevocationReason())).orElse(unspecified);
-                                LOG.warn("OCSP from {} for certificate {} returned status revoked: {}, reason: '{}'", ocspResult.uri, describe(certificate), s.getRevocationTime(), reason);
-                                return REVOKED;
-                            } else {
-                                LOG.warn("OCSP from {} for certificate {} returned status {}", ocspResult.uri, describe(certificate), cresp.getCertStatus().getClass().getSimpleName());
-                                return UNDECIDED;
+                        if (!config.ocspSignatureValidator.isValidSignature(basix, ocspSignatureValidationCertificate)) {
+                            LOG.warn("OCSP from {} for certificate {} returnerte et svar som feilet signaturvalidering", ocspResult.uri, describe(certificate));
+                            return UNDECIDED;
+                        }
+
+                        for (SingleResp cresp : basix.getResponses()) {
+                            if (cresp.getCertStatus() != GOOD) {
+                                if (cresp.getCertStatus() instanceof RevokedStatus) {
+                                    RevokedStatus s = (RevokedStatus) cresp.getCertStatus();
+                                    RevocationReason reason = Optional.of(s).filter(RevokedStatus::hasRevocationReason).map(r -> resolve(r.getRevocationReason())).orElse(unspecified);
+                                    LOG.warn("OCSP from {} for certificate {} returned status revoked: {}, reason: '{}'", ocspResult.uri, describe(certificate), s.getRevocationTime(), reason);
+                                    return REVOKED;
+                                } else {
+                                    LOG.warn("OCSP from {} for certificate {} returned status {}", ocspResult.uri, describe(certificate), cresp.getCertStatus().getClass().getSimpleName());
+                                    return UNDECIDED;
+                                }
                             }
                         }
+                        LOG.debug("OCSP from {} for certificate {} returned status GOOD", ocspResult.uri, describe(certificate));
+                        return OK;
+                    } catch (OCSPException | IOException e) {
+                        throw new DigipostSecurityException(e);
                     }
-                    LOG.debug("OCSP from {} for certificate {} returned status GOOD", ocspResult.uri, describe(certificate));
-                    return OK;
-                }))
+                })
                 .orElse(UNDECIDED);
 
     }
