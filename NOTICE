@@ -15,6 +15,7 @@ This software includes third party software subject to the following licenses:
   Bouncy Castle PKIX, CMS, EAC, TSP, PKCS, OCSP, CMP, and CRMF APIs under Bouncy Castle Licence
   Bouncy Castle Provider under Bouncy Castle Licence
   Byte Buddy (without dependencies) under The Apache Software License, Version 2.0
+  Byte Buddy Java agent under The Apache Software License, Version 2.0
   Digipost Certificate Validator under The Apache Software License, Version 2.0
   Digipost Digg under The Apache Software License, Version 2.0
   generics-resolver under The MIT License
