@@ -94,7 +94,7 @@ public class CertificateValidatorTest {
     private CertificateValidator prodValidator;
     private CertificateValidator qaValidator;
 
-    private ControllableClock clock = new ControllableClock(LocalDateTime.of(2015, 6, 24, 12, 5));
+    private ControllableClock clock = ControllableClock.freezedAt(LocalDateTime.of(2015, 6, 24, 12, 5));
 
 
     @Before
