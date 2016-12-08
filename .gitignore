@@ -6,3 +6,5 @@ target
 *.iml
 .idea
 .sonatype
+*.pfx
+*.p12
