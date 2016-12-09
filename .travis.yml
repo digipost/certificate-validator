@@ -20,9 +20,8 @@ install: true
 
 script:
 - export commitMessage="$(git --no-pager log -1 HEAD --pretty=%s)"
-- echo "Commit is $commitMessage"
-- export mavenBuildGoal=$(if [[ "$commitMessage" == *"Grorud"* ]]; then echo verify; else echo deploy; fi)
+- echo "Commit message is '$commitMessage'"
+- export mavenBuildGoal=$(if [[ "$commitMessage" == "Release:prepare release"* ]]; then echo verify; else echo deploy; fi)
 - echo "Maven will '${mavenBuildGoal}'"
-
 - mvn clean ${mavenBuildGoal} --update-snapshots --settings ~/.m2/deploy-settings.xml
 
