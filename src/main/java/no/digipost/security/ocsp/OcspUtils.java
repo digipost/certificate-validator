@@ -39,7 +39,7 @@ public final class OcspUtils {
 
 
     public static Optional<X509Certificate> findOscpSigningCertificate(BasicOCSPResp basix) {
-        if (basix.getCerts() != null && basix.getCerts().length > 0) {
+        if (basix != null && basix.getCerts() != null && basix.getCerts().length > 0) {
             Optional<X509Certificate> ocspSigningCertificate = Stream.of(basix.getCerts())
                 .filter(cert -> Optional.of(cert)
                     .map(X509CertificateHolder::getExtensions)
