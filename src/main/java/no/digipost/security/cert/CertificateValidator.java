@@ -162,6 +162,11 @@ public class CertificateValidator {
                             return UNDECIDED;
                         }
 
+                        if(basix == null) {
+                            LOG.warn("OCSP from {} for certificate {}, returned a null response", ocspResult.uri, describe(certificate));
+                            return UNDECIDED;
+                        }
+
                         X509Certificate ocspSignatureValidationCertificate;
                         Optional<X509Certificate> ocspSigningCertificate = findOcspSigningCertificate(basix, config);
                         if (ocspSigningCertificate.isPresent()) {
@@ -175,7 +180,7 @@ public class CertificateValidator {
                             ocspSignatureValidationCertificate = issuer;
                         }
 
-                        if (basix == null || !config.ocspSignatureValidator.isValidSignature(basix, ocspSignatureValidationCertificate)) {
+                        if (!config.ocspSignatureValidator.isValidSignature(basix, ocspSignatureValidationCertificate)) {
                             LOG.warn("OCSP from {} for certificate {} returnerte et svar som feilet signaturvalidering", ocspResult.uri, describe(certificate));
                             return UNDECIDED;
                         }
