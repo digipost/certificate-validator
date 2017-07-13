@@ -175,7 +175,7 @@ public class CertificateValidator {
                             ocspSignatureValidationCertificate = issuer;
                         }
 
-                        if (!config.ocspSignatureValidator.isValidSignature(basix, ocspSignatureValidationCertificate)) {
+                        if (basix == null || !config.ocspSignatureValidator.isValidSignature(basix, ocspSignatureValidationCertificate)) {
                             LOG.warn("OCSP from {} for certificate {} returnerte et svar som feilet signaturvalidering", ocspResult.uri, describe(certificate));
                             return UNDECIDED;
                         }
