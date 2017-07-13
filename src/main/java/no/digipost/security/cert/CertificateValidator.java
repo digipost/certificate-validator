@@ -162,8 +162,8 @@ public class CertificateValidator {
                             return UNDECIDED;
                         }
 
-                        if(basix == null) {
-                            LOG.warn("OCSP from {} for certificate {}, returned a null response", ocspResult.uri, describe(certificate));
+                        if(basix == GOOD) {
+                            LOG.warn("OCSP from {} for certificate {}, returned a null response, this could be a problem with the certificate issuer", ocspResult.uri, describe(certificate));
                             return UNDECIDED;
                         }
 
