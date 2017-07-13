@@ -162,6 +162,11 @@ public class CertificateValidator {
                             return UNDECIDED;
                         }
 
+                        if(basix == null) {
+                            LOG.warn("OCSP from {} for certificate {}, returned a null response, this could be a problem with the certificate issuer", ocspResult.uri, describe(certificate));
+                            return UNDECIDED;
+                        }
+
                         X509Certificate ocspSignatureValidationCertificate;
                         Optional<X509Certificate> ocspSigningCertificate = findOcspSigningCertificate(basix, config);
                         if (ocspSigningCertificate.isPresent()) {
