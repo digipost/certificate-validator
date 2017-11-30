@@ -25,11 +25,11 @@ This software includes third party software subject to the following licenses:
   Java Servlet API under CDDL + GPLv2 with classpath exception
   javaruntype under The Apache Software License, Version 2.0
   Javassist under MPL 1.1 or LGPL 2.1 or Apache License 2.0
-  JCL 1.1.1 implemented over SLF4J under MIT License
+  JCL 1.2 implemented over SLF4J under MIT License
   JUnit under Eclipse Public License 1.0
   junit-quickcheck-core under The MIT License
   junit-quickcheck-generators under The MIT License
-  Mockito under The MIT License
+  mockito-core under The MIT License
   Objenesis under Apache 2
   OGNL - Object Graph Navigation Library under The Apache Software License, Version 2.0
   SLF4J API Module under MIT License

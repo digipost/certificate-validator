@@ -57,7 +57,10 @@ import java.time.LocalDateTime;
 
 import static java.util.Optional.ofNullable;
 import static no.digipost.DiggIO.autoClosing;
-import static no.digipost.security.cert.CertStatus.*;
+import static no.digipost.security.cert.CertStatus.OK;
+import static no.digipost.security.cert.CertStatus.REVOKED;
+import static no.digipost.security.cert.CertStatus.UNDECIDED;
+import static no.digipost.security.cert.CertStatus.UNTRUSTED;
 import static no.digipost.security.cert.CertificateValidatorConfig.MOST_STRICT;
 import static no.digipost.security.cert.Certificates.digipostTestsertifikat;
 import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;
@@ -67,7 +70,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @RunWith(JUnitQuickcheck.class)
 public class CertificateValidatorTest {
@@ -76,7 +83,7 @@ public class CertificateValidatorTest {
     private static final Trust QA_TRUST = BuypassCommfidesCertificates.createTestTrust();
 
     @Rule
-    public final MockitoRule mockito = MockitoJUnit.rule();
+    public final MockitoRule mockito = MockitoJUnit.rule().silent();
 
     @Mock
     private CloseableHttpClient httpClient;
