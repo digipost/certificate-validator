@@ -17,13 +17,22 @@ package no.digipost.security;
 
 import no.digipost.security.cert.CertificateNotFound;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.crypto.Cipher;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.Security;
-import java.security.cert.*;
+import java.security.cert.CertPath;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -54,6 +63,8 @@ public final class DigipostSecurity {
      */
     public static final String JCEKS = "JCEKS";
 
+
+    private static final Logger LOG = LoggerFactory.getLogger(DigipostSecurity.class);
 
 
     /**
@@ -241,15 +252,62 @@ public final class DigipostSecurity {
     }
 
 
+
+    private static volatile boolean securityProviderSet = false;
+    private static volatile boolean cryptoPolicyPropertySet = false;
+
     /**
      * This is called by the static initializer of the {@link DigipostSecurity} class,
-     * and is not necessary to explicitly invoke.
+     * and should not be necessary to explicitly invoke.
      */
     public static void ensureSecurityProvider() {
-        synchronized (Security.class) {
-            if (Security.getProvider(PROVIDER_NAME) == null) {
-                Security.addProvider(new BouncyCastleProvider());
+        ensureCryptoPolicyUnlimited();
+        if (!securityProviderSet) {
+            synchronized (Security.class) {
+                if (Security.getProvider(PROVIDER_NAME) == null) {
+                    Security.addProvider(new BouncyCastleProvider());
+                    securityProviderSet = true;
+                    LOG.info("Security provider " + PROVIDER_NAME + " added: " + BouncyCastleProvider.class.getName());
+                }
             }
+        }
+    }
+
+
+
+    /**
+     * Sets the security property {@code crypto.policy} to "unlimited" to enable Java Cryptography Extension (JCE) Unlimited Strength.
+     * This is also invoked by {@link #ensureSecurityProvider()}.
+     * <p>
+     * Note: <em>setting this security property this only has effect on Java 8 b152 or newer</em>. On earlier Java versions one must still
+     * separately download and add the JCE Unlimited Strength Jurisdiction Policy Files.
+     *
+     * @see <a href="http://www.oracle.com/technetwork/java/javase/8u152-relnotes-3850503.html#JDK-8157561">www.oracle.com/technetwork/java/javase/8u152-relnotes-3850503.html#JDK-8157561</a>
+     */
+    public static void ensureCryptoPolicyUnlimited() {
+        if (!cryptoPolicyPropertySet) {
+            Security.setProperty("crypto.policy", "unlimited"); // only effective on Java 8 b152 or newer
+            cryptoPolicyPropertySet = true;
+            LOG.info("Security policy set: crypto.policy=unlimited");
+        }
+    }
+
+
+    /**
+     * This method may be invoked to verify that Java Cryptography Extension (JCE) Unlimited Strength is
+     * enabled.
+     *
+     * @throws DigipostSecurityException if Java Cryptography Extension (JCE) Unlimited Strength can not be
+     *                                   verified to be enabled.
+     */
+    public static void verifyJceUnlimitedStrength() {
+        try {
+            int aesMaxKeyLength = Cipher.getMaxAllowedKeyLength("AES");
+            if(aesMaxKeyLength != Integer.MAX_VALUE) {
+                throw new DigipostSecurityException("Java Cryptography Extension (JCE) Unlimited Strength not enabled! Maximum allowed key length for AES is " + aesMaxKeyLength);
+            }
+        } catch (NoSuchAlgorithmException e) {
+            throw new DigipostSecurityException("Error when verifying the maximum key length for the AES algorithm. Is Java Cryptography Extension (JCE) Unlimited Strength enabled?", e);
         }
     }
 
