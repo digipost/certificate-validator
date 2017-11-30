@@ -30,15 +30,16 @@ import org.mockito.junit.MockitoRule;
 
 import java.net.SocketTimeoutException;
 import java.security.cert.X509Certificate;
-import java.util.Iterator;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 public class OcspLookupTest {
@@ -67,18 +68,11 @@ public class OcspLookupTest {
 
 
     @Before
-    public void wireUpStubbedHttpClient() {
-        when(response.getStatusLine()).thenReturn(ocspResponseStatus);
-    }
-
-    @Before
     public void loadCertificates() {
         List<X509Certificate> certificates = DigipostSecurity.readCertificates("digipost.no-certchain.pem").collect(toList());
         assertThat(certificates, hasSize(3));
-        Iterator<X509Certificate> certIterator = certificates.iterator();
-        digipostCertificate = certIterator.next();
-        certIterator.next();
-        verisignCertificate = certIterator.next();
+        digipostCertificate = certificates.get(0);
+        verisignCertificate = certificates.get(1);
     }
 
 
@@ -108,6 +102,7 @@ public class OcspLookupTest {
     @Test
     public void non200ResponseIsNotOk() throws Exception {
         when(httpClient.execute(any())).thenReturn(response);
+        when(response.getStatusLine()).thenReturn(ocspResponseStatus);
 
         given(ocspResponseStatus.getStatusCode()).willReturn(500);
 
@@ -119,6 +114,7 @@ public class OcspLookupTest {
     @Test
     public void a200ResponseIsOk() throws Exception {
         when(httpClient.execute(any())).thenReturn(response);
+        when(response.getStatusLine()).thenReturn(ocspResponseStatus);
 
         given(ocspResponseStatus.getStatusCode()).willReturn(200);
 
