@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>certificate-validator</artifactId>
-    <version>1.4-SNAPSHOT</version>
+    <version>1.5-SNAPSHOT</version>
     <name>Digipost Certificate Validator</name>
     <description>Library for validating certificates.</description>
 
