@@ -40,14 +40,12 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
-            <!-- Version 1.55 breaks OCSP processing. This needs to be investigated before upgrading to >=1.55 -->
-            <version>1.54</version>
+            <version>1.60</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
-            <!-- Version 1.55 breaks OCSP processing. This needs to be investigated before upgrading to >=1.55 -->
-            <version>1.54</version>
+            <version>1.60</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
