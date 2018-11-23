@@ -8,10 +8,6 @@
         <version>1</version>
     </parent>
 
-    <prerequisites>
-        <maven>3.3.0</maven>
-    </prerequisites>
-
     <artifactId>certificate-validator</artifactId>
     <version>1.5-SNAPSHOT</version>
     <name>Digipost Certificate Validator</name>
