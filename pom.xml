@@ -172,7 +172,7 @@
                     <configuration>
                         <rules>
                             <requireMavenVersion>
-                                <version>3.0.3</version>
+                                <version>3.0.5</version>
                             </requireMavenVersion>
                             <bannedDependencies>
                                 <excludes>
@@ -242,7 +242,7 @@
                 <plugin>
                     <groupId>com.github.siom79.japicmp</groupId>
                     <artifactId>japicmp-maven-plugin</artifactId>
-                    <version>0.11.0</version>
+                    <version>0.13.0</version>
                     <configuration>
                         <newVersion>
                             <file><path>${project.build.directory}/${project.build.finalName}.${project.packaging}</path></file>
@@ -321,11 +321,9 @@
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>test</id>
                         <goals>
                             <goal>enforce</goal>
                         </goals>
-                        <phase>test</phase>
                     </execution>
                 </executions>
             </plugin>
