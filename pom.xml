@@ -5,11 +5,11 @@
     <parent>
         <groupId>no.digipost</groupId>
         <artifactId>digipost-open-super-pom</artifactId>
-        <version>1</version>
+        <version>2</version>
     </parent>
 
     <artifactId>certificate-validator</artifactId>
-    <version>1.5-SNAPSHOT</version>
+    <version>1.6-SNAPSHOT</version>
     <name>Digipost Certificate Validator</name>
     <description>Library for validating certificates.</description>
 
@@ -36,13 +36,13 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
-            <!-- Version 1.55 breaks OCSP processing. This needs to be investigated before upgrading to >=1.55 -->
+            <!-- Version 1.55 breaks OCSP processing. Before upgrading to >=1.55, please run tests in RealOCSPCertificateValidatorTest in digipost-offentlig to verify upgrade. -->
             <version>1.54</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
-            <!-- Version 1.55 breaks OCSP processing. This needs to be investigated before upgrading to >=1.55 -->
+            <!-- Version 1.55 breaks OCSP processing. Before upgrading to >=1.55, please run tests in RealOCSPCertificateValidatorTest in digipost-offentlig to verify upgrade. -->
             <version>1.54</version>
         </dependency>
         <dependency>
@@ -170,11 +170,11 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>3.0.0-M1</version>
+                    <version>3.0.0-M2</version>
                     <configuration>
                         <rules>
                             <requireMavenVersion>
-                                <version>3.0.3</version>
+                                <version>3.0.5</version>
                             </requireMavenVersion>
                             <bannedDependencies>
                                 <excludes>
@@ -206,45 +206,45 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.7.0</version>
+                    <version>3.8.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.20.1</version>
+                    <version>3.0.0-M1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-deploy-plugin</artifactId>
-                    <version>2.8.2</version>
+                    <version>3.0.0-M1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-clean-plugin</artifactId>
-                    <version>3.0.0</version>
+                    <version>3.1.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-dependency-plugin</artifactId>
-                    <version>3.0.2</version>
+                    <version>3.1.1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-install-plugin</artifactId>
-                    <version>2.5.2</version>
+                    <version>3.0.0-M1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.0.2</version>
+                    <version>3.1.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.0.2</version>
+                    <version>3.1.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>versions-maven-plugin</artifactId>
-                    <version>2.5</version>
+                    <version>2.7</version>
                 </plugin>
                 <plugin>
                     <groupId>com.github.siom79.japicmp</groupId>
                     <artifactId>japicmp-maven-plugin</artifactId>
-                    <version>0.11.0</version>
+                    <version>0.13.0</version>
                     <configuration>
                         <newVersion>
                             <file><path>${project.build.directory}/${project.build.finalName}.${project.packaging}</path></file>
@@ -276,7 +276,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.0.0-M1</version>
+                <version>3.0.1</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -323,11 +323,9 @@
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>test</id>
                         <goals>
                             <goal>enforce</goal>
                         </goals>
-                        <phase>test</phase>
                     </execution>
                 </executions>
             </plugin>
