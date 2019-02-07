@@ -11,3 +11,7 @@ Library for validating certificates.
     <version>1.0.4</version>
 </dependency>
 ```
+
+## Releasing (Digipost organization members only)
+
+See docs/systemer/open-source-biblioteker.md
