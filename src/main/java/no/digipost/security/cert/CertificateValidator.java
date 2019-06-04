@@ -41,8 +41,10 @@ import java.util.Optional;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static no.digipost.security.DigipostSecurity.describe;
-import static no.digipost.security.cert.CertStatus.*;
-import static no.digipost.security.cert.OcspSetting.OCSP_ACTIVATED;
+import static no.digipost.security.cert.CertStatus.OK;
+import static no.digipost.security.cert.CertStatus.REVOKED;
+import static no.digipost.security.cert.CertStatus.UNDECIDED;
+import static no.digipost.security.cert.OcspSetting.NEVER_DO_OCSP;
 import static no.digipost.security.cert.RevocationReason.resolve;
 import static no.digipost.security.cert.RevocationReason.unspecified;
 import static org.bouncycastle.cert.ocsp.CertificateStatus.GOOD;
@@ -171,7 +173,7 @@ public class CertificateValidator {
                         Optional<X509Certificate> ocspSigningCertificate = findOcspSigningCertificate(basix, config);
                         if (ocspSigningCertificate.isPresent()) {
                             ocspSignatureValidationCertificate = ocspSigningCertificate.get();
-                            CertStatus certStatus = validateCert(ocspSignatureValidationCertificate, config.with(OcspSetting.NO_OCSP));
+                            CertStatus certStatus = validateCert(ocspSignatureValidationCertificate, config.doOcspWhen(NEVER_DO_OCSP));
                             if (certStatus != OK) {
                                 LOG.warn("OCSP signing certificate {} is not OK: '{}'", describe(ocspSignatureValidationCertificate), certStatus);
                                 return certStatus;

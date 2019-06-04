@@ -21,7 +21,7 @@ import java.util.function.Predicate;
 
 import static java.util.Collections.unmodifiableSet;
 import static no.digipost.security.cert.CertStatus.OK;
-import static no.digipost.security.cert.OcspSetting.OCSP_ACTIVATED;
+import static no.digipost.security.cert.OcspSetting.ALWAYS_DO_OCSP;
 
 /**
  * Configuration of a {@link CertificateValidator}. Use {@link #MOST_STRICT} to acquire
@@ -32,10 +32,10 @@ public class CertificateValidatorConfig {
     /**
      * This is the most strict validator, and the only way to initially acquire an instance of {@link CertificateValidatorConfig}.
      * If required, e.g. for test purposes, you may loosen the strictness by using methods as
-     * {@link #with(OcspSetting)} or {@link #allowOcspResults(CertStatus...)}.
+     * {@link #doOcspWhen(Predicate)} or {@link #allowOcspResults(CertStatus...)}.
      */
     public static final CertificateValidatorConfig MOST_STRICT =
-            new CertificateValidatorConfig(OCSP_ACTIVATED, EnumSet.of(OK), OcspSignatureValidator.DEFAULT, false);
+            new CertificateValidatorConfig(ALWAYS_DO_OCSP, EnumSet.of(OK), OcspSignatureValidator.DEFAULT, false);
 
     final Predicate<ReviewedCertPath> shouldDoOcsp;
 
@@ -60,8 +60,8 @@ public class CertificateValidatorConfig {
         this.ignoreCustomSigningCertificatesInOcspResponses = ignoreCustomSigningCertificatesInOcspResponses;
     }
 
-    public CertificateValidatorConfig with(OcspSetting ocspSetting) {
-        return new CertificateValidatorConfig(ocspSetting, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
+    public CertificateValidatorConfig doOcspWhen(Predicate<ReviewedCertPath> shouldDoOcsp) {
+        return new CertificateValidatorConfig(shouldDoOcsp, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
     }
 
     public CertificateValidatorConfig allowOcspResults(CertStatus ... allowedOcspResults) {
