@@ -44,7 +44,7 @@ public class TrustTest {
 
     @Test
     public void returns_only_trust_anchors_when_no_intermediates_match_the_principal() {
-        X500Principal randomUnknownPrincipal = Certificates.digipostTestsertifikat().getIssuerX500Principal();
+        X500Principal randomUnknownPrincipal = Certificates.digipostVirksomhetsTestsertifikat().getIssuerX500Principal();
         Set<X509Certificate> allCerts = trust.getTrustAnchorsAndAnyIntermediateCertificatesFor(randomUnknownPrincipal).collect(toSet());
         assertThat(allCerts, containsInAnyOrder(buypassRoot, commfidesRoot));
     }
@@ -84,7 +84,7 @@ public class TrustTest {
 
     @Test
     public void cert_path_of_qa_certificate_is_not_trusted_in_production() {
-        ReviewedCertPath reviewedPath = trust.resolveCertPath(Certificates.digipostTestsertifikat());
+        ReviewedCertPath reviewedPath = trust.resolveCertPath(Certificates.digipostVirksomhetsTestsertifikat());
 
         assertFalse(reviewedPath.isTrusted());
         expectedException.expectMessage("unable to find valid certification path");

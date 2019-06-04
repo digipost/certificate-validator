@@ -300,10 +300,13 @@ public final class Certificates {
         return DigipostSecurity.readCertificate(new ByteArrayInputStream(DIGIPOST_VIRKSOMHETSSERTIFIKAT.getBytes()));
     }
 
-    public static X509Certificate digipostTestsertifikat() {
+    public static X509Certificate digipostVirksomhetsTestsertifikat() {
         return DigipostSecurity.readCertificate(new ByteArrayInputStream(DIGIPOST_VIRKSOMHETSSERTIFIKAT_TEST.getBytes()));
     }
 
+    public static X509Certificate digipostSelfsignedTestsertifikat() {
+        return DigipostSecurity.readCertificate(new ByteArrayInputStream(DIGIPOST_VIRKSOMHETSSERTIFIKAT_TEST.getBytes()));
+    }
 
     /**
      * Revoked certificate, acquired using from revoked.grc.com

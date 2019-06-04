@@ -125,7 +125,7 @@ public class CertificateValidatorTest {
 
     @Test
     public void qaCertificatesAreUntrustedInProduction() {
-        assertThat(prodValidator.validateCert(digipostTestsertifikat()), is(UNTRUSTED));
+        assertThat(prodValidator.validateCert(digipostVirksomhetsTestsertifikat()), is(UNTRUSTED));
     }
 
     @Test
@@ -286,17 +286,17 @@ public class CertificateValidatorTest {
         given(ocspResponseEntity.getContent()).will(i -> OcspResponses.ok());
 
         assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
-        assertThat(qaValidator.validateCert(digipostTestsertifikat()), is(OK));
+        assertThat(qaValidator.validateCert(digipostVirksomhetsTestsertifikat()), is(OK));
 
         given(httpClient.execute(any())).will(v -> {throw new SocketTimeoutException("timed out");});
         given(ocspResponseStatus.getStatusCode()).will(v -> {throw new IllegalStateException("should never be called");});
         clock.timePasses(Duration.ofHours(6));
         assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
-        assertThat(qaValidator.validateCert(digipostTestsertifikat()), is(OK));
+        assertThat(qaValidator.validateCert(digipostVirksomhetsTestsertifikat()), is(OK));
 
         clock.timePasses(Duration.ofDays(5));
         assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
-        assertThat(qaValidator.validateCert(digipostTestsertifikat()), is(OK));
+        assertThat(qaValidator.validateCert(digipostVirksomhetsTestsertifikat()), is(OK));
     }
 
 
