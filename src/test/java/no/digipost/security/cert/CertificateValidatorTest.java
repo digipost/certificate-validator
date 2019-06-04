@@ -57,13 +57,17 @@ import java.time.LocalDateTime;
 
 import static java.util.Optional.ofNullable;
 import static no.digipost.DiggIO.autoClosing;
+import static no.digipost.security.cert.BuypassCommfidesCertificates.createTestTrustIncluding;
 import static no.digipost.security.cert.CertStatus.OK;
 import static no.digipost.security.cert.CertStatus.REVOKED;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
 import static no.digipost.security.cert.CertStatus.UNTRUSTED;
 import static no.digipost.security.cert.CertificateValidatorConfig.MOST_STRICT;
+import static no.digipost.security.cert.Certificates.digipostTestRotsertifikat;
+import static no.digipost.security.cert.Certificates.digipostUtstedtTestsertifikat;
 import static no.digipost.security.cert.Certificates.digipostVirksomhetsTestsertifikat;
 import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;
+import static no.digipost.security.cert.OcspPolicy.ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
@@ -74,6 +78,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(JUnitQuickcheck.class)
@@ -300,11 +305,32 @@ public class CertificateValidatorTest {
     }
 
     @Test
-    public void allowsDigipostSelfSignedCertificate(){
-//        CertificateValidator certStatus = new CertificateValidator(MOST_STRICT.shouldDoOcsp),
-//                QA_TRUST, httpClient, clock);
+    public void skipOcspForDigipostIssuedCertificate() throws Exception {
+        Trust trust = createTestTrustIncluding(digipostTestRotsertifikat());
 
-//        assertThat(certStatus.validateCert(digipostSelfsignedTestsertifikat()), is(OK));
+        CertificateValidator skipOcspForDigipostCert = new CertificateValidator(
+                MOST_STRICT.withOcspPolicy(ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED),
+                trust, httpClient, clock);
+
+        X509Certificate digipostCertWithoutOcspResponderUrl = digipostUtstedtTestsertifikat();
+
+        assertThat(skipOcspForDigipostCert.validateCert(digipostCertWithoutOcspResponderUrl), is(OK));
+        verifyZeroInteractions(httpClient);
+
+        CertificateValidator alwaysOcspValidator = new CertificateValidator(
+                MOST_STRICT.ignoreCustomSigningCertificatesInOcspResponses().validateOcspResponseSignatureUsing((ocspResponse, issuer) -> true),
+                trust, httpClient, clock);
+
+        given(ocspResponseStatus.getStatusCode()).willReturn(200);
+        given(ocspResponseEntity.getContent()).will(i -> OcspResponses.revoked());
+
+        assertThat(alwaysOcspValidator.validateCert(digipostCertWithoutOcspResponderUrl), is(UNDECIDED));
+
+        verifyZeroInteractions(httpClient);
+        verifyZeroInteractions(ocspResponseEntity);
+
+        assertThat(alwaysOcspValidator.validateCert(digipostVirksomhetsTestsertifikat()), is(REVOKED));
+
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(CertificateValidatorTest.class);

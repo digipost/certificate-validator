@@ -23,7 +23,11 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static no.digipost.security.cert.RevocationReason.UNKNOWN;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.in;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
@@ -42,7 +46,7 @@ public class RevocationReasonTest {
 
     @Property
     public void unknownReasonCodes(int unknownCode) {
-        assumeThat(unknownCode, not(isIn(Stream.of(RevocationReason.values()).filter(r -> r != UNKNOWN).map(r -> r.code).collect(toList()))));
+        assumeThat(unknownCode, not(in(Stream.of(RevocationReason.values()).filter(r -> r != UNKNOWN).map(r -> r.code).collect(toList()))));
         assertThat(RevocationReason.resolve(unknownCode), is(UNKNOWN));
     }
 

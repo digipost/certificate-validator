@@ -29,6 +29,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.net.SocketTimeoutException;
+import java.net.URI;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
@@ -80,7 +81,7 @@ public class OcspLookupTest {
     @Test
     public void extractsTheOcspResponderUriFromCertificate() throws Exception {
         OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
-        assertThat(lookup.uri, is("http://sr.symcd.com"));
+        assertThat(lookup.uri, is(URI.create("http://sr.symcd.com")));
     }
 
     @Test

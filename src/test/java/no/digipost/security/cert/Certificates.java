@@ -18,6 +18,8 @@ package no.digipost.security.cert;
 import no.digipost.security.DigipostSecurity;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.cert.X509Certificate;
 
 public final class Certificates {
@@ -304,8 +306,20 @@ public final class Certificates {
         return DigipostSecurity.readCertificate(new ByteArrayInputStream(DIGIPOST_VIRKSOMHETSSERTIFIKAT_TEST.getBytes()));
     }
 
-    public static X509Certificate digipostSelfsignedTestsertifikat() {
-        return DigipostSecurity.readCertificate(new ByteArrayInputStream(DIGIPOST_VIRKSOMHETSSERTIFIKAT_TEST.getBytes()));
+    private static final X509Certificate DIGIPOST_TEST_ROOT_CA_CERT; static {
+        try (InputStream certStream = Certificates.class.getResourceAsStream("/sertifikater/test/digipost_test_root_ca.cert.pem")) {
+            DIGIPOST_TEST_ROOT_CA_CERT = DigipostSecurity.readCertificate(certStream);
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    public static X509Certificate digipostTestRotsertifikat() {
+        return DIGIPOST_TEST_ROOT_CA_CERT;
+    }
+
+    public static X509Certificate digipostUtstedtTestsertifikat() {
+        return DigipostSecurity.readCertificate(new ByteArrayInputStream(DIGIPOST_SELFSIGNED_SERTIFIKAT.getBytes()));
     }
 
     /**

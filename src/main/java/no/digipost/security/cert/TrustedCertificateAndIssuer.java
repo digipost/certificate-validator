@@ -15,13 +15,17 @@
  */
 package no.digipost.security.cert;
 
+import no.digipost.security.ocsp.OcspUtils;
+
+import java.net.URI;
 import java.security.cert.X509Certificate;
+import java.util.Optional;
 
 
 /**
  * A certificate and its issuer, already determined to be trusted.
  * This class is never instantiated unless the certificate and issuer
- * has been validated as trusted, and passed the revocation check (OCSP).
+ * has been validated as trusted.
  */
 public final class TrustedCertificateAndIssuer {
 
@@ -39,5 +43,9 @@ public final class TrustedCertificateAndIssuer {
     TrustedCertificateAndIssuer(X509Certificate trustedCertificate, X509Certificate trustedIssuer) {
         certificate = trustedCertificate;
         issuer = trustedIssuer;
+    }
+
+    public Optional<URI> findOcspResponderUrl() {
+        return OcspUtils.findOcspResponderUrl(certificate);
     }
 }

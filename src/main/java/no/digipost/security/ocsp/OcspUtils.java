@@ -15,19 +15,32 @@
  */
 package no.digipost.security.ocsp;
 
+import no.digipost.security.Sha1Calculator;
 import no.digipost.security.X509;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.asn1.DLSequence;
+import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
+import org.bouncycastle.cert.ocsp.CertificateID;
+import org.bouncycastle.cert.ocsp.OCSPException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URI;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.util.Enumeration;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import static no.digipost.security.DigipostSecurity.describe;
 
 public final class OcspUtils {
 
@@ -36,6 +49,39 @@ public final class OcspUtils {
     private static final DLSequence ASN1_OCSP_SIGNING = new DLSequence(new ASN1ObjectIdentifier("1.3.6.1.5.5.7.3.9"));
 
     private static final ASN1ObjectIdentifier ASN1_EXTENDED_KEY_USAGE = new ASN1ObjectIdentifier("2.5.29.37");
+
+    private static final String AUTHORITY_INFO_ACCESS_OID = "1.3.6.1.5.5.7.1.1";
+
+
+    public static Optional<URI> findOcspResponderUrl(X509Certificate certificate) {
+        byte[] authorityInfoAccessValue = certificate.getExtensionValue(AUTHORITY_INFO_ACCESS_OID);
+        if (authorityInfoAccessValue == null) {
+            return Optional.empty();
+        }
+        try {
+            DEROctetString base = (DEROctetString) ASN1Primitive.fromByteArray(authorityInfoAccessValue);
+            DLSequence seq = (DLSequence) ASN1Primitive.fromByteArray(base.getOctets());
+            Enumeration<?> objects = seq.getObjects();
+            while (objects.hasMoreElements()) {
+                Object elm = objects.nextElement();
+                if (elm instanceof DLSequence) {
+                    ASN1Encodable id = ((DLSequence)elm).getObjectAt(0);
+                    if (OCSPObjectIdentifiers.id_pkix_ocsp.equals(id)) {
+                        DERTaggedObject dt = (DERTaggedObject)((DLSequence)elm).getObjectAt(1);
+                        DEROctetString dos =  (DEROctetString)dt.getObjectParser(dt.getTagNo(), true);
+                        return Optional.of(URI.create(new String(dos.getOctets())));
+                    }
+                }
+            }
+            LOG.warn("Failed to extract OCSP uri from " + describe(certificate) + ", because Object identifier " + OCSPObjectIdentifiers.id_pkix_ocsp + " not found");
+            return Optional.empty();
+        } catch (Exception e) {
+            LOG.warn(
+                    "Error when trying to find Object identifier " + OCSPObjectIdentifiers.id_pkix_ocsp + " to extract OCSP uri from " + describe(certificate) + ": " +
+                    e.getClass().getSimpleName() + " - '" + e.getMessage() + "'", e);
+            return Optional.empty();
+        }
+    }
 
 
     public static Optional<X509Certificate> findOscpSigningCertificate(BasicOCSPResp basix) {
@@ -62,5 +108,15 @@ public final class OcspUtils {
 
 
     private OcspUtils() {}
+
+
+    static Optional<CertificateID> certificateIdForOcsp(X509Certificate certificate, X509Certificate issuer) {
+        try {
+            return Optional.of(new CertificateID(new Sha1Calculator(), new X509CertificateHolder(issuer.getEncoded()), certificate.getSerialNumber()));
+        } catch (OCSPException | CertificateEncodingException | IOException e) {
+            LOG.warn("Failed to create certificate ID from issuer " + issuer + " and certificate " + describe(certificate), e);
+            return Optional.empty();
+        }
+    }
 
 }

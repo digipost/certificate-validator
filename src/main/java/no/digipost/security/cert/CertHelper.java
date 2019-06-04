@@ -15,21 +15,35 @@
  */
 package no.digipost.security.cert;
 
+import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.security.auth.x500.X500Principal;
 
 import java.io.IOException;
 import java.security.PublicKey;
 import java.security.SignatureException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.util.Optional.empty;
+import static no.digipost.security.DigipostSecurity.describe;
 
 
 final class CertHelper {
+
+    private static final Logger LOG = LoggerFactory.getLogger(OcspPolicy.class);
 
     /**
      * Search the given Set of Trust Anchors for one that is the issuer of the
@@ -95,6 +109,24 @@ final class CertHelper {
     }
 
 
+    static Stream<String> getOrganizationUnits(X509Certificate cert) {
+        X509CertificateHolder bouncyCastleX509cert;
+        try {
+            bouncyCastleX509cert = new JcaX509CertificateHolder(cert);
+        } catch (CertificateEncodingException e) {
+            LOG.warn(
+                    "Unable to resolve organizational units (OU=xyz) from " + describe(cert) +
+                    ", because " + e.getClass().getSimpleName() + ": '" + e.getMessage() + "'", e);
+            return Stream.empty();
+        }
+        return Stream.of(bouncyCastleX509cert.getSubject().getRDNs(BCStyle.OU))
+                .map(RDN::getTypesAndValues)
+                .flatMap(Stream::of)
+                .map(AttributeTypeAndValue::getValue)
+                .map(IETFUtils::valueToString);
+    }
+
 
     private CertHelper() {}
+
 }

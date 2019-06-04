@@ -44,7 +44,7 @@ import static no.digipost.security.DigipostSecurity.describe;
 import static no.digipost.security.cert.CertStatus.OK;
 import static no.digipost.security.cert.CertStatus.REVOKED;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
-import static no.digipost.security.cert.OcspSetting.NEVER_DO_OCSP;
+import static no.digipost.security.cert.OcspPolicy.NEVER_DO_OCSP_LOOKUP;
 import static no.digipost.security.cert.RevocationReason.resolve;
 import static no.digipost.security.cert.RevocationReason.unspecified;
 import static org.bouncycastle.cert.ocsp.CertificateStatus.GOOD;
@@ -111,8 +111,9 @@ public class CertificateValidator {
             return CertStatus.UNTRUSTED;
         }
 
-        if (config.shouldDoOcsp.test(certPath)) {
-            CertStatus ocspStatus = ocspLookup(certPath.getTrustedCertificateAndIssuer(), config);
+        TrustedCertificateAndIssuer trustedCertificateAndIssuer = certPath.getTrustedCertificateAndIssuer();
+        if (config.ocspDecisionResolver.apply(trustedCertificateAndIssuer) == OcspDecision.LOOKUP_OCSP) {
+            CertStatus ocspStatus = ocspLookup(trustedCertificateAndIssuer, config);
             if (ocspStatus != OK && config.allowsOcspResult(ocspStatus)) {
                 LOG.info("Status {} for certificate {} is configured as {}", ocspStatus, describe(certificate), OK);
                 ocspStatus = OK;
@@ -173,7 +174,7 @@ public class CertificateValidator {
                         Optional<X509Certificate> ocspSigningCertificate = findOcspSigningCertificate(basix, config);
                         if (ocspSigningCertificate.isPresent()) {
                             ocspSignatureValidationCertificate = ocspSigningCertificate.get();
-                            CertStatus certStatus = validateCert(ocspSignatureValidationCertificate, config.doOcspWhen(NEVER_DO_OCSP));
+                            CertStatus certStatus = validateCert(ocspSignatureValidationCertificate, config.withOcspPolicy(NEVER_DO_OCSP_LOOKUP));
                             if (certStatus != OK) {
                                 LOG.warn("OCSP signing certificate {} is not OK: '{}'", describe(ocspSignatureValidationCertificate), certStatus);
                                 return certStatus;
