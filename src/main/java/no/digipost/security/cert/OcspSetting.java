@@ -16,7 +16,21 @@
 package no.digipost.security.cert;
 
 
-public enum OcspSetting {
-    OCSP_ACTIVATED,
-    NO_OCSP
+import java.util.function.Predicate;
+
+public enum OcspSetting implements Predicate<ReviewedCertPath> {
+    OCSP_ACTIVATED(true),
+    NO_OCSP(false),
+    ;
+
+    private final boolean doOcsp;
+
+    OcspSetting(boolean doOcsp) {
+        this.doOcsp = doOcsp;
+    }
+
+    @Override
+    public boolean test(ReviewedCertPath reviewedCertPath) {
+        return doOcsp;
+    }
 }

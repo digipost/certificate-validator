@@ -109,7 +109,7 @@ public class CertificateValidator {
             return CertStatus.UNTRUSTED;
         }
 
-        if (config.is(OCSP_ACTIVATED)) {
+        if (config.shouldDoOcsp.test(certPath)) {
             CertStatus ocspStatus = ocspLookup(certPath.getTrustedCertificateAndIssuer(), config);
             if (ocspStatus != OK && config.allowsOcspResult(ocspStatus)) {
                 LOG.info("Status {} for certificate {} is configured as {}", ocspStatus, describe(certificate), OK);

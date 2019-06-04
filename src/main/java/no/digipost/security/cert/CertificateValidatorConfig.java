@@ -17,6 +17,7 @@ package no.digipost.security.cert;
 
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import static java.util.Collections.unmodifiableSet;
 import static no.digipost.security.cert.CertStatus.OK;
@@ -37,38 +38,24 @@ public class CertificateValidatorConfig {
     public static final CertificateValidatorConfig MOST_STRICT =
             new CertificateValidatorConfig(OCSP_ACTIVATED, EnumSet.of(OK), OcspSignatureValidator.DEFAULT, false);
 
+    public final Predicate<ReviewedCertPath> shouldDoOcsp;
 
-    private final OcspSetting ocspSetting;
     private final Set<CertStatus> allowedOcspResults;
 
     final OcspSignatureValidator ocspSignatureValidator;
     final boolean ignoreCustomSigningCertificatesInOcspResponses;
 
-
-
-
-
-
-    public boolean is(OcspSetting setting) {
-        return ocspSetting == setting;
-    }
-
     public boolean allowsOcspResult(CertStatus status) {
         return allowedOcspResults.contains(status);
     }
 
-
-
-
-
-
     private CertificateValidatorConfig(
-            OcspSetting ocspSetting,
+            Predicate<ReviewedCertPath> shouldDoOcsp,
             Set<CertStatus> allowedOcspResults,
             OcspSignatureValidator ocspSignatureValidator,
             boolean ignoreCustomSigningCertificatesInOcspResponses) {
 
-        this.ocspSetting = ocspSetting;
+        this.shouldDoOcsp = shouldDoOcsp;
         this.allowedOcspResults = unmodifiableSet(allowedOcspResults);
         this.ocspSignatureValidator = ocspSignatureValidator;
         this.ignoreCustomSigningCertificatesInOcspResponses = ignoreCustomSigningCertificatesInOcspResponses;
@@ -88,15 +75,15 @@ public class CertificateValidatorConfig {
     }
 
     public CertificateValidatorConfig allowOcspResults(CertStatus ... allowedOcspResults) {
-        return new CertificateValidatorConfig(ocspSetting, EnumSet.of(OK, allowedOcspResults), ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
+        return new CertificateValidatorConfig(shouldDoOcsp, EnumSet.of(OK, allowedOcspResults), ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
     }
 
     CertificateValidatorConfig validateOcspResponseSignatureUsing(OcspSignatureValidator ocspSignatureValidator) {
-        return new CertificateValidatorConfig(ocspSetting, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
+        return new CertificateValidatorConfig(shouldDoOcsp, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
     }
 
     CertificateValidatorConfig ignoreCustomSigningCertificatesInOcspResponses() {
-        return new CertificateValidatorConfig(ocspSetting, allowedOcspResults, ocspSignatureValidator, true);
+        return new CertificateValidatorConfig(shouldDoOcsp, allowedOcspResults, ocspSignatureValidator, true);
     }
 
 }
