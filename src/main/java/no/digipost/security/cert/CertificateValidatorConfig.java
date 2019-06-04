@@ -21,7 +21,6 @@ import java.util.function.Predicate;
 
 import static java.util.Collections.unmodifiableSet;
 import static no.digipost.security.cert.CertStatus.OK;
-import static no.digipost.security.cert.OcspSetting.NO_OCSP;
 import static no.digipost.security.cert.OcspSetting.OCSP_ACTIVATED;
 
 /**
@@ -38,7 +37,7 @@ public class CertificateValidatorConfig {
     public static final CertificateValidatorConfig MOST_STRICT =
             new CertificateValidatorConfig(OCSP_ACTIVATED, EnumSet.of(OK), OcspSignatureValidator.DEFAULT, false);
 
-    public final Predicate<ReviewedCertPath> shouldDoOcsp;
+    final Predicate<ReviewedCertPath> shouldDoOcsp;
 
     private final Set<CertStatus> allowedOcspResults;
 
@@ -61,16 +60,7 @@ public class CertificateValidatorConfig {
         this.ignoreCustomSigningCertificatesInOcspResponses = ignoreCustomSigningCertificatesInOcspResponses;
     }
 
-    private static final CertificateValidatorConfig MOST_STRICT_WITH_NO_OCSP = MOST_STRICT.withUnoptimized(NO_OCSP);
-
     public CertificateValidatorConfig with(OcspSetting ocspSetting) {
-        if (this == MOST_STRICT && ocspSetting == NO_OCSP) {
-            return MOST_STRICT_WITH_NO_OCSP;
-        }
-        return withUnoptimized(ocspSetting);
-    }
-
-    private CertificateValidatorConfig withUnoptimized(OcspSetting ocspSetting) {
         return new CertificateValidatorConfig(ocspSetting, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
     }
 

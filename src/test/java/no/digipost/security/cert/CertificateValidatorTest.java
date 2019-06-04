@@ -62,7 +62,7 @@ import static no.digipost.security.cert.CertStatus.REVOKED;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
 import static no.digipost.security.cert.CertStatus.UNTRUSTED;
 import static no.digipost.security.cert.CertificateValidatorConfig.MOST_STRICT;
-import static no.digipost.security.cert.Certificates.digipostTestsertifikat;
+import static no.digipost.security.cert.Certificates.digipostVirksomhetsTestsertifikat;
 import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -299,10 +299,13 @@ public class CertificateValidatorTest {
         assertThat(qaValidator.validateCert(digipostVirksomhetsTestsertifikat()), is(OK));
     }
 
+    @Test
+    public void allowsDigipostSelfSignedCertificate(){
+//        CertificateValidator certStatus = new CertificateValidator(MOST_STRICT.shouldDoOcsp),
+//                QA_TRUST, httpClient, clock);
 
-
-
-
+//        assertThat(certStatus.validateCert(digipostSelfsignedTestsertifikat()), is(OK));
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(CertificateValidatorTest.class);
 
