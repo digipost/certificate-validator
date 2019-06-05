@@ -40,8 +40,6 @@ import static org.apache.http.client.methods.RequestBuilder.post;
  */
 public final class OcspLookup {
 
-
-
     /**
      * Prepare a new OCSP lookup request for the given certificate.
      *
@@ -60,9 +58,9 @@ public final class OcspLookup {
     public final URI uri;
     public final CertificateID certificateId;
 
-    private OcspLookup(URI uri, CertificateID certificateId) {
+    private OcspLookup(URI responderUri, CertificateID certificateId) {
         this.certificateId = certificateId;
-        this.uri = uri;
+        this.uri = responderUri;
     }
 
     /**
@@ -74,7 +72,7 @@ public final class OcspLookup {
     public OcspResult executeUsing(CloseableHttpClient client) {
         try {
             HttpEntity ocspRequestEntity = new ByteArrayEntity(new OCSPReqBuilder().addRequest(certificateId).build().getEncoded());
-            HttpUriRequest ocspRequest = post().setUri(uri)
+            HttpUriRequest ocspRequest = post(uri)
                     .addHeader("Content-Type", "application/ocsp-request")
                     .setEntity(ocspRequestEntity).build();
             return new OcspResult(uri, client.execute(ocspRequest));

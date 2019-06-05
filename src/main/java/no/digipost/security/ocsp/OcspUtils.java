@@ -26,13 +26,13 @@ import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cert.ocsp.CertificateID;
 import org.bouncycastle.cert.ocsp.OCSPException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URI;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -123,8 +123,8 @@ public final class OcspUtils {
 
     static Optional<CertificateID> certificateIdForOcsp(X509Certificate certificate, X509Certificate issuer) {
         try {
-            return Optional.of(new CertificateID(new Sha1Calculator(), new X509CertificateHolder(issuer.getEncoded()), certificate.getSerialNumber()));
-        } catch (OCSPException | CertificateEncodingException | IOException e) {
+            return Optional.of(new CertificateID(new Sha1Calculator(), new JcaX509CertificateHolder(issuer), certificate.getSerialNumber()));
+        } catch (OCSPException | CertificateEncodingException e) {
             LOG.warn("Failed to create certificate ID from issuer " + issuer + " and certificate " + describe(certificate), e);
             return Optional.empty();
         }
