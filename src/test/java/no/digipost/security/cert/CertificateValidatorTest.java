@@ -16,9 +16,6 @@
 package no.digipost.security.cert;
 
 import com.google.common.io.ByteStreams;
-import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.generator.InRange;
-import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import no.digipost.security.FilesAndDirs;
 import no.digipost.security.HttpClient;
 import no.digipost.security.ocsp.OcspLookup;
@@ -37,7 +34,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -69,9 +65,7 @@ import static no.digipost.security.cert.Certificates.digipostVirksomhetsTestsert
 import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;
 import static no.digipost.security.cert.OcspPolicy.ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -80,8 +74,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
+import static org.quicktheories.QuickTheory.qt;
+import static org.quicktheories.generators.SourceDSL.integers;
 
-@RunWith(JUnitQuickcheck.class)
 public class CertificateValidatorTest {
 
     private static final Trust PROD_TRUST = BuypassCommfidesCertificates.createProdTrust();
@@ -143,14 +138,17 @@ public class CertificateValidatorTest {
     }
 
 
-    @Property
-    public void ocspLookupReturningAnythingButStatus200IsUndecidedForProductionAndOKForOtherEnvironments(@InRange(min="100", max="599") int otherThan200) throws Exception {
-        assumeThat(otherThan200, not(200));
+    @Test
+    public void ocspLookupReturningAnythingButStatus200IsUndecidedForProductionAndOKForOtherEnvironments() {
+        qt()
+            .forAll(integers().between(100, 599))
+            .assuming(code -> code != 200)
+            .checkAssert(otherThan200 -> {
+                given(ocspResponseStatus.getStatusCode()).willReturn(otherThan200);
 
-        given(ocspResponseStatus.getStatusCode()).willReturn(otherThan200);
-
-        assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
-        assertThat(qaValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
+                assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
+                assertThat(qaValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
+            });
     }
 
 
