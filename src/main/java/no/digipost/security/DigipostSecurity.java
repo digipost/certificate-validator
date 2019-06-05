@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import javax.crypto.Cipher;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
@@ -36,6 +37,7 @@ import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -120,11 +122,11 @@ public final class DigipostSecurity {
      * @see CertificateFactory#generateCertificates(InputStream)
      */
     public static Stream<X509Certificate> readCertificates(String resourceName) {
-        InputStream certificateResource = DigipostSecurity.class.getClassLoader().getResourceAsStream(resourceName);
-        if (certificateResource == null) {
-            throw new RuntimeException(resourceName + " not found");
+        try (InputStream certificateResource = requireNonNull(DigipostSecurity.class.getClassLoader().getResourceAsStream(resourceName), resourceName + " not found")) {
+            return readCertificates(certificateResource);
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading certificate from " + resourceName + ": " + e.getMessage(), e);
         }
-        return readCertificates(certificateResource);
     }
 
 
