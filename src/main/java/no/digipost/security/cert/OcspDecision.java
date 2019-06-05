@@ -17,5 +17,16 @@ package no.digipost.security.cert;
 
 
 public enum OcspDecision {
-    LOOKUP_OCSP, NO_OCSP
+    LOOKUP_OCSP,
+    SKIP_OCSP;
+
+    /**
+     * Convert this single decision to a {@link OcspPolicy policy} which always
+     * yields this decision.
+     *
+     * @return the {@link OcspPolicy}
+     */
+    OcspPolicy always() {
+        return trustedCertAndIssuer -> this;
+    }
 }

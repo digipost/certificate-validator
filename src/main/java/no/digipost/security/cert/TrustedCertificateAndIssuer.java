@@ -15,11 +15,9 @@
  */
 package no.digipost.security.cert;
 
-import no.digipost.security.ocsp.OcspUtils;
-
-import java.net.URI;
 import java.security.cert.X509Certificate;
-import java.util.Optional;
+
+import static no.digipost.security.cert.CertHelper.getOrganizationUnits;
 
 
 /**
@@ -45,7 +43,7 @@ public final class TrustedCertificateAndIssuer {
         issuer = trustedIssuer;
     }
 
-    public Optional<URI> findOcspResponderUrl() {
-        return OcspUtils.findOcspResponderUrl(certificate);
+    boolean isIssuedByDigipostCA() {
+        return getOrganizationUnits(issuer).anyMatch("Digipost"::equals);
     }
 }

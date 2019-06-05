@@ -17,7 +17,6 @@ package no.digipost.security.cert;
 
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.function.Function;
 
 import static java.util.Collections.unmodifiableSet;
 import static no.digipost.security.cert.CertStatus.OK;
@@ -32,12 +31,12 @@ public class CertificateValidatorConfig {
     /**
      * This is the most strict validator, and the only way to initially acquire an instance of {@link CertificateValidatorConfig}.
      * If required, e.g. for test purposes, you may loosen the strictness by using methods as
-     * {@link #withOcspPolicy(Function)} or {@link #allowOcspResults(CertStatus...)}.
+     * {@link #withOcspPolicy(OcspPolicy)} or {@link #allowOcspResults(CertStatus...)}.
      */
     public static final CertificateValidatorConfig MOST_STRICT =
             new CertificateValidatorConfig(ALWAYS_DO_OCSP_LOOKUP, EnumSet.of(OK), OcspSignatureValidator.DEFAULT, false);
 
-    final Function<TrustedCertificateAndIssuer, OcspDecision> ocspDecisionResolver;
+    final OcspPolicy ocspPolicy;
 
     private final Set<CertStatus> allowedOcspResults;
 
@@ -49,31 +48,31 @@ public class CertificateValidatorConfig {
     }
 
     private CertificateValidatorConfig(
-            Function<TrustedCertificateAndIssuer, OcspDecision> ocspDecisionResolver,
+            OcspPolicy ocspPolicy,
             Set<CertStatus> allowedOcspResults,
             OcspSignatureValidator ocspSignatureValidator,
             boolean ignoreCustomSigningCertificatesInOcspResponses) {
 
-        this.ocspDecisionResolver = ocspDecisionResolver;
+        this.ocspPolicy = ocspPolicy;
         this.allowedOcspResults = unmodifiableSet(allowedOcspResults);
         this.ocspSignatureValidator = ocspSignatureValidator;
         this.ignoreCustomSigningCertificatesInOcspResponses = ignoreCustomSigningCertificatesInOcspResponses;
     }
 
-    public CertificateValidatorConfig withOcspPolicy(Function<TrustedCertificateAndIssuer, OcspDecision> ocspDecisionResolver) {
-        return new CertificateValidatorConfig(ocspDecisionResolver, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
+    public CertificateValidatorConfig withOcspPolicy(OcspPolicy ocspPolicy) {
+        return new CertificateValidatorConfig(ocspPolicy, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
     }
 
     public CertificateValidatorConfig allowOcspResults(CertStatus ... allowedOcspResults) {
-        return new CertificateValidatorConfig(ocspDecisionResolver, EnumSet.of(OK, allowedOcspResults), ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
+        return new CertificateValidatorConfig(ocspPolicy, EnumSet.of(OK, allowedOcspResults), ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
     }
 
     CertificateValidatorConfig validateOcspResponseSignatureUsing(OcspSignatureValidator ocspSignatureValidator) {
-        return new CertificateValidatorConfig(ocspDecisionResolver, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
+        return new CertificateValidatorConfig(ocspPolicy, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
     }
 
     CertificateValidatorConfig ignoreCustomSigningCertificatesInOcspResponses() {
-        return new CertificateValidatorConfig(ocspDecisionResolver, allowedOcspResults, ocspSignatureValidator, true);
+        return new CertificateValidatorConfig(ocspPolicy, allowedOcspResults, ocspSignatureValidator, true);
     }
 
 }

@@ -15,36 +15,36 @@
  */
 package no.digipost.security.cert;
 
-import java.util.function.Function;
+import java.util.function.Predicate;
 
-import static no.digipost.security.cert.CertHelper.getOrganizationUnits;
 import static no.digipost.security.cert.OcspDecision.LOOKUP_OCSP;
-import static no.digipost.security.cert.OcspDecision.NO_OCSP;
+import static no.digipost.security.cert.OcspDecision.SKIP_OCSP;
 import static no.digipost.security.ocsp.OcspUtils.findOcspResponderUrl;
 
+@FunctionalInterface
+public interface OcspPolicy {
 
-public enum OcspPolicy implements Function<TrustedCertificateAndIssuer, OcspDecision> {
+    final OcspPolicy ALWAYS_DO_OCSP_LOOKUP = LOOKUP_OCSP.always();
 
-    ALWAYS_DO_OCSP_LOOKUP(trusted -> LOOKUP_OCSP),
-    ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED(trusted -> {
-        if (getOrganizationUnits(trusted.issuer).anyMatch("Digipost"::equals) && !findOcspResponderUrl(trusted.certificate).isPresent()) {
-            return NO_OCSP;
-        } else {
-            return LOOKUP_OCSP;
-        }
-    }),
-    NEVER_DO_OCSP_LOOKUP(certPath -> NO_OCSP),
-    ;
+    final OcspPolicy NEVER_DO_OCSP_LOOKUP = SKIP_OCSP.always();
+
+    final OcspPolicy ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED =
+            ALWAYS_DO_OCSP_LOOKUP.except(trusted -> trusted.isIssuedByDigipostCA() && !findOcspResponderUrl(trusted.certificate).isPresent(), SKIP_OCSP);
 
 
-    private final Function<TrustedCertificateAndIssuer, OcspDecision> ocspDecisionResolver;
 
-    OcspPolicy(Function<TrustedCertificateAndIssuer, OcspDecision> ocspDecisionResolver) {
-        this.ocspDecisionResolver = ocspDecisionResolver;
-    }
+    OcspDecision decideFor(TrustedCertificateAndIssuer certPath);
 
-    @Override
-    public OcspDecision apply(TrustedCertificateAndIssuer certPath) {
-        return ocspDecisionResolver.apply(certPath);
+    /**
+     * Create a new policy which yields another {@link OcspDecision result} for a certain case,
+     * or else yields what this policy would originally yield.
+     *
+     * @param trustedCertEvaluator the evaluator function for identifying if the given {@code decisionResult}
+     *                             should be the result of the new policy.
+     * @param decisionResult       the decision to yield if the {@code trustedCertEvaluator} yields {@code true}.
+     * @return the new {@link OcspPolicy policy}
+     */
+    default OcspPolicy except(Predicate<TrustedCertificateAndIssuer> trustedCertEvaluator, OcspDecision decisionResult) {
+        return trusted -> trustedCertEvaluator.test(trusted) ? decisionResult : decideFor(trusted);
     }
 }

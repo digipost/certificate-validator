@@ -112,7 +112,7 @@ public class CertificateValidator {
         }
 
         TrustedCertificateAndIssuer trustedCertificateAndIssuer = certPath.getTrustedCertificateAndIssuer();
-        if (config.ocspDecisionResolver.apply(trustedCertificateAndIssuer) == OcspDecision.LOOKUP_OCSP) {
+        if (config.ocspPolicy.decideFor(trustedCertificateAndIssuer) == OcspDecision.LOOKUP_OCSP) {
             CertStatus ocspStatus = ocspLookup(trustedCertificateAndIssuer, config);
             if (ocspStatus != OK && config.allowsOcspResult(ocspStatus)) {
                 LOG.info("Status {} for certificate {} is configured as {}", ocspStatus, describe(certificate), OK);
