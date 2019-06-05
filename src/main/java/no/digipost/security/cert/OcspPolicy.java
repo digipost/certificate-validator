@@ -24,16 +24,32 @@ import static no.digipost.security.ocsp.OcspUtils.findOcspResponderUrl;
 @FunctionalInterface
 public interface OcspPolicy {
 
-    final OcspPolicy ALWAYS_DO_OCSP_LOOKUP = LOOKUP_OCSP.always();
+    final OcspPolicy ALWAYS_DO_OCSP_LOOKUP = always(LOOKUP_OCSP);
 
-    final OcspPolicy NEVER_DO_OCSP_LOOKUP = SKIP_OCSP.always();
+    final OcspPolicy NEVER_DO_OCSP_LOOKUP = always(SKIP_OCSP);
 
     final OcspPolicy ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED =
             ALWAYS_DO_OCSP_LOOKUP.except(trusted -> trusted.isIssuedByDigipostCA() && !findOcspResponderUrl(trusted.certificate).isPresent(), SKIP_OCSP);
 
+    /**
+     * Create a policy which <em>always</em> makes the given {@link OcspDecision decision}.
+     *
+     * @return the {@link OcspPolicy}
+     */
+    static OcspPolicy always(OcspDecision decision) {
+        return trustedCertAndIssuer -> decision;
+    }
 
 
-    OcspDecision decideFor(TrustedCertificateAndIssuer certPath);
+    /**
+     * Evaluate the given <em>trusted</em> {@link TrustedCertificateAndIssuer certificate and its issuer's certificate}
+     * if an OCSP-lookup should be performed.
+     *
+     * @param trustedCertificateAndIssuer the certificate and its issuer's certificate
+     * @return the resulting {@link OcspDecision}.
+     */
+    OcspDecision decideFor(TrustedCertificateAndIssuer trustedCertificateAndIssuer);
+
 
     /**
      * Create a new policy which yields another {@link OcspDecision result} for a certain case,
