@@ -344,7 +344,9 @@ public class CertificateValidatorTest {
             X509Certificate certificate = Certificates.revoked();
             X509Certificate issuer = Certificates.revokedIssuer();
 
-            byte[] response = OcspLookup.newLookup(certificate, issuer)
+            byte[] response = new TrustedCertificateAndIssuer(certificate, issuer)
+                    .ocspLookupRequest
+                    .map(OcspLookup::new)
                     .map(l -> l.executeUsing(realClient))
                     .map(autoClosing((OcspResult res) -> ByteStreams.toByteArray(res.response.getEntity().getContent())))
                     .get();

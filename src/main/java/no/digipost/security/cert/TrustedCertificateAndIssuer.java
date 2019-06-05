@@ -15,8 +15,12 @@
  */
 package no.digipost.security.cert;
 
-import java.security.cert.X509Certificate;
+import no.digipost.security.ocsp.OcspLookupRequest;
 
+import java.security.cert.X509Certificate;
+import java.util.Optional;
+
+import static no.digipost.security.DigipostSecurity.describe;
 import static no.digipost.security.cert.CertHelper.getOrganizationUnits;
 
 
@@ -37,13 +41,26 @@ public final class TrustedCertificateAndIssuer {
      */
     public final X509Certificate issuer;
 
+    /**
+     * The OCSP lookup request for the certificate, if possible to resolve, which
+     * may be used to perform an OCSP-lookup for this certificate.
+     */
+    public final Optional<OcspLookupRequest> ocspLookupRequest;
+
 
     TrustedCertificateAndIssuer(X509Certificate trustedCertificate, X509Certificate trustedIssuer) {
-        certificate = trustedCertificate;
-        issuer = trustedIssuer;
+        this.certificate = trustedCertificate;
+        this.issuer = trustedIssuer;
+        this.ocspLookupRequest = OcspLookupRequest.tryCreate(trustedCertificate, trustedIssuer);
     }
 
     boolean isIssuedByDigipostCA() {
         return getOrganizationUnits(issuer).anyMatch("Digipost"::equals);
+    }
+
+    @Override
+    public String toString() {
+        return "Trusted certificate: " + describe(certificate) + ", issued by " + describe(issuer) + ", " +
+                ocspLookupRequest.map(request -> "OCSP-lookup may be done at " + request.url).orElse("OCSP-lookup is not possible");
     }
 }

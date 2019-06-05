@@ -121,15 +121,16 @@ public final class OcspUtils {
         }
     }
 
-    static Optional<CertificateID> certificateIdForOcsp(X509Certificate certificate, X509Certificate issuer) {
+    private OcspUtils() {}
+
+
+    static Optional<CertificateID> tryCreateCertificateId(X509Certificate certificate, X509Certificate issuer) {
         try {
             return Optional.of(new CertificateID(new Sha1Calculator(), new JcaX509CertificateHolder(issuer), certificate.getSerialNumber()));
         } catch (OCSPException | CertificateEncodingException e) {
-            LOG.warn("Failed to create certificate ID from issuer " + issuer + " and certificate " + describe(certificate), e);
+            OcspLookupRequest.LOG.warn("Failed to create certificate ID from certificate: {}, issued by {}", describe(certificate), describe(issuer), e);
             return Optional.empty();
         }
     }
-
-    private OcspUtils() {}
 
 }

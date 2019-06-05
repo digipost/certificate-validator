@@ -26,8 +26,6 @@ import org.bouncycastle.cert.ocsp.OCSPReqBuilder;
 
 import java.io.IOException;
 import java.net.URI;
-import java.security.cert.X509Certificate;
-import java.util.Optional;
 
 import static org.apache.http.client.methods.RequestBuilder.post;
 
@@ -40,23 +38,12 @@ import static org.apache.http.client.methods.RequestBuilder.post;
  */
 public final class OcspLookup {
 
-    /**
-     * Prepare a new OCSP lookup request for the given certificate.
-     *
-     * @param certificate the certificate to lookup. It must contain an OCSP responder URI.
-     * @param issuer the issuer of the certificate.
-     * @return an OCSP request, ready to be {@link OcspLookup#executeUsing(CloseableHttpClient) executed},
-     *         or {@link Optional#empty()} if no OCSP responder URI was found, or any other error occuring.
-     */
-    public static Optional<OcspLookup> newLookup(X509Certificate certificate, X509Certificate issuer) {
-        return OcspUtils.findOcspResponderUrl(certificate)
-                .flatMap(ocspResponderUri ->
-                    OcspUtils.certificateIdForOcsp(certificate, issuer).map(certId -> new OcspLookup(ocspResponderUri, certId)));
-    }
-
-
     public final URI uri;
     public final CertificateID certificateId;
+
+    public OcspLookup(OcspLookupRequest request) {
+        this(request.url, request.certificateId);
+    }
 
     private OcspLookup(URI responderUri, CertificateID certificateId) {
         this.certificateId = certificateId;

@@ -19,7 +19,6 @@ import java.util.function.Predicate;
 
 import static no.digipost.security.cert.OcspDecision.LOOKUP_OCSP;
 import static no.digipost.security.cert.OcspDecision.SKIP_OCSP;
-import static no.digipost.security.ocsp.OcspUtils.findOcspResponderUrl;
 
 @FunctionalInterface
 public interface OcspPolicy {
@@ -29,7 +28,7 @@ public interface OcspPolicy {
     final OcspPolicy NEVER_DO_OCSP_LOOKUP = always(SKIP_OCSP);
 
     final OcspPolicy ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED =
-            ALWAYS_DO_OCSP_LOOKUP.except(trusted -> trusted.isIssuedByDigipostCA() && !findOcspResponderUrl(trusted.certificate).isPresent(), SKIP_OCSP);
+            ALWAYS_DO_OCSP_LOOKUP.except(trusted -> trusted.isIssuedByDigipostCA() && !trusted.ocspLookupRequest.isPresent(), SKIP_OCSP);
 
     /**
      * Create a policy which <em>always</em> makes the given {@link OcspDecision decision}.

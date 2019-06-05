@@ -29,13 +29,11 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.net.SocketTimeoutException;
-import java.net.URI;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -77,24 +75,11 @@ public class OcspLookupTest {
     }
 
 
-
-    @Test
-    public void extractsTheOcspResponderUriFromCertificate() throws Exception {
-        OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
-        assertThat(lookup.uri, is(URI.create("http://sr.symcd.com")));
-    }
-
-    @Test
-    public void certificateIdSerialnumberFromCertificate() {
-        OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
-        assertThat(lookup.certificateId.getSerialNumber(), is(digipostCertificate.getSerialNumber()));
-    }
-
     @Test
     public void exceptionFromHttpRequestAreRethrown() throws Exception {
         given(httpClient.execute(any())).will(i -> { throw new SocketTimeoutException("timed out"); });
 
-        OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
+        OcspLookup lookup = OcspLookupRequest.tryCreate(digipostCertificate, verisignCertificate).map(OcspLookup::new).get();
         expectedException.expectMessage(SocketTimeoutException.class.getSimpleName());
         expectedException.expectMessage("timed out");
         lookup.executeUsing(httpClient);
@@ -107,7 +92,7 @@ public class OcspLookupTest {
 
         given(ocspResponseStatus.getStatusCode()).willReturn(500);
 
-        OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
+        OcspLookup lookup = OcspLookupRequest.tryCreate(digipostCertificate, verisignCertificate).map(OcspLookup::new).get();
         OcspResult result = lookup.executeUsing(httpClient);
         assertFalse(result.isOkResponse());
     }
@@ -119,7 +104,7 @@ public class OcspLookupTest {
 
         given(ocspResponseStatus.getStatusCode()).willReturn(200);
 
-        OcspLookup lookup = OcspLookup.newLookup(digipostCertificate, verisignCertificate).get();
+        OcspLookup lookup = OcspLookupRequest.tryCreate(digipostCertificate, verisignCertificate).map(OcspLookup::new).get();
         try (OcspResult result = lookup.executeUsing(httpClient)) {
             assertTrue(result.isOkResponse());
         }
