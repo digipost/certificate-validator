@@ -15,8 +15,7 @@
  */
 package no.digipost.security.ocsp;
 
-import no.digipost.security.Sha1Calculator;
-import no.digipost.security.X509;
+import no.digipost.security.DigipostSecurity;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
@@ -26,6 +25,7 @@ import org.bouncycastle.asn1.DLSequence;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cert.ocsp.CertificateID;
 import org.bouncycastle.cert.ocsp.OCSPException;
@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 import java.util.Optional;
@@ -94,7 +95,7 @@ public final class OcspUtils {
                     .map(ASN1Encodable::toASN1Primitive)
                     .filter(ASN1_OCSP_SIGNING::equals)
                     .isPresent())
-                .map(X509::getCertificateFromHolder)
+                .map(OcspUtils::getCertificateFromHolder)
                 .findFirst();
 
             if (!ocspSigningCertificate.isPresent()) {
@@ -107,8 +108,18 @@ public final class OcspUtils {
     }
 
 
-    private OcspUtils() {}
+    private static final JcaX509CertificateConverter JCA_X509_CERTIFICATE_CONVERTER = new JcaX509CertificateConverter().setProvider(DigipostSecurity.PROVIDER_NAME);
 
+    static final X509Certificate getCertificateFromHolder(X509CertificateHolder holder) {
+        try {
+            return JCA_X509_CERTIFICATE_CONVERTER.getCertificate(holder);
+        } catch (CertificateException e) {
+            throw new RuntimeException(
+                    "Error retrieving " + X509Certificate.class.getName() +
+                    " from BouncyCastle " + X509CertificateHolder.class.getSimpleName() + ". " +
+                    "Reason: " + e.getMessage(), e);
+        }
+    }
 
     static Optional<CertificateID> certificateIdForOcsp(X509Certificate certificate, X509Certificate issuer) {
         try {
@@ -118,5 +129,7 @@ public final class OcspUtils {
             return Optional.empty();
         }
     }
+
+    private OcspUtils() {}
 
 }

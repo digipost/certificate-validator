@@ -26,7 +26,9 @@ import java.security.cert.X509Certificate;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.any;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -43,7 +45,6 @@ public class DigipostSecurityTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void readAChainOfCertificatesFromOnePem() {
         Stream<String> certs = DigipostSecurity.readCertificates("digipost.no-certchain.pem").map(c -> c.getSubjectDN().getName());
         assertThat(certs.collect(toList()), contains(containsString("POSTEN NORGE AS"), any(String.class), containsString("VeriSign")));
