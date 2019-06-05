@@ -28,9 +28,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>4.0.2</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -46,7 +46,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.3</version>
+            <version>4.5.8</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>
@@ -57,35 +57,35 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
-            <version>4.4.8</version>
+            <version>4.4.11</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.25</version>
+            <version>1.7.26</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
-            <version>1.7.25</version>
+            <version>1.7.26</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.7.25</version>
+            <version>1.7.26</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>no.digipost</groupId>
             <artifactId>digg</artifactId>
-            <version>0.13</version>
+            <version>0.19</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>23.5-jre</version>
+            <version>27.1-jre</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -96,45 +96,38 @@
             <exclusions>
                 <exclusion>
                     <groupId>org.hamcrest</groupId>
-                    <artifactId>hamcrest-core</artifactId>
+                    <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>com.pholser</groupId>
             <artifactId>junit-quickcheck-core</artifactId>
-            <version>0.7</version>
+            <version>0.9</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>javassist</groupId>
-                    <artifactId>javassist</artifactId>
+                    <groupId>org.hamcrest</groupId>
+                    <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
-            <!-- Depends explicitly on newer version because missing license in version depended on by junit-quickcheck-core -->
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>3.22.0-GA</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.pholser</groupId>
             <artifactId>junit-quickcheck-generators</artifactId>
-            <version>0.7</version>
+            <version>0.9</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
-            <artifactId>java-hamcrest</artifactId>
-            <version>2.0.0.0</version>
+            <artifactId>hamcrest</artifactId>
+            <version>2.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>2.12.0</version>
+            <version>2.28.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -177,9 +170,10 @@
                             <bannedDependencies>
                                 <excludes>
                                     <exclude>*:*</exclude>
+                                    <exclude>org.hamcrest:hamcrest-core</exclude>
+                                    <exclude>org.hamcrest:hamcrest-library</exclude>
                                 </excludes>
                                 <includes>
-                                    <include>no.digipost:digg</include>
                                     <include>org.slf4j:slf4j-api</include>
                                     <include>org.slf4j:jcl-over-slf4j</include>
                                     <include>org.slf4j:slf4j-simple</include>
@@ -189,7 +183,7 @@
                                     <include>commons-codec:commons-codec</include>
                                     <include>org.apache.httpcomponents:httpcore</include>
                                     <include>org.apache.httpcomponents:httpclient</include>
-                                    <include>javax.servlet:javax.servlet-api</include>
+                                    <include>jakarta.servlet:jakarta.servlet-api</include>
 
                                     <!-- Test dependencies are automatically allowed -->
                                     <include>*:*:*:*:test</include>
