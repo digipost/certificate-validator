@@ -15,32 +15,26 @@
  */
 package no.digipost.security;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.servlet.ServletRequest;
 
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
+@ExtendWith(MockitoExtension.class)
 public class HttpsTest {
 
     private static final X509Certificate x509Cert = DigipostSecurity.readCertificate("verisign.pem");
-
-    @Rule
-    public final MockitoRule mockito = MockitoJUnit.rule();
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
 
     @Mock
     private ServletRequest request;
@@ -48,8 +42,7 @@ public class HttpsTest {
 
     @Test
     public void doesNotAllowNonSecureRequest() {
-        expectedException.expect(NotSecure.class);
-        Https.extractClientCertificate(request);
+        assertThrows(NotSecure.class, () -> Https.extractClientCertificate(request));
     }
 
     @Test
@@ -73,8 +66,7 @@ public class HttpsTest {
         given(request.isSecure()).willReturn(true);
         given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[]{mock(Certificate.class)});
 
-        expectedException.expect(IllegalCertificateType.class);
-        Https.extractClientCertificate(request);
+        assertThrows(IllegalCertificateType.class, () -> Https.extractClientCertificate(request));
     }
 
     @Test
@@ -82,8 +74,7 @@ public class HttpsTest {
         given(request.isSecure()).willReturn(true);
         given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[0]);
 
-        expectedException.expect(IllegalCertificateType.class);
-        Https.extractClientCertificate(request);
+        assertThrows(IllegalCertificateType.class, () -> Https.extractClientCertificate(request));
     }
 
 

@@ -18,15 +18,17 @@ package no.digipost.security.cert;
 import no.digipost.security.DigipostSecurity;
 import no.digipost.security.HttpClient;
 import org.apache.http.HttpHost;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 
-import static no.digipost.security.cert.CertStatus.*;
+import static no.digipost.security.cert.CertStatus.OK;
+import static no.digipost.security.cert.CertStatus.UNDECIDED;
+import static no.digipost.security.cert.CertStatus.UNTRUSTED;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 @SuppressWarnings("unused")
 public class RealOCSPCertificateValidatorTest {

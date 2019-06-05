@@ -16,15 +16,16 @@
 package no.digipost.security.ocsp;
 
 import no.digipost.security.DigipostSecurity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
+import static co.unruly.matchers.Java8Matchers.where;
 import static java.util.stream.Collectors.toList;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 public class OcspLookupRequestTest {
 
@@ -42,7 +43,7 @@ public class OcspLookupRequestTest {
 
     @Test
     public void extractsTheOcspResponderUriFromCertificate() {
-        assertThat(ocspLookupRequest.url, is(URI.create("http://sr.symcd.com")));
+        assertThat(ocspLookupRequest, where(request -> request.url, is(URI.create("http://sr.symcd.com"))));
     }
 
     @Test

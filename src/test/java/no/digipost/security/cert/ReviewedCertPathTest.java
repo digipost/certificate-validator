@@ -17,9 +17,7 @@ package no.digipost.security.cert;
 
 import no.digipost.security.DigipostSecurity;
 import no.digipost.security.InvalidState;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import java.security.GeneralSecurityException;
 import java.security.cert.CertPath;
@@ -28,42 +26,42 @@ import java.security.cert.CertificateParsingException;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
+import static co.unruly.matchers.Java8Matchers.where;
+import static co.unruly.matchers.Java8Matchers.whereNot;
 import static no.digipost.security.DigipostSecurity.asCertPath;
 import static no.digipost.security.DigipostSecurity.readCertificates;
 import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.sameInstance;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 public class ReviewedCertPathTest {
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
     @Test
     public void exceptionIsUntrusted() {
         ReviewedCertPath certPath = new ReviewedCertPath(new GeneralSecurityException());
-        assertFalse(certPath.isTrusted());
+        assertThat(certPath, whereNot(ReviewedCertPath::isTrusted));
     }
 
     @Test
     public void nullCertificateIsNotAllowed() {
-        expectedException.expect(NullPointerException.class);
-        new ReviewedCertPath(null, p -> true);
+        assertThrows(NullPointerException.class, () -> new ReviewedCertPath(null, p -> true));
     }
 
     @Test
     public void trustedCertificate() {
         CertPath certpath = mock(CertPath.class);
         ReviewedCertPath reviewedPath = new ReviewedCertPath(certpath, p -> true);
-        assertTrue(reviewedPath.isTrusted());
-        assertThat(reviewedPath.getTrustedPath(), sameInstance(certpath));
+        assertThat(reviewedPath, where(ReviewedCertPath::isTrusted));
+        assertThat(reviewedPath, where(ReviewedCertPath::getTrustedPath, sameInstance(certpath)));
     }
 
     @Test
     public void untrustedCertificate() {
-        assertFalse(new ReviewedCertPath(mock(CertPath.class), p -> false).isTrusted());
+        assertThat(new ReviewedCertPath(mock(CertPath.class), p -> false), whereNot(ReviewedCertPath::isTrusted));
     }
 
     @Test
@@ -71,8 +69,7 @@ public class ReviewedCertPathTest {
         CertPath certpath = asCertPath(DigipostSecurity.readCertificates("digipost.no-certchain.pem"));
         ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> false);
 
-        expectedException.expect(Untrusted.class);
-        reviewedCertPath.getTrustedCertificateAndIssuer();
+        assertThrows(Untrusted.class, () -> reviewedCertPath.getTrustedCertificateAndIssuer());
     }
 
     @Test
@@ -91,9 +88,8 @@ public class ReviewedCertPathTest {
         CertPath certpath = asCertPath(Stream.of(digipostVirksomhetssertifikat()));
         ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> true);
 
-        expectedException.expect(InvalidState.class);
-        expectedException.expectMessage("No issuer found");
-        reviewedCertPath.getTrustedCertificateAndIssuer();
+        InvalidState thrown = assertThrows(InvalidState.class, () -> reviewedCertPath.getTrustedCertificateAndIssuer());
+        assertThat(thrown, where(Exception::getMessage, containsString("No issuer found")));
     }
 
     @Test
@@ -101,9 +97,8 @@ public class ReviewedCertPathTest {
         CertPath certpath = mock(CertPath.class);
         ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> true);
 
-        expectedException.expect(InvalidState.class);
-        expectedException.expectMessage("No certificate found");
-        reviewedCertPath.getTrustedCertificateAndIssuer();
+        InvalidState thrown = assertThrows(InvalidState.class, reviewedCertPath::getTrustedCertificateAndIssuer);
+        assertThat(thrown, where(Exception::getMessage, containsString("No certificate found")));
     }
 
     @Test

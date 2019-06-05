@@ -30,13 +30,12 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cert.ocsp.OCSPResp;
 import org.bouncycastle.cert.ocsp.SingleResp;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,26 +63,24 @@ import static no.digipost.security.cert.Certificates.digipostUtstedtTestsertifik
 import static no.digipost.security.cert.Certificates.digipostVirksomhetsTestsertifikat;
 import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;
 import static no.digipost.security.cert.OcspPolicy.ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
 import static org.quicktheories.QuickTheory.qt;
 import static org.quicktheories.generators.SourceDSL.integers;
 
+@ExtendWith(MockitoExtension.class)
 public class CertificateValidatorTest {
 
     private static final Trust PROD_TRUST = BuypassCommfidesCertificates.createProdTrust();
     private static final Trust QA_TRUST = BuypassCommfidesCertificates.createTestTrust();
-
-    @Rule
-    public final MockitoRule mockito = MockitoJUnit.rule().silent();
 
     @Mock
     private CloseableHttpClient httpClient;
@@ -104,12 +101,12 @@ public class CertificateValidatorTest {
     private ControllableClock clock = ControllableClock.freezedAt(LocalDateTime.of(2015, 6, 24, 12, 5));
 
 
-    @Before
+    @BeforeEach
     public void stubHttpClientAndInitCertificateValidator() throws Exception {
-        when(response.getStatusLine()).thenReturn(ocspResponseStatus);
-        when(response.getEntity()).thenReturn(ocspResponseEntity);
-        when(httpClient.execute(any(HttpUriRequest.class))).thenReturn(response);
-        when(ocspResponseStatus.toString()).thenAnswer(i -> "status " + ocspResponseStatus.getStatusCode());
+        lenient().when(response.getStatusLine()).thenReturn(ocspResponseStatus);
+        lenient().when(response.getEntity()).thenReturn(ocspResponseEntity);
+        lenient().when(httpClient.execute(any(HttpUriRequest.class))).thenReturn(response);
+        lenient().when(ocspResponseStatus.toString()).thenAnswer(i -> "status " + ocspResponseStatus.getStatusCode());
 
         prodValidator = new CertificateValidator(MOST_STRICT, PROD_TRUST, httpClient, clock);
         qaValidator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), QA_TRUST, httpClient, clock);
@@ -144,10 +141,11 @@ public class CertificateValidatorTest {
             .forAll(integers().between(100, 599))
             .assuming(code -> code != 200)
             .checkAssert(otherThan200 -> {
-                given(ocspResponseStatus.getStatusCode()).willReturn(otherThan200);
+                lenient().when(ocspResponseStatus.getStatusCode()).thenReturn(otherThan200);
 
                 assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
                 assertThat(qaValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
+                verify(ocspResponseStatus, times(2)).getStatusCode();
             });
     }
 
@@ -292,7 +290,7 @@ public class CertificateValidatorTest {
         assertThat(qaValidator.validateCert(digipostVirksomhetsTestsertifikat()), is(OK));
 
         given(httpClient.execute(any())).will(v -> {throw new SocketTimeoutException("timed out");});
-        given(ocspResponseStatus.getStatusCode()).will(v -> {throw new IllegalStateException("should never be called");});
+        lenient().when(ocspResponseStatus.getStatusCode()).then(v -> {throw new IllegalStateException("should never be called");});
         clock.timePasses(Duration.ofHours(6));
         assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
         assertThat(qaValidator.validateCert(digipostVirksomhetsTestsertifikat()), is(OK));
@@ -334,7 +332,7 @@ public class CertificateValidatorTest {
     private static final Logger LOG = LoggerFactory.getLogger(CertificateValidatorTest.class);
 
     @Test
-    @Ignore("use this to do an actual OCSP-lookup to store the response")
+    @Disabled("use this to do an actual OCSP-lookup to store the response")
     public void doRealOcspLookup() throws Exception {
 
 

@@ -15,7 +15,8 @@
  */
 package no.digipost.security.cert;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.quicktheories.generators.SourceDSL;
 
 import java.util.Set;
@@ -23,8 +24,8 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
 import static no.digipost.security.cert.RevocationReason.UNKNOWN;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 import static org.quicktheories.QuickTheory.qt;
 import static org.quicktheories.generators.SourceDSL.integers;
 
@@ -35,7 +36,7 @@ public class RevocationReasonTest {
         qt()
             .forAll(integers().all())
             .as(RevocationReason::resolve)
-            .check(reason -> reason != null);
+            .checkAssert(Assertions::assertNotNull);
     }
 
     @Test
@@ -43,7 +44,7 @@ public class RevocationReasonTest {
         qt()
             .forAll(SourceDSL.arbitrary().enumValues(RevocationReason.class))
             .asWithPrecursor(reason -> RevocationReason.resolve(reason.code))
-            .check((r1, r2) -> r1 == r2);
+            .checkAssert(Assertions::assertSame);
     }
 
     @Test
