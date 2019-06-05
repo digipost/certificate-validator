@@ -23,12 +23,13 @@ import static no.digipost.security.cert.OcspDecision.SKIP_OCSP;
 @FunctionalInterface
 public interface OcspPolicy {
 
-    final OcspPolicy ALWAYS_DO_OCSP_LOOKUP = always(LOOKUP_OCSP);
+    OcspPolicy ALWAYS_DO_OCSP_LOOKUP = always(LOOKUP_OCSP);
 
-    final OcspPolicy NEVER_DO_OCSP_LOOKUP = always(SKIP_OCSP);
+    OcspPolicy NEVER_DO_OCSP_LOOKUP = always(SKIP_OCSP);
 
-    final OcspPolicy ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED =
+    OcspPolicy ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED =
             ALWAYS_DO_OCSP_LOOKUP.except(trusted -> trusted.isIssuedByDigipostCA() && !trusted.ocspLookupRequest.isPresent(), SKIP_OCSP);
+
 
     /**
      * Create a policy which <em>always</em> makes the given {@link OcspDecision decision}.
