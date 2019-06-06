@@ -17,9 +17,6 @@ package no.digipost.security.cert;
 
 import no.digipost.security.DigipostSecurity;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.security.cert.X509Certificate;
 
 public final class Certificates {
@@ -299,27 +296,21 @@ public final class Certificates {
 
 
     public static X509Certificate digipostVirksomhetssertifikat() {
-        return DigipostSecurity.readCertificate(new ByteArrayInputStream(DIGIPOST_VIRKSOMHETSSERTIFIKAT.getBytes()));
+        return DigipostSecurity.readCertificate(DIGIPOST_VIRKSOMHETSSERTIFIKAT.getBytes());
     }
 
     public static X509Certificate digipostVirksomhetsTestsertifikat() {
-        return DigipostSecurity.readCertificate(new ByteArrayInputStream(DIGIPOST_VIRKSOMHETSSERTIFIKAT_TEST.getBytes()));
+        return DigipostSecurity.readCertificate(DIGIPOST_VIRKSOMHETSSERTIFIKAT_TEST.getBytes());
     }
 
-    private static final X509Certificate DIGIPOST_TEST_ROOT_CA_CERT; static {
-        try (InputStream certStream = Certificates.class.getResourceAsStream("/sertifikater/test/digipost_test_root_ca.cert.pem")) {
-            DIGIPOST_TEST_ROOT_CA_CERT = DigipostSecurity.readCertificate(certStream);
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
+    private static final X509Certificate DIGIPOST_TEST_ROOT_CA_CERT = DigipostSecurity.readCertificate("sertifikater/test/digipost_test_root_ca.cert.pem");
 
     public static X509Certificate digipostTestRotsertifikat() {
         return DIGIPOST_TEST_ROOT_CA_CERT;
     }
 
     public static X509Certificate digipostUtstedtTestsertifikat() {
-        return DigipostSecurity.readCertificate(new ByteArrayInputStream(DIGIPOST_SELFSIGNED_SERTIFIKAT.getBytes()));
+        return DigipostSecurity.readCertificate(DIGIPOST_SELFSIGNED_SERTIFIKAT.getBytes());
     }
 
     /**
@@ -329,7 +320,7 @@ public final class Certificates {
      * @see #REVOKED
      */
     public static X509Certificate revoked() {
-        return DigipostSecurity.readCertificate(new ByteArrayInputStream(REVOKED.getBytes()));
+        return DigipostSecurity.readCertificate(REVOKED.getBytes());
     }
 
 
@@ -339,7 +330,7 @@ public final class Certificates {
      * @see #REVOKED_ISSUER
      */
     public static X509Certificate revokedIssuer() {
-        return DigipostSecurity.readCertificate(new ByteArrayInputStream(REVOKED_ISSUER.getBytes()));
+        return DigipostSecurity.readCertificate(REVOKED_ISSUER.getBytes());
     }
 
 }

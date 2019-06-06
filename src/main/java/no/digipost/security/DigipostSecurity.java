@@ -122,7 +122,7 @@ public final class DigipostSecurity {
      * @see CertificateFactory#generateCertificates(InputStream)
      */
     public static Stream<X509Certificate> readCertificates(String resourceName) {
-        try (InputStream certificateResource = requireNonNull(DigipostSecurity.class.getClassLoader().getResourceAsStream(resourceName), resourceName + " not found")) {
+        try (InputStream certificateResource = requireNonNull(DigipostSecurity.class.getClassLoader().getResourceAsStream(resourceName), resourceName + " not found on classpath!")) {
             return readCertificates(certificateResource);
         } catch (IOException e) {
             throw new RuntimeException("Error reading certificate from " + resourceName + ": " + e.getMessage(), e);

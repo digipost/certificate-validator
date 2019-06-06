@@ -20,7 +20,6 @@ import no.digipost.security.HttpClient;
 import org.apache.http.HttpHost;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 
@@ -39,7 +38,7 @@ public class RealOCSPCertificateValidatorTest {
 
     @Test
     public void validerer_gammelt_commfides_sertifikat() {
-        X509Certificate commfidesSert = DigipostSecurity.readCertificate(new ByteArrayInputStream(GAMMELT_COMMFIDES_SERTIFIKAT_KS.getBytes()));
+        X509Certificate commfidesSert = DigipostSecurity.readCertificate(GAMMELT_COMMFIDES_SERTIFIKAT_KS.getBytes());
 
         assertThat("Untrusted pga ocsp-response signert med utdatert sertifikat",
                    validator.validateCert(commfidesSert), is(UNTRUSTED));
@@ -65,7 +64,7 @@ public class RealOCSPCertificateValidatorTest {
 
     @Test
     public void validerer_nytt_buypass_sertifikat() {
-        X509Certificate buypassSert = DigipostSecurity.readCertificate(new ByteArrayInputStream(BUYPASS_MF_PROD_SERTIFIKAT.getBytes()));
+        X509Certificate buypassSert = DigipostSecurity.readCertificate(BUYPASS_MF_PROD_SERTIFIKAT.getBytes());
 
         assertThat(validator.validateCert(buypassSert), is(OK));
     }
