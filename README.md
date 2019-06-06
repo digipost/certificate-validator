@@ -1,13 +1,8 @@
 # Digipost Certificate Validator
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/no.digipost/certificate-validator/badge.svg)](https://maven-badges.herokuapp.com/maven-central/no.digipost/certificate-validator)
 
 Library for validating certificates.
 
-## Maven dependency
+## Releasing (Digipost organization members only)
 
-```xml
-<dependency>
-    <groupId>no.digipost</groupId>
-    <artifactId>certificate-validator</artifactId>
-    <version>1.0.4</version>
-</dependency>
-```
+See docs/systemer/open-source-biblioteker.md
