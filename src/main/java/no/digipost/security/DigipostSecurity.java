@@ -16,6 +16,8 @@
 package no.digipost.security;
 
 import no.digipost.security.cert.CertificateNotFound;
+import no.digipost.security.keystore.KeyStoreCreator;
+import no.digipost.security.keystore.KeyStoreType;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +46,6 @@ import static java.util.stream.Collectors.toList;
 
 public final class DigipostSecurity {
 
-
     /**
      * Name of the security provider: {@value #PROVIDER_NAME}
      */
@@ -59,11 +60,6 @@ public final class DigipostSecurity {
      * String denoting the certificate type {@value #X509}.
      */
     public static final String X509 = "X.509";
-
-    /**
-     * String denoting the Java Cryptography Extension type of KeyStore ({@value #JCEKS}).
-     */
-    public static final String JCEKS = "JCEKS";
 
 
     private static final Logger LOG = LoggerFactory.getLogger(DigipostSecurity.class);
@@ -183,19 +179,16 @@ public final class DigipostSecurity {
 
 
     /**
-     * Put certificates into a new {@link KeyStore} of type {@value #JCEKS}.
+     * Put certificates into a new {@link KeyStore} of type {@link KeyStoreType#JCEKS}. They
+     * will be aliased as their Subject DNs.
+     *
+     * @deprecated Use
+     *   {@link KeyStoreType#JCEKS JCEKS}.{@link KeyStoreCreator#newKeyStoreContaining(Iterable) newKeyStoreContaining(..)}
+     *   instead.
      */
+    @Deprecated
     public static KeyStore asKeyStore(Iterable<X509Certificate> certificates) {
-        try {
-            KeyStore keystore = KeyStore.getInstance(JCEKS);
-            keystore.load(null, null);
-            for (X509Certificate cert : certificates) {
-                keystore.setCertificateEntry(cert.getSubjectDN().toString(), cert);
-            }
-            return keystore;
-        } catch (Exception e) {
-            throw e instanceof RuntimeException ? (RuntimeException) e : new DigipostSecurityException(e);
-        }
+        return KeyStoreType.JCEKS.newKeyStoreContaining(certificates, cert -> cert.getSubjectDN().toString());
     }
 
 

@@ -25,6 +25,7 @@ import java.security.KeyStoreException;
 import java.security.cert.CertPath;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -66,11 +67,13 @@ public class TrustTest {
     @Test
     public void builds_keystore_with_certificates() throws KeyStoreException {
         Collection<X509Certificate> certificates = trust.getTrustAnchorCertificates();
+        assertThat(certificates, hasSize(greaterThan(0)));
+
         KeyStore keystore = trust.getTrustAnchorsKeyStore();
 
-        assertThat(certificates, hasSize(greaterThan(0)));
-        for (X509Certificate certificate : certificates) {
-            assertTrue(keystore.isCertificateEntry(certificate.getSubjectDN().toString()));
+        assertThat(keystore.aliases(), where(Collections::list, hasSize(certificates.size())));
+        for (String alias : Collections.list(keystore.aliases())) {
+            assertTrue(keystore.isCertificateEntry(alias));
         }
     }
 

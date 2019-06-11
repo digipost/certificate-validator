@@ -17,6 +17,7 @@ package no.digipost.security.cert;
 
 import no.digipost.security.DigipostSecurity;
 import no.digipost.security.DigipostSecurityException;
+import no.digipost.security.keystore.KeyStoreType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,17 +25,33 @@ import javax.security.auth.x500.X500Principal;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.security.cert.*;
+import java.security.cert.CertPath;
+import java.security.cert.CertPathBuilder;
+import java.security.cert.CertPathValidator;
+import java.security.cert.CertPathValidatorException;
+import java.security.cert.CertStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.CollectionCertStoreParameters;
+import java.security.cert.PKIXBuilderParameters;
+import java.security.cert.PKIXParameters;
+import java.security.cert.TrustAnchor;
+import java.security.cert.X509CertSelector;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static java.util.Collections.*;
-import static java.util.stream.Collectors.*;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.unmodifiableSet;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
-import static no.digipost.security.DigipostSecurity.*;
+import static no.digipost.security.DigipostSecurity.PKIX;
+import static no.digipost.security.DigipostSecurity.describe;
 
 /**
  * The Trust contains the root certificates and any intermediate certificates you
@@ -126,7 +143,7 @@ public class Trust {
     }
 
     public KeyStore getTrustAnchorsKeyStore() {
-        return asKeyStore(this.getTrustAnchorCertificates());
+        return KeyStoreType.JCEKS.newKeyStoreContaining(this.getTrustAnchorCertificates());
     }
 
     public Map<X500Principal, List<X509Certificate>> getTrustedIntermediateCertificates() {
