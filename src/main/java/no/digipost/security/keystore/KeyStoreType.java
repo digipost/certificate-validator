@@ -15,15 +15,7 @@
  */
 package no.digipost.security.keystore;
 
-import no.digipost.security.DigipostSecurityException;
-
-import java.io.IOException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-
-public enum KeyStoreType implements KeyStoreCreator {
+public enum KeyStoreType {
 
     /**
      * Java Cryptography Extension Key Store type
@@ -36,20 +28,13 @@ public enum KeyStoreType implements KeyStoreCreator {
     PKCS12("PKCS12");
 
 
-    private String typeName;
+    String typeName;
 
     KeyStoreType(String typeName) {
         this.typeName = typeName;
     }
 
-    @Override
-    public KeyStore newKeyStore() {
-        try {
-            KeyStore newKeyStore = KeyStore.getInstance(typeName);
-            newKeyStore.load(null, null);
-            return newKeyStore;
-        } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
-            throw new DigipostSecurityException(e);
-        }
+    public KeyStoreBuilder newKeyStore() {
+        return new KeyStoreBuilder(this);
     }
 }

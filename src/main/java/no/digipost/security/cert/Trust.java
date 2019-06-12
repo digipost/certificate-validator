@@ -143,7 +143,7 @@ public class Trust {
     }
 
     public KeyStore getTrustAnchorsKeyStore() {
-        return KeyStoreType.JCEKS.newKeyStoreContaining(this.getTrustAnchorCertificates());
+        return KeyStoreType.JCEKS.newKeyStore().containing(this.getTrustAnchorCertificates()).withNoPassword();
     }
 
     public Map<X500Principal, List<X509Certificate>> getTrustedIntermediateCertificates() {

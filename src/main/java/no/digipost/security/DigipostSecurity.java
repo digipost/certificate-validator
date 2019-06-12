@@ -16,7 +16,7 @@
 package no.digipost.security;
 
 import no.digipost.security.cert.CertificateNotFound;
-import no.digipost.security.keystore.KeyStoreCreator;
+import no.digipost.security.keystore.KeyStoreBuilder;
 import no.digipost.security.keystore.KeyStoreType;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
@@ -42,6 +42,7 @@ import java.util.stream.Stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
 
 
 public final class DigipostSecurity {
@@ -183,12 +184,15 @@ public final class DigipostSecurity {
      * will be aliased as their Subject DNs.
      *
      * @deprecated Use
-     *   {@link KeyStoreType#JCEKS JCEKS}.{@link KeyStoreCreator#newKeyStoreContaining(Iterable) newKeyStoreContaining(..)}
-     *   instead.
+     *   {@link KeyStoreType#JCEKS JCEKS}.{@link KeyStoreType#newKeyStore() newKeyStore()}
+     *   instead, and add certificates using e.g. {@link KeyStoreBuilder#containing(java.util.Collection)}.
      */
     @Deprecated
     public static KeyStore asKeyStore(Iterable<X509Certificate> certificates) {
-        return KeyStoreType.JCEKS.newKeyStoreContaining(certificates, cert -> cert.getSubjectDN().toString());
+        return KeyStoreType.JCEKS
+                .newKeyStore()
+                .containing(stream(certificates.spliterator(), false), cert -> cert.getSubjectDN().toString())
+                .withNoPassword();
     }
 
 
