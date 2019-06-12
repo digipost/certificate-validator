@@ -240,7 +240,10 @@ public final class DigipostSecurity {
         }
         if (certificate instanceof X509Certificate) {
             X509Certificate x509 = (X509Certificate) certificate;
-            return x509.getSubjectDN() + ", issuer: " + x509.getIssuerDN();
+            String subjectDescription = x509.getSubjectX500Principal().getName();
+            String serialNumberDescription = "serial-number: " + x509.getSerialNumber().toString(16);
+            String issuerDescription = x509.getSubjectX500Principal().equals(x509.getIssuerX500Principal()) ? "self-issued" : "issuer: " + x509.getIssuerX500Principal().getName();
+            return String.join(", ", subjectDescription, serialNumberDescription, issuerDescription);
         } else {
             return certificate.getType() + "-certificate";
         }
