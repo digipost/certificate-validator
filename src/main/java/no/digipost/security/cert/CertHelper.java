@@ -69,7 +69,6 @@ final class CertHelper {
      */
     static Optional<TrustAnchor> findTrustAnchor(X509Certificate cert, Set<TrustAnchor> trustAnchors) throws SignatureException {
 
-        PublicKey trustPublicKey = null;
         X509CertSelector certSelectX509 = new X509CertSelector();
         X500Principal certIssuer = cert.getIssuerX500Principal();
 
@@ -79,33 +78,40 @@ final class CertHelper {
             throw new SignatureException("Cannot set subject search criteria for trust anchor.", ex);
         }
 
-        for (TrustAnchor trust : trustAnchors) {
+        SignatureException certVerificationFailure = null;
+        for (TrustAnchor trusted : trustAnchors) {
 
-            if (trust.getTrustedCert() != null) {
-                if (certSelectX509.match(trust.getTrustedCert())) {
-                    trustPublicKey = trust.getTrustedCert().getPublicKey();
+            PublicKey trustPublicKey = null;
+            if (trusted.getTrustedCert() != null) {
+                if (certSelectX509.match(trusted.getTrustedCert())) {
+                    trustPublicKey = trusted.getTrustedCert().getPublicKey();
                 }
-            } else if (trust.getCAName() != null && trust.getCAPublicKey() != null) {
-                try {
-                    X500Principal caName = new X500Principal(trust.getCAName());
-                    if (certIssuer.equals(caName)) {
-                        trustPublicKey = trust.getCAPublicKey();
-                    }
-                } catch (IllegalArgumentException ex) {
-                    continue;
+            } else if (trusted.getCA() != null && trusted.getCAPublicKey() != null) {
+                X500Principal caName = trusted.getCA();
+                if (certIssuer.equals(caName)) {
+                    trustPublicKey = trusted.getCAPublicKey();
                 }
             }
 
             if (trustPublicKey != null) {
                 try {
                     cert.verify(trustPublicKey);
-                    return Optional.of(trust);
+                    return Optional.of(trusted);
                 } catch (Exception ex) {
-                    throw new SignatureException("TrustAnchor found but certificate validation failed.", ex);
+                    if (certVerificationFailure == null) {
+                        certVerificationFailure = new SignatureException("TrustAnchor found, but certificate validation for " + describe(cert) + " failed", ex);
+                    } else {
+                        certVerificationFailure.addSuppressed(ex);
+                    }
                 }
             }
         }
-        return empty();
+
+        if (certVerificationFailure != null) {
+            throw certVerificationFailure;
+        } else {
+            return empty();
+        }
     }
 
 
