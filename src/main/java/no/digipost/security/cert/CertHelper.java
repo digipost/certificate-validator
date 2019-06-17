@@ -15,21 +15,35 @@
  */
 package no.digipost.security.cert;
 
+import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.security.auth.x500.X500Principal;
 
 import java.io.IOException;
 import java.security.PublicKey;
 import java.security.SignatureException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.util.Optional.empty;
+import static no.digipost.security.DigipostSecurity.describe;
 
 
 final class CertHelper {
+
+    private static final Logger LOG = LoggerFactory.getLogger(OcspPolicy.class);
 
     /**
      * Search the given Set of Trust Anchors for one that is the issuer of the
@@ -55,7 +69,6 @@ final class CertHelper {
      */
     static Optional<TrustAnchor> findTrustAnchor(X509Certificate cert, Set<TrustAnchor> trustAnchors) throws SignatureException {
 
-        PublicKey trustPublicKey = null;
         X509CertSelector certSelectX509 = new X509CertSelector();
         X500Principal certIssuer = cert.getIssuerX500Principal();
 
@@ -65,36 +78,61 @@ final class CertHelper {
             throw new SignatureException("Cannot set subject search criteria for trust anchor.", ex);
         }
 
-        for (TrustAnchor trust : trustAnchors) {
+        SignatureException certVerificationFailure = null;
+        for (TrustAnchor trusted : trustAnchors) {
 
-            if (trust.getTrustedCert() != null) {
-                if (certSelectX509.match(trust.getTrustedCert())) {
-                    trustPublicKey = trust.getTrustedCert().getPublicKey();
+            PublicKey trustPublicKey = null;
+            if (trusted.getTrustedCert() != null) {
+                if (certSelectX509.match(trusted.getTrustedCert())) {
+                    trustPublicKey = trusted.getTrustedCert().getPublicKey();
                 }
-            } else if (trust.getCAName() != null && trust.getCAPublicKey() != null) {
-                try {
-                    X500Principal caName = new X500Principal(trust.getCAName());
-                    if (certIssuer.equals(caName)) {
-                        trustPublicKey = trust.getCAPublicKey();
-                    }
-                } catch (IllegalArgumentException ex) {
-                    continue;
+            } else if (trusted.getCA() != null && trusted.getCAPublicKey() != null) {
+                X500Principal caName = trusted.getCA();
+                if (certIssuer.equals(caName)) {
+                    trustPublicKey = trusted.getCAPublicKey();
                 }
             }
 
             if (trustPublicKey != null) {
                 try {
                     cert.verify(trustPublicKey);
-                    return Optional.of(trust);
+                    return Optional.of(trusted);
                 } catch (Exception ex) {
-                    throw new SignatureException("TrustAnchor found but certificate validation failed.", ex);
+                    if (certVerificationFailure == null) {
+                        certVerificationFailure = new SignatureException("TrustAnchor found, but certificate validation for " + describe(cert) + " failed", ex);
+                    } else {
+                        certVerificationFailure.addSuppressed(ex);
+                    }
                 }
             }
         }
-        return empty();
+
+        if (certVerificationFailure != null) {
+            throw certVerificationFailure;
+        } else {
+            return empty();
+        }
     }
 
 
+    static Stream<String> getOrganizationUnits(X509Certificate cert) {
+        X509CertificateHolder bouncyCastleX509cert;
+        try {
+            bouncyCastleX509cert = new JcaX509CertificateHolder(cert);
+        } catch (CertificateEncodingException e) {
+            LOG.warn(
+                    "Unable to resolve organizational units (OU=xyz) from " + describe(cert) +
+                    ", because " + e.getClass().getSimpleName() + ": '" + e.getMessage() + "'", e);
+            return Stream.empty();
+        }
+        return Stream.of(bouncyCastleX509cert.getSubject().getRDNs(BCStyle.OU))
+                .map(RDN::getTypesAndValues)
+                .flatMap(Stream::of)
+                .map(AttributeTypeAndValue::getValue)
+                .map(IETFUtils::valueToString);
+    }
+
 
     private CertHelper() {}
+
 }

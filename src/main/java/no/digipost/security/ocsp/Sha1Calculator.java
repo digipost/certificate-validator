@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package no.digipost.security;
+package no.digipost.security.ocsp;
 
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.cert.ocsp.CertificateID;
@@ -23,7 +23,7 @@ import org.bouncycastle.operator.DigestCalculator;
 
 import java.io.OutputStream;
 
-public class Sha1Calculator implements DigestCalculator {
+final class Sha1Calculator implements DigestCalculator {
 
     private final DigestOutputStream ouz = new DigestOutputStream(new SHA1Digest());
 

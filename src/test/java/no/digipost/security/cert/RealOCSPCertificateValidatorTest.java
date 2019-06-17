@@ -18,15 +18,16 @@ package no.digipost.security.cert;
 import no.digipost.security.DigipostSecurity;
 import no.digipost.security.HttpClient;
 import org.apache.http.HttpHost;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 
-import static no.digipost.security.cert.CertStatus.*;
+import static no.digipost.security.cert.CertStatus.OK;
+import static no.digipost.security.cert.CertStatus.UNDECIDED;
+import static no.digipost.security.cert.CertStatus.UNTRUSTED;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 @SuppressWarnings("unused")
 public class RealOCSPCertificateValidatorTest {
@@ -37,7 +38,7 @@ public class RealOCSPCertificateValidatorTest {
 
     @Test
     public void validerer_gammelt_commfides_sertifikat() {
-        X509Certificate commfidesSert = DigipostSecurity.readCertificate(new ByteArrayInputStream(GAMMELT_COMMFIDES_SERTIFIKAT_KS.getBytes()));
+        X509Certificate commfidesSert = DigipostSecurity.readCertificate(GAMMELT_COMMFIDES_SERTIFIKAT_KS.getBytes());
 
         assertThat("Untrusted pga ocsp-response signert med utdatert sertifikat",
                    validator.validateCert(commfidesSert), is(UNTRUSTED));
@@ -63,7 +64,7 @@ public class RealOCSPCertificateValidatorTest {
 
     @Test
     public void validerer_nytt_buypass_sertifikat() {
-        X509Certificate buypassSert = DigipostSecurity.readCertificate(new ByteArrayInputStream(BUYPASS_MF_PROD_SERTIFIKAT.getBytes()));
+        X509Certificate buypassSert = DigipostSecurity.readCertificate(BUYPASS_MF_PROD_SERTIFIKAT.getBytes());
 
         assertThat(validator.validateCert(buypassSert), is(OK));
     }

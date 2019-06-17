@@ -15,35 +15,46 @@
  */
 package no.digipost.security.cert;
 
-import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.quicktheories.generators.SourceDSL;
 
+import java.util.Set;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static no.digipost.security.cert.RevocationReason.UNKNOWN;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.quicktheories.QuickTheory.qt;
+import static org.quicktheories.generators.SourceDSL.integers;
 
-@RunWith(JUnitQuickcheck.class)
 public class RevocationReasonTest {
 
-    @Property
-    public void managesToResolveAnyReason(int code) {
-        assertThat(RevocationReason.resolve(code), notNullValue());
+    @Test
+    public void managesToResolveAnyReason() {
+        qt()
+            .forAll(integers().all())
+            .as(RevocationReason::resolve)
+            .checkAssert(Assertions::assertNotNull);
     }
 
-    @Property
-    public void resolveParticularReason(RevocationReason reason) {
-        assertThat(RevocationReason.resolve(reason.code), sameInstance(reason));
+    @Test
+    public void resolveParticularReason() {
+        qt()
+            .forAll(SourceDSL.arbitrary().enumValues(RevocationReason.class))
+            .asWithPrecursor(reason -> RevocationReason.resolve(reason.code))
+            .checkAssert(Assertions::assertSame);
     }
 
-    @Property
-    public void unknownReasonCodes(int unknownCode) {
-        assumeThat(unknownCode, not(isIn(Stream.of(RevocationReason.values()).filter(r -> r != UNKNOWN).map(r -> r.code).collect(toList()))));
-        assertThat(RevocationReason.resolve(unknownCode), is(UNKNOWN));
+    @Test
+    public void unknownReasonCodes() {
+        Set<Integer> knownReasons = Stream.of(RevocationReason.values()).filter(r -> r != UNKNOWN).map(r -> r.code).collect(toSet());
+        qt()
+            .forAll(integers().all())
+            .assuming(code -> !knownReasons.contains(code))
+            .as(RevocationReason::resolve)
+            .checkAssert(reason -> assertThat(reason, is(UNKNOWN)));
     }
 
 

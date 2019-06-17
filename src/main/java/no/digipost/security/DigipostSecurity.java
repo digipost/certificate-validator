@@ -16,6 +16,8 @@
 package no.digipost.security;
 
 import no.digipost.security.cert.CertificateNotFound;
+import no.digipost.security.keystore.KeyStoreBuilder;
+import no.digipost.security.keystore.KeyStoreType;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import javax.crypto.Cipher;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
@@ -36,12 +39,13 @@ import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
 
 
 public final class DigipostSecurity {
-
 
     /**
      * Name of the security provider: {@value #PROVIDER_NAME}
@@ -57,11 +61,6 @@ public final class DigipostSecurity {
      * String denoting the certificate type {@value #X509}.
      */
     public static final String X509 = "X.509";
-
-    /**
-     * String denoting the Java Cryptography Extension type of KeyStore ({@value #JCEKS}).
-     */
-    public static final String JCEKS = "JCEKS";
 
 
     private static final Logger LOG = LoggerFactory.getLogger(DigipostSecurity.class);
@@ -120,11 +119,11 @@ public final class DigipostSecurity {
      * @see CertificateFactory#generateCertificates(InputStream)
      */
     public static Stream<X509Certificate> readCertificates(String resourceName) {
-        InputStream certificateResource = DigipostSecurity.class.getClassLoader().getResourceAsStream(resourceName);
-        if (certificateResource == null) {
-            throw new RuntimeException(resourceName + " not found");
+        try (InputStream certificateResource = requireNonNull(DigipostSecurity.class.getClassLoader().getResourceAsStream(resourceName), resourceName + " not found on classpath!")) {
+            return readCertificates(certificateResource);
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading certificate from " + resourceName + ": " + e.getMessage(), e);
         }
-        return readCertificates(certificateResource);
     }
 
 
@@ -181,19 +180,19 @@ public final class DigipostSecurity {
 
 
     /**
-     * Put certificates into a new {@link KeyStore} of type {@value #JCEKS}.
+     * Put certificates into a new {@link KeyStore} of type {@link KeyStoreType#JCEKS}. They
+     * will be aliased as their Subject DNs.
+     *
+     * @deprecated Use
+     *   {@link KeyStoreType#JCEKS JCEKS}.{@link KeyStoreType#newKeyStore() newKeyStore()}
+     *   instead, and add certificates using e.g. {@link KeyStoreBuilder#containing(java.util.Collection)}.
      */
+    @Deprecated
     public static KeyStore asKeyStore(Iterable<X509Certificate> certificates) {
-        try {
-            KeyStore keystore = KeyStore.getInstance(JCEKS);
-            keystore.load(null, null);
-            for (X509Certificate cert : certificates) {
-                keystore.setCertificateEntry(cert.getSubjectDN().toString(), cert);
-            }
-            return keystore;
-        } catch (Exception e) {
-            throw e instanceof RuntimeException ? (RuntimeException) e : new DigipostSecurityException(e);
-        }
+        return KeyStoreType.JCEKS
+                .newKeyStore()
+                .containing(stream(certificates.spliterator(), false), cert -> cert.getSubjectDN().toString())
+                .withNoPassword();
     }
 
 
@@ -245,7 +244,10 @@ public final class DigipostSecurity {
         }
         if (certificate instanceof X509Certificate) {
             X509Certificate x509 = (X509Certificate) certificate;
-            return x509.getSubjectDN() + ", issuer: " + x509.getIssuerDN();
+            String subjectDescription = x509.getSubjectX500Principal().getName();
+            String serialNumberDescription = "serial-number: " + x509.getSerialNumber().toString(16);
+            String issuerDescription = x509.getSubjectX500Principal().equals(x509.getIssuerX500Principal()) ? "self-issued" : "issuer: " + x509.getIssuerX500Principal().getName();
+            return String.join(", ", subjectDescription, serialNumberDescription, issuerDescription);
         } else {
             return certificate.getType() + "-certificate";
         }

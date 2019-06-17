@@ -16,7 +16,7 @@
 package no.digipost.security.cert;
 
 
-public enum OcspSetting {
-    OCSP_ACTIVATED,
-    NO_OCSP
+public enum OcspDecision {
+    LOOKUP_OCSP,
+    SKIP_OCSP;
 }

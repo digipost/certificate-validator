@@ -16,22 +16,29 @@
 package no.digipost.security.cert;
 
 import no.digipost.security.DigipostSecurity;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import javax.security.auth.x500.X500Principal;
 
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.cert.CertPath;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static co.unruly.matchers.Java8Matchers.where;
+import static co.unruly.matchers.Java8Matchers.whereNot;
 import static java.util.stream.Collectors.toSet;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TrustTest {
 
@@ -44,7 +51,7 @@ public class TrustTest {
 
     @Test
     public void returns_only_trust_anchors_when_no_intermediates_match_the_principal() {
-        X500Principal randomUnknownPrincipal = Certificates.digipostTestsertifikat().getIssuerX500Principal();
+        X500Principal randomUnknownPrincipal = Certificates.digipostVirksomhetsTestsertifikat().getIssuerX500Principal();
         Set<X509Certificate> allCerts = trust.getTrustAnchorsAndAnyIntermediateCertificatesFor(randomUnknownPrincipal).collect(toSet());
         assertThat(allCerts, containsInAnyOrder(buypassRoot, commfidesRoot));
     }
@@ -57,38 +64,34 @@ public class TrustTest {
     }
 
 
-
     @Test
     public void builds_keystore_with_certificates() throws KeyStoreException {
         Collection<X509Certificate> certificates = trust.getTrustAnchorCertificates();
+        assertThat(certificates, hasSize(greaterThan(0)));
+
         KeyStore keystore = trust.getTrustAnchorsKeyStore();
 
-        assertThat(certificates, hasSize(greaterThan(0)));
-        for (X509Certificate certificate : certificates) {
-            assertTrue(keystore.isCertificateEntry(certificate.getSubjectDN().toString()));
+        assertThat(keystore.aliases(), where(Collections::list, hasSize(certificates.size())));
+        for (String alias : Collections.list(keystore.aliases())) {
+            assertTrue(keystore.isCertificateEntry(alias));
         }
     }
-
-
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
 
 
     @Test
     public void resolve_cert_path_from_certificate() {
         ReviewedCertPath reviewedPath = trust.resolveCertPath(Certificates.digipostVirksomhetssertifikat());
-        assertTrue(reviewedPath.isTrusted());
-        assertThat(reviewedPath.getPath().getCertificates(), hasSize(2));
+        assertThat(reviewedPath, where(ReviewedCertPath::isTrusted));
+        assertThat(reviewedPath.getPath(), where(CertPath::getCertificates, hasSize(2)));
     }
 
     @Test
     public void cert_path_of_qa_certificate_is_not_trusted_in_production() {
-        ReviewedCertPath reviewedPath = trust.resolveCertPath(Certificates.digipostTestsertifikat());
+        ReviewedCertPath reviewedPath = trust.resolveCertPath(Certificates.digipostVirksomhetsTestsertifikat());
 
-        assertFalse(reviewedPath.isTrusted());
-        expectedException.expectMessage("unable to find valid certification path");
-        reviewedPath.getPath();
+        assertThat(reviewedPath, whereNot(ReviewedCertPath::isTrusted));
+        Exception thrown = assertThrows(Exception.class, reviewedPath::getPath);
+        assertThat(thrown, where(Exception::getMessage, containsString("unable to find valid certification path")));
     }
 
 }

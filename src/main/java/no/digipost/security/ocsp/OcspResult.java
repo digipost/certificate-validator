@@ -22,6 +22,7 @@ import org.bouncycastle.cert.ocsp.OCSPResp;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.URI;
 
 /**
  * The result of a successful lookup against an OCSP responder.
@@ -31,10 +32,10 @@ import java.io.IOException;
  */
 public final class OcspResult implements Closeable {
 
-    public final String uri;
+    public final URI uri;
     public final CloseableHttpResponse response;
 
-    OcspResult(String uri, CloseableHttpResponse response) {
+    OcspResult(URI uri, CloseableHttpResponse response) {
         this.uri = uri;
         this.response = response;
     }

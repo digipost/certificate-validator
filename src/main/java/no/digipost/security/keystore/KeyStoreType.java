@@ -13,19 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package no.digipost.security.cert;
+package no.digipost.security.keystore;
 
-import org.junit.Test;
+public enum KeyStoreType {
 
-import static no.digipost.security.cert.CertificateValidatorConfig.MOST_STRICT;
-import static no.digipost.security.cert.OcspSetting.NO_OCSP;
-import static org.hamcrest.Matchers.sameInstance;
-import static org.junit.Assert.assertThat;
+    /**
+     * Java Cryptography Extension Key Store type
+     */
+    JCEKS("JCEKS"),
 
-public class CertificateValidatorConfigTest {
+    /**
+     * PKCS #12 Key Store type
+     */
+    PKCS12("PKCS12");
 
-    @Test
-    public void mostStrictWithNoOcspIsOptimizedToNotCreateUnnecessaryInstances() {
-        assertThat(MOST_STRICT.with(NO_OCSP), sameInstance(MOST_STRICT.with(NO_OCSP)));
+
+    String typeName;
+
+    KeyStoreType(String typeName) {
+        this.typeName = typeName;
+    }
+
+    public KeyStoreBuilder newKeyStore() {
+        return new KeyStoreBuilder(this);
     }
 }
