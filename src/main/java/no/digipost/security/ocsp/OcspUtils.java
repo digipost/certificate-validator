@@ -16,7 +16,14 @@
 package no.digipost.security.ocsp;
 
 import no.digipost.security.DigipostSecurity;
-import org.bouncycastle.asn1.*;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1TaggedObject;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.DLSequence;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -57,9 +64,10 @@ public final class OcspUtils {
         try {
             ASN1OctetString base = (ASN1OctetString) ASN1Primitive.fromByteArray(authorityInfoAccessValue);
             ASN1Sequence seq = (ASN1Sequence) ASN1Primitive.fromByteArray(base.getOctets());
-            Enumeration objects = seq.getObjects();
+            @SuppressWarnings("unchecked")
+            Enumeration<ASN1Encodable> objects = seq.getObjects();
             while (objects.hasMoreElements()) {
-                ASN1Encodable elm = (ASN1Encodable) objects.nextElement();
+                ASN1Encodable elm = objects.nextElement();
                 if (elm instanceof ASN1Sequence) {
                     ASN1Encodable id = ((ASN1Sequence)elm).getObjectAt(0);
                     if (OCSPObjectIdentifiers.id_pkix_ocsp.equals(id)) {
