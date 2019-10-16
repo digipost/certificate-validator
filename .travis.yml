@@ -1,27 +1,23 @@
-cache:
-  directories:
-  - $HOME/.m2/repository
-
-sudo: false
-
+dist: trusty
 language: java
 jdk:
 - oraclejdk8
+- openjdk11    # open source libraries should target Java 8, but
+- openjdk12    # it is nice to verify it also builds with later JDKs.
+
+cache:
+  directories:
+  - $HOME/.m2
 
 env:
   global:
   - secure: inKpWOw6hzOBk6nVi4mxlbe2PjKhohQXKytzMkyXIoGdNqUTZ/WK/kaaKhUnloLR4QXepIPbkRArZ1NJ+ef/Go0aW1EwV6YstlqPujdm8M6hwmwLnc3yyN9tPEG4LJ0uwaYSB0m3tLQeqJ0kU+LZaGS75Kje4kQw2bxbESTgTQKaxhv79/wllshicWCNJkTUsMrBhnv4CWkT/pKlWPwXI2AoEY9cyjxjuma3ftDEgILL5lLXtBmQIQo5nmg0JeJHijNSgNDb7lI4iB1hm4Ntrrg6A9P6S4U4nSP4qJtLmIaZAp4pgnsSeHO4uIYvVP5XEBqRVjuvRwuVoRpWTKmsUX2Y2UfHy4XsQODS+qAZaIbsNHZ44bA+p6ZxtMWoTSMlQg8EChFm0VKVcWFJF53oM+2yUvc086OYu3iOcwlmOZHiVIb0fhVU4goeR8RnAZhq8djEe2hf5zfdsb1fd9yE2NsJoOwNJgC/Zi4V2fxZ1NeTuKAIxh/117fowS8W9cvlcK/5rJAsqa6WF1g/BZge60FQ0IS9o5wNLCUCbjw+TE/SH8ud8j7bwrvZT/FK6goWj0YJcJ4SS/fsfbjesTZxNF146wgR75w4YWpNgE/TsaXiuYIWTM1/unV7FeBCVdujKYBQW+w3WuZQTUvcKRiu8wcCzqGP4s3FBTzb80hck1E=
   - secure: BEC+Q7kCQ8fafmGYuahyJ7CbYLwJ9fJKRR3PyKTNIxVt3C4PJneRFZqlKoXZs0Cca0q8I09/X6Uu5mcgnKuxRkxZWYDA9mqLUthDhu8XwVL6q5180lKwa10SKDEHyYRPU1nkSx5S1z0xfPUhmH/fnHLyZzTtOrpDi8RXvXckeedviirQoGOhOu+HIfDGetPbTKpCs6t2iyoXEAevRxfO04dn5dgnV7qXpJXcPJVsuLoGE9wYlu09Gsnjo2T76jpcMpa5/myHRVscaQfS2a7rw0lMeZhmAzn0dGB+yaUSyxSgawiijhVYAN4yneNS5LH94Tqf6/TT7PoyNl/r78JtrxIf0ekRowgJTpCjxHoYfGZurmpYI3V0gmHtT1v6waV+KopoIGDqnZ7iBFWXulfCCo4Ca9o2m7J0OG1pqeofBegOzamfWgTOpEF0bxgXjraQqTXUMCUbDSPP4wkYB1J2h5tAZZFr4ofRe5zsxs+wTlza3EKzlpoCmy21uPKVJ2P9v02bObzkWcY+6QzfeI45yakWSsrnzXzWc1dEQMFxHp+EW/P6zIM3VUr4LZjG7EtHQgxGy3AyQt11bowvakyjrxYle8QY/gmSGR+mTxAXw72AsbN0bR+EFfXg9MFpuv8wZutiQHPHiBak0ETAO3F2gCLOJuwpAXUuQsxNXRnHUdc=
 
-before_install:
-  - echo "<settings><servers><server><id>sonatype-oss-nexus-snapshots</id><username>\${env.SONATYPE_USER}</username><password>\${env.SONATYPE_PASS}</password></server></servers></settings>" > ~/.m2/deploy-settings.xml
-
 install: true
 
-script:
-- export commitMessage="$(git --no-pager log -1 HEAD --pretty=%s)"
-- echo "Commit message is '$commitMessage'"
-- export mavenBuildGoal=$(if [[ "$commitMessage" == "Release:prepare release"* ]]; then echo verify; else echo deploy; fi)
-- echo "Maven will '${mavenBuildGoal}'"
-- mvn clean ${mavenBuildGoal} --update-snapshots --settings ~/.m2/deploy-settings.xml
+before_script:
+  - cp .travis/maven.settings.xml ~/.m2/settings.xml
 
+script:
+  - mvn clean deploy --update-snapshots

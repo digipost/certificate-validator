@@ -18,9 +18,11 @@ package no.digipost.security.ocsp;
 import no.digipost.security.DigipostSecurity;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1Primitive;
-import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERTaggedObject;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1TaggedObject;
+import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DLSequence;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x509.Extension;
@@ -47,7 +49,7 @@ public final class OcspUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(OcspUtils.class);
 
-    private static final DLSequence ASN1_OCSP_SIGNING = new DLSequence(new ASN1ObjectIdentifier("1.3.6.1.5.5.7.3.9"));
+    private static final ASN1Sequence ASN1_OCSP_SIGNING = new DERSequence(new ASN1ObjectIdentifier("1.3.6.1.5.5.7.3.9"));
 
     private static final ASN1ObjectIdentifier ASN1_EXTENDED_KEY_USAGE = new ASN1ObjectIdentifier("2.5.29.37");
 
@@ -60,16 +62,17 @@ public final class OcspUtils {
             return Optional.empty();
         }
         try {
-            DEROctetString base = (DEROctetString) ASN1Primitive.fromByteArray(authorityInfoAccessValue);
-            DLSequence seq = (DLSequence) ASN1Primitive.fromByteArray(base.getOctets());
-            Enumeration<?> objects = seq.getObjects();
+            ASN1OctetString base = (ASN1OctetString) ASN1Primitive.fromByteArray(authorityInfoAccessValue);
+            ASN1Sequence seq = (ASN1Sequence) ASN1Primitive.fromByteArray(base.getOctets());
+            @SuppressWarnings("unchecked")
+            Enumeration<ASN1Encodable> objects = seq.getObjects();
             while (objects.hasMoreElements()) {
-                Object elm = objects.nextElement();
-                if (elm instanceof DLSequence) {
-                    ASN1Encodable id = ((DLSequence)elm).getObjectAt(0);
+                ASN1Encodable elm = objects.nextElement();
+                if (elm instanceof ASN1Sequence) {
+                    ASN1Encodable id = ((ASN1Sequence)elm).getObjectAt(0);
                     if (OCSPObjectIdentifiers.id_pkix_ocsp.equals(id)) {
-                        DERTaggedObject dt = (DERTaggedObject)((DLSequence)elm).getObjectAt(1);
-                        DEROctetString dos =  (DEROctetString)dt.getObjectParser(dt.getTagNo(), true);
+                        ASN1TaggedObject dt = (ASN1TaggedObject)((DLSequence)elm).getObjectAt(1);
+                        ASN1OctetString dos =  (ASN1OctetString)dt.getObjectParser(dt.getTagNo(), true);
                         return Optional.of(URI.create(new String(dos.getOctets())));
                     }
                 }
