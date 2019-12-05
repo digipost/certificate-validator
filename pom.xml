@@ -5,11 +5,11 @@
     <parent>
         <groupId>no.digipost</groupId>
         <artifactId>digipost-open-super-pom</artifactId>
-        <version>3</version>
+        <version>6</version>
     </parent>
 
     <artifactId>certificate-validator</artifactId>
-    <version>2.1-SNAPSHOT</version>
+    <version>LOCAL-SNAPSHOT</version>
     <name>Digipost Certificate Validator</name>
     <description>Library for validating certificates.</description>
 
@@ -160,6 +160,7 @@
                             <exclude>LICENSE*</exclude>
                             <exclude>NOTICE</exclude>
                             <exclude>**/*.xml</exclude>
+                            <exclude>.github/**/*.yml</exclude>
                             <exclude>**/*.pem</exclude>
                             <exclude>**/*.cer</exclude>
                             <exclude>**/*.response</exclude>
@@ -168,6 +169,15 @@
                             <exclude>.mvn/maven.config</exclude>
                         </excludes>
                     </configuration>
+                    <executions>
+                        <execution>
+                            <id>check-license-header</id>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <phase>test</phase>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <artifactId>maven-enforcer-plugin</artifactId>
