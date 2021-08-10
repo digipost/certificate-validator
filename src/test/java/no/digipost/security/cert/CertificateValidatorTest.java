@@ -352,8 +352,8 @@ public class CertificateValidatorTest {
 
 
         try (CloseableHttpClient realClient = HttpClient.create()) {
-            X509Certificate certificate = BUYPASS_SEID_2_CERT;
-            X509Certificate issuer = BUYPASS_SEID_2_ISSUER;
+            X509Certificate certificate = Certificates.revoked();
+            X509Certificate issuer = Certificates.revokedIssuer();
 
             byte[] response = new TrustedCertificateAndIssuer(certificate, issuer)
                     .ocspLookupRequest
