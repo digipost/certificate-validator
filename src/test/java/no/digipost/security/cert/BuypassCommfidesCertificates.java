@@ -49,6 +49,13 @@ public class BuypassCommfidesCertificates {
             trustedCerts.add(readCertificate("sertifikater/test/Buypass_Class_3_Test4_Root_CA.cer"));
             // Buypass gyldig 2012 - 2022 - CN=CPN Root SHA256 CA - TEST, OU=Commfides Trust Environment(C) TEST 2010 Commfides Norge AS, OU=CPN TEST - For authorized use only, OU=CPN Primary Certificate Authority TEST, O=Commfides Norge AS - 988 312 495, C=NO
             trustedCerts.add(readCertificate("sertifikater/test/commfides_test_root_ca.cer"));
+
+            // Buypass G2 PSD2 QWAC
+            trustedCerts.add(readCertificate("sertifikater/test/BPCl3RootCaG2QC.cer"));
+            // Buypass G2 Virksomhetssertifikater for Europa (SEID v2.0) og QC eSeal (fra Q3 2021) og PSD2 QC eSeal som 'Soft Token'
+            trustedCerts.add(readCertificate("sertifikater/test/BPCl3RootCaG2ST.cer"));
+            // Buypass G2 Virksomhetssertifikater (SEID v2.0) og QC eSeal som 'Hard Token'
+            trustedCerts.add(readCertificate("sertifikater/test/BPCl3RootCaG2HT.cer"));
         }
         return trustedCerts.build();
     }
@@ -67,6 +74,13 @@ public class BuypassCommfidesCertificates {
             intermediateTrust.add(readCertificate("sertifikater/test/Buypass_Class_3_Test4_CA_3.cer"));
             //2012-2022
             intermediateTrust.add(readCertificate("sertifikater/test/commfides_test_ca.cer"));
+
+            // Buypass G2 PSD2 QWAC
+            intermediateTrust.add(readCertificate("sertifikater/test/BPCl3CaG2QCWA.cer"));
+            // Buypass G2 Virksomhetssertifikater for Europa (SEID v2.0) og QC eSeal (fra Q3 2021) og PSD2 QC eSeal som 'Soft Token'
+            intermediateTrust.add(readCertificate("sertifikater/test/BPCl3CaG2STBS.cer"));
+            // Buypass G2 Virksomhetssertifikater (SEID v2.0) og QC eSeal som 'Hard Token'
+            intermediateTrust.add(readCertificate("sertifikater/test/BPCl3CaG2HTBS.cer"));
         }
 
         return intermediateTrust.build();

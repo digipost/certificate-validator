@@ -18,6 +18,7 @@ package no.digipost.security.cert;
 import com.google.common.io.ByteStreams;
 import no.digipost.security.FilesAndDirs;
 import no.digipost.security.HttpClient;
+import no.digipost.security.X509;
 import no.digipost.security.ocsp.OcspLookup;
 import no.digipost.security.ocsp.OcspResponses;
 import no.digipost.security.ocsp.OcspResult;
@@ -41,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,7 +51,9 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
+import static co.unruly.matchers.Java8Matchers.where;
 import static java.util.Optional.ofNullable;
 import static no.digipost.DiggIO.autoClosing;
 import static no.digipost.security.cert.BuypassCommfidesCertificates.createTestTrustWithAdditionalCerts;
@@ -58,10 +62,7 @@ import static no.digipost.security.cert.CertStatus.REVOKED;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
 import static no.digipost.security.cert.CertStatus.UNTRUSTED;
 import static no.digipost.security.cert.CertificateValidatorConfig.MOST_STRICT;
-import static no.digipost.security.cert.Certificates.digipostTestRotsertifikat;
-import static no.digipost.security.cert.Certificates.digipostUtstedtTestsertifikat;
-import static no.digipost.security.cert.Certificates.digipostVirksomhetsTestsertifikat;
-import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;
+import static no.digipost.security.cert.Certificates.*;
 import static no.digipost.security.cert.OcspPolicy.ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -329,6 +330,17 @@ public class CertificateValidatorTest {
 
     }
 
+    @Test
+    public void validateBuypassSeid2Cert() throws IOException {
+        CertificateValidator validator = new CertificateValidator(MOST_STRICT, QA_TRUST, httpClient, clock);
+
+        given(ocspResponseStatus.getStatusCode()).willReturn(200);
+        given(ocspResponseEntity.getContent()).will(i -> OcspResponses.okSeid2Buypass());
+
+        assertThat(validator.validateCert(BUYPASS_SEID_2_CERT), is(OK));
+        assertThat(validator.validateCert(BUYPASS_SEID_2_E_SEAL_CERT), is(OK));
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(CertificateValidatorTest.class);
 
     @Test
@@ -337,8 +349,8 @@ public class CertificateValidatorTest {
 
 
         try (CloseableHttpClient realClient = HttpClient.create()) {
-            X509Certificate certificate = Certificates.revoked();
-            X509Certificate issuer = Certificates.revokedIssuer();
+            X509Certificate certificate = BUYPASS_SEID_2_CERT;
+            X509Certificate issuer = BUYPASS_SEID_2_ISSUER;
 
             byte[] response = new TrustedCertificateAndIssuer(certificate, issuer)
                     .ocspLookupRequest
