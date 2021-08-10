@@ -44,7 +44,7 @@ public final class X509 {
     /**
      * SEID 2 way to embed Norwegian "organisasjonsnummer" in certificates.
      */
-    private static final Pattern SEID2_PATTERN = Pattern.compile("OID.2.5.4.97=NTRNO-([0-9]{9})", CASE_INSENSITIVE);
+    private static final Pattern SEID2_PATTERN = Pattern.compile("OID\\.2\\.5\\.4\\.97=NTRNO-([0-9]{9})", CASE_INSENSITIVE);
 
 
     /**
