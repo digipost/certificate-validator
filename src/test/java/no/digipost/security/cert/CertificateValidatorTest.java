@@ -71,8 +71,8 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.quicktheories.QuickTheory.qt;
 import static org.quicktheories.generators.SourceDSL.integers;
 
@@ -311,7 +311,7 @@ public class CertificateValidatorTest {
         X509Certificate digipostCertWithoutOcspResponderUrl = digipostUtstedtTestsertifikat();
 
         assertThat(skipOcspForDigipostCert.validateCert(digipostCertWithoutOcspResponderUrl), is(OK));
-        verifyZeroInteractions(httpClient);
+        verifyNoInteractions(httpClient);
 
         CertificateValidator alwaysOcspValidator = new CertificateValidator(
                 MOST_STRICT.ignoreCustomSigningCertificatesInOcspResponses().validateOcspResponseSignatureUsing((ocspResponse, issuer) -> true),
@@ -322,8 +322,8 @@ public class CertificateValidatorTest {
 
         assertThat(alwaysOcspValidator.validateCert(digipostCertWithoutOcspResponderUrl), is(UNDECIDED));
 
-        verifyZeroInteractions(httpClient);
-        verifyZeroInteractions(ocspResponseEntity);
+        verifyNoInteractions(httpClient);
+        verifyNoInteractions(ocspResponseEntity);
 
         assertThat(alwaysOcspValidator.validateCert(digipostVirksomhetsTestsertifikat()), is(REVOKED));
 
