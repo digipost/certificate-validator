@@ -52,7 +52,7 @@ import java.time.LocalDateTime;
 
 import static java.util.Optional.ofNullable;
 import static no.digipost.DiggIO.autoClosing;
-import static no.digipost.security.cert.BuypassCommfidesCertificates.createTestTrustIncluding;
+import static no.digipost.security.cert.BuypassCommfidesCertificates.createTestTrustWithAdditionalCerts;
 import static no.digipost.security.cert.CertStatus.OK;
 import static no.digipost.security.cert.CertStatus.REVOKED;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
@@ -79,9 +79,6 @@ import static org.quicktheories.generators.SourceDSL.integers;
 @ExtendWith(MockitoExtension.class)
 public class CertificateValidatorTest {
 
-    private static final Trust PROD_TRUST = BuypassCommfidesCertificates.createProdTrust();
-    private static final Trust QA_TRUST = BuypassCommfidesCertificates.createTestTrust();
-
     @Mock
     private CloseableHttpClient httpClient;
 
@@ -98,7 +95,9 @@ public class CertificateValidatorTest {
     private CertificateValidator prodValidator;
     private CertificateValidator qaValidator;
 
-    private ControllableClock clock = ControllableClock.freezedAt(LocalDateTime.of(2015, 6, 24, 12, 5));
+    private final ControllableClock clock = ControllableClock.freezedAt(LocalDateTime.of(2020, 2, 24, 12, 5));
+    private final Trust prodTrust = BuypassCommfidesCertificates.createProdTrust(clock);
+    private final Trust qaTrust = BuypassCommfidesCertificates.createTestTrust(clock);
 
 
     @BeforeEach
@@ -108,8 +107,8 @@ public class CertificateValidatorTest {
         lenient().when(httpClient.execute(any(HttpUriRequest.class))).thenReturn(response);
         lenient().when(ocspResponseStatus.toString()).thenAnswer(i -> "status " + ocspResponseStatus.getStatusCode());
 
-        prodValidator = new CertificateValidator(MOST_STRICT, PROD_TRUST, httpClient, clock);
-        qaValidator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), QA_TRUST, httpClient, clock);
+        prodValidator = new CertificateValidator(MOST_STRICT, prodTrust, httpClient, clock);
+        qaValidator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrust, httpClient, clock);
     }
 
 
@@ -200,7 +199,7 @@ public class CertificateValidatorTest {
 
         assertThat(new CertificateValidator(MOST_STRICT
                 .ignoreCustomSigningCertificatesInOcspResponses()
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), PROD_TRUST, httpClient, clock)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, httpClient, clock)
                 .validateCert(digipostVirksomhetssertifikat()), is(REVOKED));
     }
 
@@ -212,7 +211,7 @@ public class CertificateValidatorTest {
         CertificateValidator validator = new CertificateValidator(MOST_STRICT
                 .ignoreCustomSigningCertificatesInOcspResponses()
                 .validateOcspResponseSignatureUsing((resp, cert) -> true),
-                PROD_TRUST, httpClient, clock);
+                prodTrust, httpClient, clock);
         assertThat(validator.validateCert(digipostVirksomhetssertifikat()), is(REVOKED));
         verify(httpClient, times(1)).execute(any());
 
@@ -235,11 +234,11 @@ public class CertificateValidatorTest {
 
         assertThat(new CertificateValidator(MOST_STRICT
                 .ignoreCustomSigningCertificatesInOcspResponses()
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), PROD_TRUST, httpClient, clock)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, httpClient, clock)
                 .validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
         assertThat(new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED)
                 .ignoreCustomSigningCertificatesInOcspResponses()
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), QA_TRUST, httpClient, clock)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), qaTrust, httpClient, clock)
                 .validateCert(digipostVirksomhetssertifikat()), is(OK));
     }
 
@@ -249,10 +248,10 @@ public class CertificateValidatorTest {
         given(ocspResponseEntity.getContent()).willAnswer(i -> new ByteArrayInputStream(new byte[0]));
 
         assertThat(new CertificateValidator(MOST_STRICT
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), PROD_TRUST, httpClient, clock)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, httpClient, clock)
                 .validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
         assertThat(new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED)
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), QA_TRUST, httpClient, clock)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), qaTrust, httpClient, clock)
                 .validateCert(digipostVirksomhetssertifikat()), is(OK));
 
     }
@@ -264,11 +263,11 @@ public class CertificateValidatorTest {
 
         assertThat(new CertificateValidator(MOST_STRICT
                 .validateOcspResponseSignatureUsing((resp, cert) -> false),
-                PROD_TRUST, httpClient, clock)
+                prodTrust, httpClient, clock)
                 .validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
         assertThat(new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED)
                 .validateOcspResponseSignatureUsing((resp, cert) -> false),
-                QA_TRUST, httpClient, clock)
+                qaTrust, httpClient, clock)
                 .validateCert(digipostVirksomhetssertifikat()), is(OK));
     }
 
@@ -276,8 +275,8 @@ public class CertificateValidatorTest {
     public void failingOcspHttpRequestResultsInUndecided() {
         CloseableHttpClient brokenHttp = mock(CloseableHttpClient.class, (Answer<?>) (v -> {throw new SocketTimeoutException("timed out");}));
 
-        assertThat(new CertificateValidator(PROD_TRUST, brokenHttp).validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
-        assertThat(new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), QA_TRUST, brokenHttp).validateCert(digipostVirksomhetssertifikat()), is(OK));
+        assertThat(new CertificateValidator(prodTrust, brokenHttp).validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
+        assertThat(new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrust, brokenHttp).validateCert(digipostVirksomhetssertifikat()), is(OK));
     }
 
 
@@ -302,7 +301,7 @@ public class CertificateValidatorTest {
 
     @Test
     public void skipOcspForDigipostIssuedCertificate() throws Exception {
-        Trust trust = createTestTrustIncluding(digipostTestRotsertifikat());
+        Trust trust = createTestTrustWithAdditionalCerts(clock, digipostTestRotsertifikat());
 
         CertificateValidator skipOcspForDigipostCert = new CertificateValidator(
                 MOST_STRICT.withOcspPolicy(ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED),
@@ -325,7 +324,8 @@ public class CertificateValidatorTest {
         verifyNoInteractions(httpClient);
         verifyNoInteractions(ocspResponseEntity);
 
-        assertThat(alwaysOcspValidator.validateCert(digipostVirksomhetsTestsertifikat()), is(REVOKED));
+        X509Certificate dpVirksomhetsSertifikat = digipostVirksomhetsTestsertifikat();
+        assertThat(alwaysOcspValidator.validateCert(dpVirksomhetsSertifikat), is(REVOKED));
 
     }
 

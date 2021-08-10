@@ -24,6 +24,8 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.cert.CertPath;
 import java.security.cert.X509Certificate;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -31,6 +33,7 @@ import java.util.stream.Stream;
 
 import static co.unruly.matchers.Java8Matchers.where;
 import static co.unruly.matchers.Java8Matchers.whereNot;
+import static java.time.ZoneOffset.UTC;
 import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -47,7 +50,8 @@ public class TrustTest {
     private final X509Certificate commfidesRoot = DigipostSecurity.readCertificate("sertifikater/prod/commfides_root_ca.cer");
     private final X509Certificate commfidesIntermediate = DigipostSecurity.readCertificate("sertifikater/prod/commfides_ca.cer");
 
-    private final Trust trust = new Trust(Stream.of(buypassRoot, commfidesRoot), Stream.of(buypassIntermediate, commfidesIntermediate));
+    private final Trust trust = new Trust(Stream.of(buypassRoot, commfidesRoot), Stream.of(buypassIntermediate, commfidesIntermediate),
+            Clock.fixed(LocalDateTime.of(2020, 2, 10, 12, 0).toInstant(UTC), UTC));
 
     @Test
     public void returns_only_trust_anchors_when_no_intermediates_match_the_principal() {
