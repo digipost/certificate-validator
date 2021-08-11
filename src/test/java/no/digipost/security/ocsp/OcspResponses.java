@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import static com.google.common.io.ByteStreams.toByteArray;
-import static java.util.Objects.requireNonNull;
 import static no.digipost.DiggBase.nonNull;
 
 public final class OcspResponses {
