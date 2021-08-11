@@ -61,7 +61,6 @@ import static no.digipost.security.cert.CertStatus.UNTRUSTED;
 import static no.digipost.security.cert.CertificateValidatorConfig.MOST_STRICT;
 import static no.digipost.security.cert.Certificates.BUYPASS_SEID_2_CERT;
 import static no.digipost.security.cert.Certificates.BUYPASS_SEID_2_E_SEAL_CERT;
-import static no.digipost.security.cert.Certificates.BUYPASS_SEID_2_ISSUER;
 import static no.digipost.security.cert.Certificates.digipostTestRotsertifikat;
 import static no.digipost.security.cert.Certificates.digipostUtstedtTestsertifikat;
 import static no.digipost.security.cert.Certificates.digipostVirksomhetsTestsertifikat;
@@ -335,7 +334,9 @@ public class CertificateValidatorTest {
 
     @Test
     public void validateBuypassSeid2Cert() throws IOException {
-        CertificateValidator validator = new CertificateValidator(MOST_STRICT, QA_TRUST, httpClient, clock);
+        ControllableClock clockForValidSeid2Certs = ControllableClock.freezedAt(LocalDateTime.of(2021, 8, 24, 12, 5));
+        Trust qaTrustForValidSeid2Certs = BuypassCommfidesCertificates.createTestTrust(ControllableClock.freezedAt(LocalDateTime.of(2021, 8, 24, 12, 5)));
+        CertificateValidator validator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrustForValidSeid2Certs, httpClient, clockForValidSeid2Certs);
 
         given(ocspResponseStatus.getStatusCode()).willReturn(200);
         given(ocspResponseEntity.getContent()).will(i -> OcspResponses.okSeid2Buypass());
