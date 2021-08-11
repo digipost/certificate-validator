@@ -21,25 +21,33 @@ import java.io.InputStream;
 
 import static com.google.common.io.ByteStreams.toByteArray;
 import static java.util.Objects.requireNonNull;
+import static no.digipost.DiggBase.nonNull;
 
 public final class OcspResponses {
 
-    private static final byte[] OK;
+    private static final byte[] OK_OLD;
     private static final byte[] UNKNOWN;
     private static final byte[] REVOKED;
+    private static final byte[] OK_SEID2_BUYPASS;
 
     static {
         try {
-            OK = toByteArray(requireNonNull(OcspResponses.class.getResourceAsStream("/ocsp/ok.response")));
-            UNKNOWN = toByteArray(requireNonNull(OcspResponses.class.getResourceAsStream("/ocsp/unknown.response")));
-            REVOKED = toByteArray(requireNonNull(OcspResponses.class.getResourceAsStream("/ocsp/revoked.response")));
+            OK_OLD = toByteArray(nonNull("/ocsp/ok.response", OcspResponses.class::getResourceAsStream));
+            UNKNOWN = toByteArray(nonNull("/ocsp/unknown.response", OcspResponses.class::getResourceAsStream));
+            REVOKED = toByteArray(nonNull("/ocsp/revoked.response", OcspResponses.class::getResourceAsStream));
+
+            OK_SEID2_BUYPASS = toByteArray(nonNull("/ocsp/ok_seid2_buypass.response", OcspResponses.class::getResourceAsStream));
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
 
     public static InputStream ok() {
-        return new ByteArrayInputStream(OK);
+        return new ByteArrayInputStream(OK_OLD);
+    }
+
+    public static InputStream okSeid2Buypass() {
+        return new ByteArrayInputStream(OK_SEID2_BUYPASS);
     }
 
     public static InputStream unknown() {

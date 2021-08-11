@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,6 +59,8 @@ import static no.digipost.security.cert.CertStatus.REVOKED;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
 import static no.digipost.security.cert.CertStatus.UNTRUSTED;
 import static no.digipost.security.cert.CertificateValidatorConfig.MOST_STRICT;
+import static no.digipost.security.cert.Certificates.BUYPASS_SEID_2_CERT;
+import static no.digipost.security.cert.Certificates.BUYPASS_SEID_2_E_SEAL_CERT;
 import static no.digipost.security.cert.Certificates.digipostTestRotsertifikat;
 import static no.digipost.security.cert.Certificates.digipostUtstedtTestsertifikat;
 import static no.digipost.security.cert.Certificates.digipostVirksomhetsTestsertifikat;
@@ -327,6 +330,19 @@ public class CertificateValidatorTest {
         X509Certificate dpVirksomhetsSertifikat = digipostVirksomhetsTestsertifikat();
         assertThat(alwaysOcspValidator.validateCert(dpVirksomhetsSertifikat), is(REVOKED));
 
+    }
+
+    @Test
+    public void validateBuypassSeid2Cert() throws IOException {
+        ControllableClock clockForValidSeid2Certs = ControllableClock.freezedAt(LocalDateTime.of(2021, 8, 24, 12, 5));
+        Trust qaTrustForValidSeid2Certs = BuypassCommfidesCertificates.createTestTrust(ControllableClock.freezedAt(LocalDateTime.of(2021, 8, 24, 12, 5)));
+        CertificateValidator validator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrustForValidSeid2Certs, httpClient, clockForValidSeid2Certs);
+
+        given(ocspResponseStatus.getStatusCode()).willReturn(200);
+        given(ocspResponseEntity.getContent()).will(i -> OcspResponses.okSeid2Buypass());
+
+        assertThat(validator.validateCert(BUYPASS_SEID_2_CERT), is(OK));
+        assertThat(validator.validateCert(BUYPASS_SEID_2_E_SEAL_CERT), is(OK));
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(CertificateValidatorTest.class);

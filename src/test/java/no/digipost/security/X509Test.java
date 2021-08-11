@@ -21,7 +21,9 @@ import org.junit.jupiter.api.Test;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 
+import static co.unruly.matchers.Java8Matchers.where;
 import static no.digipost.security.X509.findOrganisasjonsnummer;
+import static no.digipost.security.cert.Certificates.BUYPASS_SEID_2_CERT;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
@@ -54,6 +56,10 @@ public class X509Test {
         assertThat(findOrganisasjonsnummer(cert), is(Optional.empty()));
     }
 
+    @Test
+    public void getOrgNumberBuypassSeid2Cert() {
+        assertThat(X509.findOrganisasjonsnummer(BUYPASS_SEID_2_CERT), where(Optional::get, is("100101688")));
+    }
 
     private String orgnr(String certificate) {
         X509Certificate cert = DigipostSecurity.readCertificate(certificate.getBytes());

@@ -293,7 +293,12 @@ public final class Certificates {
             "I5e4KnHi7f5piGe/Jlw=\n" +
             "-----END CERTIFICATE-----";
 
+    // Virksomhetssertifikater for Europa (SEID v2.0) for test
+    public static final X509Certificate BUYPASS_SEID_2_CERT = DigipostSecurity.readCertificate("sertifikater/test/test4-autentiseringssertifikat-vid-europa.cer");
+    public static final X509Certificate BUYPASS_SEID_2_ISSUER = DigipostSecurity.readCertificate("sertifikater/test/BPCl3CaG2STBS.cer");
 
+    // Kvalifiserte sertifikater for elektroniske segl (QC eSeal) (SEID v2.0) for test
+    public static final X509Certificate BUYPASS_SEID_2_E_SEAL_CERT = DigipostSecurity.readCertificate("sertifikater/test/test4-autentiseringssertifikat-qceseal.cer");
 
     public static X509Certificate digipostVirksomhetssertifikat() {
         return DigipostSecurity.readCertificate(DIGIPOST_VIRKSOMHETSSERTIFIKAT.getBytes());

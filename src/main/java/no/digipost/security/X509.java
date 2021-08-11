@@ -41,6 +41,11 @@ public final class X509 {
      */
     private static final Pattern SERIALNUMBER_PATTERN = Pattern.compile("SERIALNUMBER=([0-9]{9})", CASE_INSENSITIVE);
 
+    /**
+     * SEID 2 way to embed Norwegian "organisasjonsnummer" in certificates.
+     */
+    private static final Pattern SEID2_PATTERN = Pattern.compile("OID\\.2\\.5\\.4\\.97=NTRNO-([0-9]{9})", CASE_INSENSITIVE);
+
 
     /**
      * Try to find Norwegian "organisasjonsnummer" in an {@link X509Certificate}.
@@ -48,6 +53,7 @@ public final class X509 {
     public static final Optional<String> findOrganisasjonsnummer(X509Certificate certificate) {
         String subjectDnName = certificate.getSubjectDN().getName();
         return find(certificate,
+                    cert -> tryFindOrgnr(subjectDnName, SEID2_PATTERN),
                     cert -> tryFindOrgnr(subjectDnName, SERIALNUMBER_PATTERN),
                     cert -> tryFindOrgnr(subjectDnName, CN_PATTERN))
                 .findFirst();
