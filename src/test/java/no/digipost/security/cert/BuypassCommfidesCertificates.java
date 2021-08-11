@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) Posten Norge AS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 package no.digipost.security.cert;
 
 import java.security.cert.X509Certificate;
+import java.time.Clock;
 import java.util.stream.Stream;
 
 import static java.util.stream.Stream.concat;
@@ -23,16 +24,16 @@ import static no.digipost.security.DigipostSecurity.readCertificate;
 
 public class BuypassCommfidesCertificates {
 
-    public static Trust createProdTrust() {
-        return new Trust(initTrustedCerts(false), initIntermediateTrust(false));
+    public static Trust createProdTrust(Clock clock) {
+        return new Trust(initTrustedCerts(false), initIntermediateTrust(false), clock);
     }
 
-    public static Trust createTestTrust() {
-        return new Trust(initTrustedCerts(true), initIntermediateTrust(true));
+    public static Trust createTestTrust(Clock clock) {
+        return new Trust(initTrustedCerts(true), initIntermediateTrust(true), clock);
     }
 
-    public static Trust createTestTrustIncluding(X509Certificate ... additionalTrustedCerts) {
-        return new Trust(concat(initTrustedCerts(true), Stream.of(additionalTrustedCerts)), initIntermediateTrust(true));
+    public static Trust createTestTrustWithAdditionalCerts(Clock clock, X509Certificate ... additionalTrustedCerts) {
+        return new Trust(concat(initTrustedCerts(true), Stream.of(additionalTrustedCerts)), initIntermediateTrust(true), clock);
     }
 
     private static Stream<X509Certificate> initTrustedCerts(boolean includeTestCerts) {

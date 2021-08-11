@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) Posten Norge AS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -245,9 +245,10 @@ public final class DigipostSecurity {
         if (certificate instanceof X509Certificate) {
             X509Certificate x509 = (X509Certificate) certificate;
             String subjectDescription = x509.getSubjectX500Principal().getName();
+            String validityDescription = "valid from " + x509.getNotBefore().toInstant() + " to " + x509.getNotAfter().toInstant();
             String serialNumberDescription = "serial-number: " + x509.getSerialNumber().toString(16);
             String issuerDescription = x509.getSubjectX500Principal().equals(x509.getIssuerX500Principal()) ? "self-issued" : "issuer: " + x509.getIssuerX500Principal().getName();
-            return String.join(", ", subjectDescription, serialNumberDescription, issuerDescription);
+            return String.join(", ", subjectDescription, validityDescription, serialNumberDescription, issuerDescription);
         } else {
             return certificate.getType() + "-certificate";
         }

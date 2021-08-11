@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) Posten Norge AS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,6 +37,8 @@ import java.security.cert.PKIXParameters;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
+import java.time.Clock;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,8 +67,14 @@ public class Trust {
 
     private final Set<X509Certificate> trustedCerts;
     private final Map<X500Principal, List<X509Certificate>> trustedIntermediateCerts;
+    private final Clock clock;
 
     public Trust(Stream<X509Certificate> rootCertificates, Stream<X509Certificate> intermediateCertificates) {
+        this(rootCertificates, intermediateCertificates, Clock.systemDefaultZone());
+    }
+
+    public Trust(Stream<X509Certificate> rootCertificates, Stream<X509Certificate> intermediateCertificates, Clock clock) {
+        this.clock = clock;
         this.trustedCerts = unmodifiableSet(rootCertificates.collect(toSet()));
         this.trustedIntermediateCerts = unmodifiableMap(intermediateCertificates.collect(groupingBy(X509Certificate::getSubjectX500Principal)));
     }
@@ -84,15 +92,18 @@ public class Trust {
         try {
             CollectionCertStoreParameters certStoreParams = new CollectionCertStoreParameters(
                     getTrustAnchorsAndAnyIntermediateCertificatesFor(certificate.getIssuerX500Principal()).collect(toSet()));
-            CertStore certStore = CertStore.getInstance("Collection", certStoreParams);
+
             X509CertSelector certSelector = new X509CertSelector();
             certSelector.setCertificate(certificate);
             certSelector.setSubject(certificate.getSubjectX500Principal());
+            certSelector.setCertificateValid(Date.from(clock.instant()));
 
+            CertStore certStore = CertStore.getInstance("Collection", certStoreParams);
             PKIXBuilderParameters params = new PKIXBuilderParameters(getTrustAnchors(), certSelector);
             params.addCertStore(certStore);
             params.setSigProvider(DigipostSecurity.PROVIDER_NAME);
             params.setRevocationEnabled(false);
+            params.setDate(Date.from(clock.instant()));
             CertPath certpath = CertPathBuilder.getInstance(PKIX).build(params).getCertPath();
             if (certpath.getCertificates().size() > 1) {
                 return new ReviewedCertPath(certpath, this::trusts);
@@ -105,7 +116,8 @@ public class Trust {
             }
 
         } catch (GeneralSecurityException e) {
-            LOG.warn("Error generating cert path. Certificate {} is not issued by trusted issuer. {}: {}", describe(certificate), e.getClass().getSimpleName(), e.getMessage());
+            LOG.warn("Error generating cert path for certificate, because the issuer is not trusted. {}: {}. certificate: {}",
+                    e.getClass().getSimpleName(), e.getMessage(), describe(certificate));
             if (LOG.isDebugEnabled()) {
                 LOG.debug(e.getClass().getSimpleName() + ": '" + e.getMessage() + "'", e);
             }
@@ -124,6 +136,7 @@ public class Trust {
             PKIXParameters params = new PKIXParameters(trustAnchors);
             params.setSigProvider(DigipostSecurity.PROVIDER_NAME);
             params.setRevocationEnabled(false);
+            params.setDate(Date.from(clock.instant()));
             CertPathValidator.getInstance(PKIX).validate(certPath, params);
             return true;
         } catch (CertPathValidatorException e) {

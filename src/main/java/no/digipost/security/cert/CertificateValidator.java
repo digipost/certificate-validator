@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) Posten Norge AS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -175,7 +175,7 @@ public class CertificateValidator {
                             ocspSignatureValidationCertificate = ocspSigningCertificate.get();
                             CertStatus certStatus = validateCert(ocspSignatureValidationCertificate, config.withOcspPolicy(NEVER_DO_OCSP_LOOKUP));
                             if (certStatus != OK) {
-                                LOG.warn("OCSP signing certificate {} is not OK: '{}'", describe(ocspSignatureValidationCertificate), certStatus);
+                                LOG.warn("OCSP signing certificate is '{}': {}", certStatus, describe(ocspSignatureValidationCertificate));
                                 return certStatus;
                             }
                         } else {
