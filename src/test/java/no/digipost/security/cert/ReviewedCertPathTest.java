@@ -26,8 +26,8 @@ import java.security.cert.CertificateParsingException;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
-import static co.unruly.matchers.Java8Matchers.where;
-import static co.unruly.matchers.Java8Matchers.whereNot;
+import static uk.co.probablyfine.matchers.Java8Matchers.where;
+import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
 import static no.digipost.security.DigipostSecurity.asCertPath;
 import static no.digipost.security.DigipostSecurity.readCertificates;
 import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;

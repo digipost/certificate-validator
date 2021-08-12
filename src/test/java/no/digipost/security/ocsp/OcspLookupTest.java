@@ -30,8 +30,8 @@ import java.net.SocketTimeoutException;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
-import static co.unruly.matchers.Java8Matchers.where;
-import static co.unruly.matchers.Java8Matchers.whereNot;
+import static uk.co.probablyfine.matchers.Java8Matchers.where;
+import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
