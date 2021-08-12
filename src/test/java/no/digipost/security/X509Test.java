@@ -48,6 +48,12 @@ public class X509Test {
         assertThat(findOrganisasjonsnummer(cert).get(), is("123456789"));
     }
 
+    @Test
+    public void findOrganisasjonsnummerInSubjectWithoutPrefix() {
+        X509Certificate cert = mock(X509Certificate.class, RETURNS_DEEP_STUBS);
+        given(cert.getSubjectDN().getName()).willReturn("OID.2.5.4.97=123456789, CN=MyCorp Fullname, OU=MyCorp Department, O=MyCorp, C=NO");
+        assertThat(findOrganisasjonsnummer(cert).get(), is("123456789"));
+    }
 
     @Test
     public void doesNotFindOrganisasjonsnummer() {
