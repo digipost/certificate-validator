@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 
-import static co.unruly.matchers.Java8Matchers.where;
+import static uk.co.probablyfine.matchers.Java8Matchers.where;
 import static no.digipost.security.X509.findOrganisasjonsnummer;
 import static no.digipost.security.cert.Certificates.BUYPASS_SEID_2_CERT;
 import static org.hamcrest.MatcherAssert.assertThat;
