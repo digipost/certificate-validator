@@ -65,18 +65,25 @@ public class Trust {
 
     private static final Logger LOG = LoggerFactory.getLogger(Trust.class);
 
-    private final Set<X509Certificate> trustedCerts;
+    private final Set<X509Certificate> trustAnchorCerts;
     private final Map<X500Principal, List<X509Certificate>> trustedIntermediateCerts;
     private final Clock clock;
 
-    public Trust(Stream<X509Certificate> rootCertificates, Stream<X509Certificate> intermediateCertificates) {
-        this(rootCertificates, intermediateCertificates, Clock.systemDefaultZone());
+    public Trust(Stream<X509Certificate> trustAnchorCertificates, Stream<X509Certificate> intermediateCertificates) {
+        this(trustAnchorCertificates, intermediateCertificates, Clock.systemDefaultZone());
     }
 
-    public Trust(Stream<X509Certificate> rootCertificates, Stream<X509Certificate> intermediateCertificates, Clock clock) {
+    public Trust(Stream<X509Certificate> trustAnchorCertificates, Stream<X509Certificate> intermediateCertificates, Clock clock) {
+        this(
+                unmodifiableSet(trustAnchorCertificates.collect(toSet())),
+                unmodifiableMap(intermediateCertificates.collect(groupingBy(X509Certificate::getSubjectX500Principal))),
+                clock);
+    }
+
+    private Trust(Set<X509Certificate> trustAnchorCerts, Map<X500Principal, List<X509Certificate>> trustedIntermediateCerts, Clock clock) {
+        this.trustAnchorCerts = trustAnchorCerts;
+        this.trustedIntermediateCerts = trustedIntermediateCerts;
         this.clock = clock;
-        this.trustedCerts = unmodifiableSet(rootCertificates.collect(toSet()));
-        this.trustedIntermediateCerts = unmodifiableMap(intermediateCertificates.collect(groupingBy(X509Certificate::getSubjectX500Principal)));
     }
 
 
@@ -130,7 +137,7 @@ public class Trust {
      *
      * @return <code>true</code> if the path is trusted, <code>false</code> otherwise.
      */
-    public boolean trusts(final CertPath certPath) {
+    public boolean trusts(CertPath certPath) {
         try {
             Set<TrustAnchor> trustAnchors = getTrustAnchors();
             PKIXParameters params = new PKIXParameters(trustAnchors);
@@ -152,7 +159,7 @@ public class Trust {
     }
 
     public Set<X509Certificate> getTrustAnchorCertificates() {
-        return trustedCerts;
+        return trustAnchorCerts;
     }
 
     public KeyStore getTrustAnchorsKeyStore() {
