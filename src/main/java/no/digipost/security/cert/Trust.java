@@ -39,6 +39,7 @@ import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.time.Clock;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -46,7 +47,6 @@ import java.util.stream.Stream;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -74,8 +74,8 @@ public class Trust {
     public static Trust from(Stream<X509Certificate> trustedCertificates, Clock clock) {
         Map<TrustBasis, Set<X509Certificate>> grouped = trustedCertificates.collect(groupingBy(TrustBasis::determineFrom, toSet()));
         return new Trust(
-                grouped.getOrDefault(TrustBasis.ANCHOR, emptySet()),
-                grouped.getOrDefault(TrustBasis.DERIVED, emptySet()).stream().collect(groupingBy(X509Certificate::getSubjectX500Principal, toSet())),
+                grouped.getOrDefault(TrustBasis.ANCHOR, emptySet()).stream(),
+                grouped.getOrDefault(TrustBasis.DERIVED, emptySet()).stream(),
                 clock);
     }
 
@@ -89,7 +89,7 @@ public class Trust {
 
     private static final Logger LOG = LoggerFactory.getLogger(Trust.class);
 
-    private final Set<X509Certificate> trustAnchorCerts;
+    private final Map<X500Principal, Set<X509Certificate>> trustAnchorCerts;
     private final Map<X500Principal, Set<X509Certificate>> trustedIntermediateCerts;
     private final Clock clock;
 
@@ -99,17 +99,28 @@ public class Trust {
 
     public Trust(Stream<X509Certificate> trustAnchorCertificates, Stream<X509Certificate> intermediateCertificates, Clock clock) {
         this(
-                unmodifiableSet(trustAnchorCertificates.collect(toSet())),
+                unmodifiableMap(trustAnchorCertificates.collect(groupingBy(X509Certificate::getSubjectX500Principal, toSet()))),
                 unmodifiableMap(intermediateCertificates.collect(groupingBy(X509Certificate::getSubjectX500Principal, toSet()))),
                 clock);
     }
 
-    private Trust(Set<X509Certificate> trustAnchorCerts, Map<X500Principal, Set<X509Certificate>> trustedIntermediateCerts, Clock clock) {
+    private Trust(Map<X500Principal, Set<X509Certificate>> trustAnchorCerts, Map<X500Principal, Set<X509Certificate>> trustedIntermediateCerts, Clock clock) {
         this.trustAnchorCerts = trustAnchorCerts;
         this.trustedIntermediateCerts = trustedIntermediateCerts;
         this.clock = clock;
+        validate();
     }
 
+
+    private void validate() {
+        List<X509Certificate> intermediateCertsWithoutAnchor = trustedIntermediateCerts
+            .values().stream().flatMap(Set::stream)
+            .filter(cert -> !trustAnchorCerts.containsKey(cert.getIssuerX500Principal()))
+            .collect(toList());
+        if (!intermediateCertsWithoutAnchor.isEmpty()) {
+            throw new MissingTrustAnchorException(intermediateCertsWithoutAnchor);
+        }
+    }
 
     /**
      * Resolve the certificate path of an X.509 certificate.
@@ -196,7 +207,7 @@ public class Trust {
      * @return the {@link X509Certificate trust anchor certificates} of this {@code Trust}
      */
     public Set<X509Certificate> getTrustAnchorCertificates() {
-        return trustAnchorCerts;
+        return trustAnchorCerts.values().stream().flatMap(Set::stream).collect(toSet());
     }
 
 

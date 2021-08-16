@@ -55,8 +55,11 @@ public class TrustTest {
     private final X509Certificate commfidesRoot = DigipostSecurity.readCertificate("sertifikater/prod/commfides_root_ca.cer");
     private final X509Certificate commfidesIntermediate = DigipostSecurity.readCertificate("sertifikater/prod/commfides_ca.cer");
 
-    private final Trust trust = Trust.from(Stream.of(buypassRoot, commfidesRoot, buypassIntermediate, commfidesIntermediate),
-            Clock.fixed(LocalDateTime.of(2020, 2, 10, 12, 0).toInstant(UTC), UTC));
+    private final Clock clockSetWhenCertificatesAreValid = Clock.fixed(LocalDateTime.of(2020, 2, 10, 12, 0).toInstant(UTC), UTC);
+
+    private final Trust trust = Trust.from(
+            Stream.of(buypassRoot, commfidesRoot, buypassIntermediate, commfidesIntermediate),
+            clockSetWhenCertificatesAreValid);
 
     @Test
     void detects_trust_achors_and_intermediate_certificates() {
@@ -67,6 +70,19 @@ public class TrustTest {
                 () -> assertThat(trust, where(Trust::getTrustedIntermediateCertificates, aMapWithSize(2)))
                 );
     }
+
+    @Test
+    void must_contain_trust_anchors_for_intermediate_certificates() {
+        MissingTrustAnchorException missingAnchorsForAll =
+                assertThrows(MissingTrustAnchorException.class, () -> Trust.from(Stream.of(buypassIntermediate, commfidesIntermediate), clockSetWhenCertificatesAreValid));
+        assertThat(missingAnchorsForAll.getCertificates(), containsInAnyOrder(buypassIntermediate, commfidesIntermediate));
+
+
+        MissingTrustAnchorException missingBuypassRoot =
+                assertThrows(MissingTrustAnchorException.class, () -> Trust.from(Stream.of(commfidesRoot, buypassIntermediate, commfidesIntermediate), clockSetWhenCertificatesAreValid));
+        assertThat(missingBuypassRoot.getCertificates(), contains(buypassIntermediate));
+    }
+
 
 
     @Test
