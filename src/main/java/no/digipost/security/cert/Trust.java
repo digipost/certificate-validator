@@ -65,18 +65,28 @@ public class Trust {
     /**
      * Construct a Trust from the given trusted certificates.
      *
+     * @param trustedCertificates all the certificates, both trust anchors and any
+     *                            intermediate certificates issued from any of the trust anchors
+     * @param clock the clock to use for asserting certificate validity
+     * @return the Trust for the given certificates
+     */
+    public static Trust from(Clock clock, X509Certificate ... trustedCertificates) {
+        return Trust.from(clock, Stream.of(trustedCertificates));
+    }
+
+    /**
+     * Construct a Trust from the given trusted certificates.
      *
      * @param trustedCertificates all the certificates, both trust anchors and any
      *                            intermediate certificates issued from any of the trust anchors
      * @param clock the clock to use for asserting certificate validity
      * @return the Trust for the given certificates
      */
-    public static Trust from(Stream<X509Certificate> trustedCertificates, Clock clock) {
+    public static Trust from(Clock clock, Stream<X509Certificate> trustedCertificates) {
         Map<TrustBasis, Set<X509Certificate>> grouped = trustedCertificates.collect(groupingBy(TrustBasis::determineFrom, toSet()));
-        return new Trust(
+        return new Trust(clock,
                 grouped.getOrDefault(TrustBasis.ANCHOR, emptySet()).stream(),
-                grouped.getOrDefault(TrustBasis.DERIVED, emptySet()).stream(),
-                clock);
+                grouped.getOrDefault(TrustBasis.DERIVED, emptySet()).stream());
     }
 
     private enum TrustBasis {
@@ -94,10 +104,10 @@ public class Trust {
     private final Clock clock;
 
     public Trust(Stream<X509Certificate> trustAnchorCertificates, Stream<X509Certificate> intermediateCertificates) {
-        this(trustAnchorCertificates, intermediateCertificates, Clock.systemDefaultZone());
+        this(Clock.systemDefaultZone(), trustAnchorCertificates, intermediateCertificates);
     }
 
-    public Trust(Stream<X509Certificate> trustAnchorCertificates, Stream<X509Certificate> intermediateCertificates, Clock clock) {
+    public Trust(Clock clock, Stream<X509Certificate> trustAnchorCertificates, Stream<X509Certificate> intermediateCertificates) {
         this(
                 unmodifiableMap(trustAnchorCertificates.collect(groupingBy(X509Certificate::getSubjectX500Principal, toSet()))),
                 unmodifiableMap(intermediateCertificates.collect(groupingBy(X509Certificate::getSubjectX500Principal, toSet()))),

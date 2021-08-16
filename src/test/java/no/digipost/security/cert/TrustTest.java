@@ -29,7 +29,6 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import static java.time.ZoneOffset.UTC;
 import static java.util.stream.Collectors.toSet;
@@ -57,9 +56,7 @@ public class TrustTest {
 
     private final Clock clockSetWhenCertificatesAreValid = Clock.fixed(LocalDateTime.of(2020, 2, 10, 12, 0).toInstant(UTC), UTC);
 
-    private final Trust trust = Trust.from(
-            Stream.of(buypassRoot, commfidesRoot, buypassIntermediate, commfidesIntermediate),
-            clockSetWhenCertificatesAreValid);
+    private final Trust trust = Trust.from(clockSetWhenCertificatesAreValid, buypassRoot, commfidesRoot, buypassIntermediate, commfidesIntermediate);
 
     @Test
     void detects_trust_achors_and_intermediate_certificates() {
@@ -74,12 +71,12 @@ public class TrustTest {
     @Test
     void must_contain_trust_anchors_for_intermediate_certificates() {
         MissingTrustAnchorException missingAnchorsForAll =
-                assertThrows(MissingTrustAnchorException.class, () -> Trust.from(Stream.of(buypassIntermediate, commfidesIntermediate), clockSetWhenCertificatesAreValid));
+                assertThrows(MissingTrustAnchorException.class, () -> Trust.from(clockSetWhenCertificatesAreValid, buypassIntermediate, commfidesIntermediate));
         assertThat(missingAnchorsForAll.getCertificates(), containsInAnyOrder(buypassIntermediate, commfidesIntermediate));
 
 
         MissingTrustAnchorException missingBuypassRoot =
-                assertThrows(MissingTrustAnchorException.class, () -> Trust.from(Stream.of(commfidesRoot, buypassIntermediate, commfidesIntermediate), clockSetWhenCertificatesAreValid));
+                assertThrows(MissingTrustAnchorException.class, () -> Trust.from(clockSetWhenCertificatesAreValid, commfidesRoot, buypassIntermediate, commfidesIntermediate));
         assertThat(missingBuypassRoot.getCertificates(), contains(buypassIntermediate));
     }
 

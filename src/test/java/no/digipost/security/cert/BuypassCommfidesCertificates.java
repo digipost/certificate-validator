@@ -25,15 +25,15 @@ import static no.digipost.security.DigipostSecurity.readCertificate;
 public class BuypassCommfidesCertificates {
 
     public static Trust createProdTrust(Clock clock) {
-        return new Trust(initTrustedCerts(false), initIntermediateTrust(false), clock);
+        return new Trust(clock, initTrustedCerts(false), initIntermediateTrust(false));
     }
 
     public static Trust createTestTrust(Clock clock) {
-        return new Trust(initTrustedCerts(true), initIntermediateTrust(true), clock);
+        return new Trust(clock, initTrustedCerts(true), initIntermediateTrust(true));
     }
 
     public static Trust createTestTrustWithAdditionalCerts(Clock clock, X509Certificate ... additionalTrustedCerts) {
-        return new Trust(concat(initTrustedCerts(true), Stream.of(additionalTrustedCerts)), initIntermediateTrust(true), clock);
+        return new Trust(clock, concat(initTrustedCerts(true), Stream.of(additionalTrustedCerts)), initIntermediateTrust(true));
     }
 
     private static Stream<X509Certificate> initTrustedCerts(boolean includeTestCerts) {
