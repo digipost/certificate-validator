@@ -31,17 +31,22 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static uk.co.probablyfine.matchers.Java8Matchers.where;
-import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
 import static java.time.ZoneOffset.UTC;
 import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.aMapWithSize;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.co.probablyfine.matchers.Java8Matchers.where;
+import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
 
 public class TrustTest {
 
@@ -50,8 +55,19 @@ public class TrustTest {
     private final X509Certificate commfidesRoot = DigipostSecurity.readCertificate("sertifikater/prod/commfides_root_ca.cer");
     private final X509Certificate commfidesIntermediate = DigipostSecurity.readCertificate("sertifikater/prod/commfides_ca.cer");
 
-    private final Trust trust = new Trust(Stream.of(buypassRoot, commfidesRoot), Stream.of(buypassIntermediate, commfidesIntermediate),
+    private final Trust trust = Trust.from(Stream.of(buypassRoot, commfidesRoot, buypassIntermediate, commfidesIntermediate),
             Clock.fixed(LocalDateTime.of(2020, 2, 10, 12, 0).toInstant(UTC), UTC));
+
+    @Test
+    void detects_trust_achors_and_intermediate_certificates() {
+        assertThat(trust, where(Trust::getTrustAnchorCertificates, containsInAnyOrder(buypassRoot, commfidesRoot)));
+        assertAll("intermediate certs",
+                () -> assertThat(trust, where(Trust::getTrustedIntermediateCertificates, hasEntry(is(buypassIntermediate.getSubjectX500Principal()), contains(buypassIntermediate)))),
+                () -> assertThat(trust, where(Trust::getTrustedIntermediateCertificates, hasEntry(is(commfidesIntermediate.getSubjectX500Principal()), contains(commfidesIntermediate)))),
+                () -> assertThat(trust, where(Trust::getTrustedIntermediateCertificates, aMapWithSize(2)))
+                );
+    }
+
 
     @Test
     public void returns_only_trust_anchors_when_no_intermediates_match_the_principal() {
