@@ -132,6 +132,7 @@ public class Trust {
         }
     }
 
+
     /**
      * Determine if a certificate path is trusted or not
      *
@@ -154,21 +155,41 @@ public class Trust {
     }
 
 
+    /**
+     * @return the {@link TrustAnchor}s of this {@code Trust}
+     *
+     * @see #getTrustAnchorCertificates()
+     */
     public Set<TrustAnchor> getTrustAnchors() {
         return getTrustAnchorCertificates().stream().map(c -> new TrustAnchor(c, null)).collect(toSet());
     }
 
+
+    /**
+     * A trust anchor is the authoritative entity for which trust is assumed
+     * and not derived, i.e. the root certificates from which the whole chain of trust is derived.
+     *
+     * @return the {@link X509Certificate trust anchor certificates} of this {@code Trust}
+     */
     public Set<X509Certificate> getTrustAnchorCertificates() {
         return trustAnchorCerts;
     }
 
+
+    /**
+     * @return a {@link KeyStore} populated with the
+     *         {@link #getTrustAnchorCertificates() trust anchor certificates}
+     *         of this {@code Trust}
+     */
     public KeyStore getTrustAnchorsKeyStore() {
         return KeyStoreType.JCEKS.newKeyStore().containing(this.getTrustAnchorCertificates()).withNoPassword();
     }
 
+
     public Map<X500Principal, List<X509Certificate>> getTrustedIntermediateCertificates() {
         return trustedIntermediateCerts;
     }
+
 
     Stream<X509Certificate> getTrustAnchorsAndAnyIntermediateCertificatesFor(X500Principal principal) {
         return concat(getTrustAnchorCertificates().stream(), getTrustedIntermediateCertificates().getOrDefault(principal, emptyList()).stream());
