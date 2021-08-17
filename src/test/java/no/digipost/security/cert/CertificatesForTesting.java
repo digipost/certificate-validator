@@ -19,7 +19,7 @@ import no.digipost.security.DigipostSecurity;
 
 import java.security.cert.X509Certificate;
 
-public final class Certificates {
+public final class CertificatesForTesting {
 
 
     public static final String DIGIPOST_VIRKSOMHETSSERTIFIKAT_TEST =

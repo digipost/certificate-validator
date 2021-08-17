@@ -16,6 +16,7 @@
 package no.digipost.security.cert;
 
 import com.google.common.io.ByteStreams;
+import no.digipost.security.DigipostTrusts;
 import no.digipost.security.FilesAndDirs;
 import no.digipost.security.HttpClient;
 import no.digipost.security.ocsp.OcspLookup;
@@ -59,12 +60,12 @@ import static no.digipost.security.cert.CertStatus.REVOKED;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
 import static no.digipost.security.cert.CertStatus.UNTRUSTED;
 import static no.digipost.security.cert.CertificateValidatorConfig.MOST_STRICT;
-import static no.digipost.security.cert.Certificates.BUYPASS_SEID_2_CERT;
-import static no.digipost.security.cert.Certificates.BUYPASS_SEID_2_E_SEAL_CERT;
-import static no.digipost.security.cert.Certificates.digipostTestRotsertifikat;
-import static no.digipost.security.cert.Certificates.digipostUtstedtTestsertifikat;
-import static no.digipost.security.cert.Certificates.digipostVirksomhetsTestsertifikat;
-import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;
+import static no.digipost.security.cert.CertificatesForTesting.BUYPASS_SEID_2_CERT;
+import static no.digipost.security.cert.CertificatesForTesting.BUYPASS_SEID_2_E_SEAL_CERT;
+import static no.digipost.security.cert.CertificatesForTesting.digipostTestRotsertifikat;
+import static no.digipost.security.cert.CertificatesForTesting.digipostUtstedtTestsertifikat;
+import static no.digipost.security.cert.CertificatesForTesting.digipostVirksomhetsTestsertifikat;
+import static no.digipost.security.cert.CertificatesForTesting.digipostVirksomhetssertifikat;
 import static no.digipost.security.cert.OcspPolicy.ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -99,7 +100,7 @@ public class CertificateValidatorTest {
     private CertificateValidator qaValidator;
 
     private final ControllableClock clock = ControllableClock.freezedAt(LocalDateTime.of(2020, 2, 24, 12, 5));
-    private final Trust prodTrust = BuypassCommfidesCertificates.createProdTrust(clock);
+    private final Trust prodTrust = new DigipostTrusts(clock).buypassAndCommfidesEnterpriseCertificates();
     private final Trust qaTrust = BuypassCommfidesCertificates.createTestTrust(clock);
 
 
@@ -353,8 +354,8 @@ public class CertificateValidatorTest {
 
 
         try (CloseableHttpClient realClient = HttpClient.create()) {
-            X509Certificate certificate = Certificates.revoked();
-            X509Certificate issuer = Certificates.revokedIssuer();
+            X509Certificate certificate = CertificatesForTesting.revoked();
+            X509Certificate issuer = CertificatesForTesting.revokedIssuer();
 
             byte[] response = new TrustedCertificateAndIssuer(certificate, issuer)
                     .ocspLookupRequest

@@ -16,6 +16,7 @@
 package no.digipost.security.cert;
 
 import no.digipost.security.DigipostSecurity;
+import no.digipost.security.DigipostTrusts;
 import no.digipost.security.HttpClient;
 import no.digipost.time.ControllableClock;
 import org.apache.http.HttpHost;
@@ -27,7 +28,6 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static java.time.ZoneOffset.UTC;
-import static no.digipost.security.cert.BuypassCommfidesCertificates.createProdTrust;
 import static no.digipost.security.cert.CertStatus.OK;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
 import static no.digipost.security.cert.CertStatus.UNTRUSTED;
@@ -39,7 +39,8 @@ public class RealOCSPCertificateValidatorTest {
 
     private final ControllableClock clock = ControllableClock.freezedAt(LocalDateTime.of(2020, 2, 10, 12, 0).atZone(UTC));
     private final Optional<HttpHost> proxy =  Optional.ofNullable(System.getProperty("https_proxy")).map(HttpHost::create);
-    private final CertificateValidator validator = new CertificateValidator(createProdTrust(clock), HttpClient.create(proxy));
+    private final CertificateValidator validator = new CertificateValidator(
+            new DigipostTrusts(clock).buypassAndCommfidesEnterpriseCertificates(), HttpClient.create(proxy));
 
 
     @Test
