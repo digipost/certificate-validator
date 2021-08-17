@@ -15,7 +15,9 @@
  */
 package no.digipost.security.cert;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
 import no.digipost.security.DigipostSecurity;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import javax.security.auth.x500.X500Principal;
@@ -25,6 +27,7 @@ import java.security.KeyStoreException;
 import java.security.cert.CertPath;
 import java.security.cert.X509Certificate;
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,6 +40,7 @@ import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasSize;
@@ -47,14 +51,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.co.probablyfine.matchers.Java8Matchers.where;
 import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
 
-public class TrustTest {
+class TrustTest {
 
-    private final X509Certificate buypassRoot = DigipostSecurity.readCertificate("sertifikater/prod/BPClass3RootCA.cer");
-    private final X509Certificate buypassIntermediate = DigipostSecurity.readCertificate("sertifikater/prod/BPClass3CA3.cer");
-    private final X509Certificate commfidesRoot = DigipostSecurity.readCertificate("sertifikater/prod/commfides_root_ca.cer");
-    private final X509Certificate commfidesIntermediate = DigipostSecurity.readCertificate("sertifikater/prod/commfides_ca.cer");
+    private static final X509Certificate buypassRoot = DigipostSecurity.readCertificate("sertifikater/prod/BPClass3RootCA.cer");
+    private static final X509Certificate buypassIntermediate = DigipostSecurity.readCertificate("sertifikater/prod/BPClass3CA3.cer");
+    private static final X509Certificate commfidesRoot = DigipostSecurity.readCertificate("sertifikater/prod/commfides_root_ca.cer");
+    private static final X509Certificate commfidesIntermediate = DigipostSecurity.readCertificate("sertifikater/prod/commfides_ca.cer");
 
-    private final Clock clockSetWhenCertificatesAreValid = Clock.fixed(LocalDateTime.of(2020, 2, 10, 12, 0).toInstant(UTC), UTC);
+    private static final Clock clockSetWhenCertificatesAreValid = Clock.fixed(LocalDateTime.of(2020, 2, 10, 12, 0).toInstant(UTC), UTC);
 
     private final Trust trust = Trust.from(clockSetWhenCertificatesAreValid, buypassRoot, commfidesRoot, buypassIntermediate, commfidesIntermediate);
 
@@ -83,14 +87,14 @@ public class TrustTest {
 
 
     @Test
-    public void returns_only_trust_anchors_when_no_intermediates_match_the_principal() {
+    void returns_only_trust_anchors_when_no_intermediates_match_the_principal() {
         X500Principal randomUnknownPrincipal = Certificates.digipostVirksomhetsTestsertifikat().getIssuerX500Principal();
         Set<X509Certificate> allCerts = trust.getTrustAnchorsAndAnyIntermediateCertificatesFor(randomUnknownPrincipal).collect(toSet());
         assertThat(allCerts, containsInAnyOrder(buypassRoot, commfidesRoot));
     }
 
     @Test
-    public void returns_trust_anchors_and_trusted_intermediate_certificates() {
+    void returns_trust_anchors_and_trusted_intermediate_certificates() {
         X500Principal digipostCertificateIssuer = Certificates.digipostVirksomhetssertifikat().getIssuerX500Principal();
         Set<X509Certificate> allCerts = trust.getTrustAnchorsAndAnyIntermediateCertificatesFor(digipostCertificateIssuer).collect(toSet());
         assertThat(allCerts, containsInAnyOrder(buypassRoot, commfidesRoot, buypassIntermediate));
@@ -98,7 +102,7 @@ public class TrustTest {
 
 
     @Test
-    public void builds_keystore_with_certificates() throws KeyStoreException {
+    void builds_keystore_with_certificates() throws KeyStoreException {
         Collection<X509Certificate> certificates = trust.getTrustAnchorCertificates();
         assertThat(certificates, hasSize(greaterThan(0)));
 
@@ -112,19 +116,56 @@ public class TrustTest {
 
 
     @Test
-    public void resolve_cert_path_from_certificate() {
+    void resolve_cert_path_from_certificate() {
         ReviewedCertPath reviewedPath = trust.resolveCertPath(Certificates.digipostVirksomhetssertifikat());
         assertThat(reviewedPath, where(ReviewedCertPath::isTrusted));
         assertThat(reviewedPath.getPath(), where(CertPath::getCertificates, hasSize(2)));
     }
 
     @Test
-    public void cert_path_of_qa_certificate_is_not_trusted_in_production() {
+    void cert_path_of_qa_certificate_is_not_trusted_in_production() {
         ReviewedCertPath reviewedPath = trust.resolveCertPath(Certificates.digipostVirksomhetsTestsertifikat());
 
         assertThat(reviewedPath, whereNot(ReviewedCertPath::isTrusted));
         Exception thrown = assertThrows(Exception.class, reviewedPath::getPath);
         assertThat(thrown, where(Exception::getMessage, containsString("unable to find valid certification path")));
+    }
+
+    @Test
+    void trust_equality() {
+        EqualsVerifier.forClass(Trust.class)
+            .withPrefabValues(X509Certificate.class, buypassRoot, commfidesIntermediate)
+            .withPrefabValues(X500Principal.class, buypassRoot.getSubjectX500Principal(), commfidesIntermediate.getSubjectX500Principal())
+            .verify();
+    }
+
+
+    @Nested
+    class Merging {
+
+        @Test
+        void trusts_with_different_clocks_is_not_possible() {
+            Trust trust1 = Trust.from(Clock.fixed(Instant.ofEpochSecond(1_234_567), UTC));
+            Trust trust2 = Trust.from(Clock.fixed(Instant.ofEpochSecond(9_000_000), UTC));
+            assertThrows(NonMatchingClocksException.class, () -> Trust.merge(trust1, trust2));
+        }
+
+        @Test
+        void trusts_with_no_overlapping_certificates() {
+            Trust buypassTrust = Trust.from(clockSetWhenCertificatesAreValid, buypassRoot, buypassIntermediate);
+            Trust commfidesTrust = Trust.from(clockSetWhenCertificatesAreValid, commfidesIntermediate, commfidesRoot);
+            Trust merged = Trust.merge(buypassTrust, commfidesTrust);
+            assertThat(merged, equalTo(trust));
+        }
+
+        @Test
+        void trusts_with_some_overlapping_certificates() {
+            Trust buypassAndCommfidesRootTrust = Trust.from(clockSetWhenCertificatesAreValid, buypassRoot, buypassIntermediate, commfidesRoot);
+            Trust commfidesTrust = Trust.from(clockSetWhenCertificatesAreValid, commfidesIntermediate, commfidesRoot);
+            Trust merged = Trust.merge(buypassAndCommfidesRootTrust, commfidesTrust);
+            assertThat(merged, equalTo(trust));
+        }
+
     }
 
 }

@@ -39,14 +39,20 @@ import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.time.Clock;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.unmodifiableSet;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -60,7 +66,7 @@ import static no.digipost.security.DigipostSecurity.describe;
  * {@link #resolveCertPath(X509Certificate) the certificatation path} of a certificate,
  * and determined if it {@link ReviewedCertPath#isTrusted() is trusted} or not.
  */
-public class Trust {
+public final class Trust {
 
     /**
      * Construct a Trust from the given trusted certificates.
@@ -88,6 +94,42 @@ public class Trust {
                 grouped.getOrDefault(TrustBasis.ANCHOR, emptySet()).stream(),
                 grouped.getOrDefault(TrustBasis.DERIVED, emptySet()).stream());
     }
+
+    /**
+     * Merge two {@code Trust}s. The resulting trust will be the union of the given trusts.
+     *
+     * @param t1 the first trust
+     * @param t2 the second trust
+     *
+     * @return the resulting trust from merging {@code t1} and {@code t2}
+     */
+    public static Trust merge(Trust t1, Trust t2) {
+        if (!Objects.equals(t1.clock, t2.clock)) {
+            throw new NonMatchingClocksException(t1.clock, t2.clock);
+        }
+        return new Trust(
+                mergeMultimaps(t1.trustAnchorCerts, t2.trustAnchorCerts),
+                mergeMultimaps(t1.trustedIntermediateCerts, t2.trustedIntermediateCerts),
+                t1.clock);
+    }
+
+    private static <K, V> Map<K, Set<V>> mergeMultimaps(Map<K, Set<V>> m1, Map<K, Set<V>> m2) {
+        Map<K, Set<V>> merged = new HashMap<>();
+        for (Entry<K, Set<V>> m1Entry : m1.entrySet()) {
+            K m1key = m1Entry.getKey();
+            Set<V> union = new HashSet<>(m1Entry.getValue());
+            union.addAll(m2.getOrDefault(m1key, emptySet()));
+            merged.put(m1key, unmodifiableSet(union));
+        }
+        for (Entry<K, Set<V>> m2Entry : m2.entrySet()) {
+            K m2Key = m2Entry.getKey();
+            if (!merged.containsKey(m2Key)) {
+                merged.put(m2Key, m2Entry.getValue());
+            }
+        }
+        return unmodifiableMap(merged);
+    }
+
 
     private enum TrustBasis {
         /**
@@ -125,9 +167,9 @@ public class Trust {
     }
 
     private Trust(Map<X500Principal, Set<X509Certificate>> trustAnchorCerts, Map<X500Principal, Set<X509Certificate>> trustedIntermediateCerts, Clock clock) {
-        this.trustAnchorCerts = trustAnchorCerts;
-        this.trustedIntermediateCerts = trustedIntermediateCerts;
-        this.clock = clock;
+        this.trustAnchorCerts = requireNonNull(trustAnchorCerts, "trust anchor certificates");
+        this.trustedIntermediateCerts = requireNonNull(trustedIntermediateCerts, "intermediate certificates");
+        this.clock = requireNonNull(clock, "clock");
         validate();
     }
 
@@ -249,5 +291,22 @@ public class Trust {
     Stream<X509Certificate> getTrustAnchorsAndAnyIntermediateCertificatesFor(X500Principal principal) {
         return concat(getTrustAnchorCertificates().stream(), getTrustedIntermediateCertificates().getOrDefault(principal, emptySet()).stream());
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof Trust) {
+            Trust that = (Trust) other;
+            return Objects.equals(this.clock, that.clock)
+                    && Objects.equals(this.trustAnchorCerts, that.trustAnchorCerts)
+                    && Objects.equals(this.trustedIntermediateCerts, that.trustedIntermediateCerts);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(clock, trustAnchorCerts, trustedIntermediateCerts);
+    }
+
 
 }
