@@ -90,7 +90,17 @@ public class Trust {
     }
 
     private enum TrustBasis {
-        ANCHOR, DERIVED;
+        /**
+         * The trust in a trust anchor is assumed, i.e. it is simply something
+         * you decide to trust.
+         */
+        ANCHOR,
+
+        /**
+         * Derived trust must be traceable back to a trust anchor, e.g. a certificate
+         * must be issued by a another already trusted certificate.
+         */
+        DERIVED;
 
         static TrustBasis determineFrom(X509Certificate cert) {
             return cert.getSubjectX500Principal().equals(cert.getIssuerX500Principal()) ? TrustBasis.ANCHOR : TrustBasis.DERIVED;
