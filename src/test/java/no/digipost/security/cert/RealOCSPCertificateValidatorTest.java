@@ -16,7 +16,6 @@
 package no.digipost.security.cert;
 
 import no.digipost.security.DigipostSecurity;
-import no.digipost.security.DigipostTrusts;
 import no.digipost.security.HttpClient;
 import no.digipost.time.ControllableClock;
 import org.apache.http.HttpHost;
@@ -40,7 +39,7 @@ public class RealOCSPCertificateValidatorTest {
     private final ControllableClock clock = ControllableClock.freezedAt(LocalDateTime.of(2020, 2, 10, 12, 0).atZone(UTC));
     private final Optional<HttpHost> proxy =  Optional.ofNullable(System.getProperty("https_proxy")).map(HttpHost::create);
     private final CertificateValidator validator = new CertificateValidator(
-            new DigipostTrusts(clock).buypassAndCommfidesEnterpriseCertificates(), HttpClient.create(proxy));
+            new TrustFactory(clock).buypassAndCommfidesEnterpriseCertificates(), HttpClient.create(proxy));
 
 
     @Test
@@ -63,7 +62,7 @@ public class RealOCSPCertificateValidatorTest {
     public void godtar_nytt_commfides_test_sertifikat() {
         CertificateValidator validatorQaEnv = new CertificateValidator(
                 CertificateValidatorConfig.MOST_STRICT.allowOcspResults(UNDECIDED),
-                BuypassCommfidesCertificates.createTestTrust(Clock.systemUTC()),
+                new TrustFactory(Clock.systemUTC()).buypassAndCommfidesTestEnterpriseCertificates(),
                 HttpClient.create());
 
         assertThat(validatorQaEnv.validateCert(EBOKS_COMMFIDES_TEST), is(OK));

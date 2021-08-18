@@ -295,7 +295,7 @@ public final class CertificatesForTesting {
 
     // Virksomhetssertifikater for Europa (SEID v2.0) for test
     public static final X509Certificate BUYPASS_SEID_2_CERT = DigipostSecurity.readCertificate("sertifikater/test/test4-autentiseringssertifikat-vid-europa.cer");
-    public static final X509Certificate BUYPASS_SEID_2_ISSUER = DigipostSecurity.readCertificate("sertifikater/test/BPCl3CaG2STBS.cer");
+    public static final X509Certificate BUYPASS_SEID_2_ISSUER = TestEnvCertificates.buypassClass3TestCaG2SoftToken();
 
     // Kvalifiserte sertifikater for elektroniske segl (QC eSeal) (SEID v2.0) for test
     public static final X509Certificate BUYPASS_SEID_2_E_SEAL_CERT = DigipostSecurity.readCertificate("sertifikater/test/test4-autentiseringssertifikat-qceseal.cer");

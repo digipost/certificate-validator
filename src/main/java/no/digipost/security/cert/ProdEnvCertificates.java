@@ -15,11 +15,11 @@
  */
 package no.digipost.security.cert;
 
+import no.digipost.security.DigipostSecurity;
+
 import java.security.cert.X509Certificate;
 
-import static no.digipost.security.DigipostSecurity.readCertificate;
-
-public final class Certificates {
+public final class ProdEnvCertificates {
 
     /**
      * Buypass
@@ -62,23 +62,30 @@ public final class Certificates {
     }
 
 
+
+    // X509Certificate singletons
+
     private static final class BuypassClass3RootCa {
-        static final X509Certificate cert = readCertificate("certificates/prod/BPClass3RootCA.cer");
+        static final X509Certificate cert = readCertificate("BPClass3RootCA.cer");
     }
 
     private static final class BuypassClass3Ca3 {
-        static final X509Certificate cert = readCertificate("certificates/prod/BPClass3CA3.cer");
+        static final X509Certificate cert = readCertificate("BPClass3CA3.cer");
     }
 
     private static final class CommfidesRootCa {
-        static final X509Certificate cert = readCertificate("certificates/prod/commfides_root_ca.cer");
+        static final X509Certificate cert = readCertificate("commfides_root_ca.cer");
     }
 
     private static final class CommfidesCa {
-        static final X509Certificate cert = readCertificate("certificates/prod/commfides_ca.cer");
+        static final X509Certificate cert = readCertificate("commfides_ca.cer");
     }
 
-    private Certificates() {
+    private static X509Certificate readCertificate(String resourceName) {
+        return DigipostSecurity.readCertificate("certificates/prod/" + resourceName);
+    }
+
+    private ProdEnvCertificates() {
     }
 
 }

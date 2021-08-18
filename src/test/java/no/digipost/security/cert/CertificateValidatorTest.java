@@ -16,7 +16,6 @@
 package no.digipost.security.cert;
 
 import com.google.common.io.ByteStreams;
-import no.digipost.security.DigipostTrusts;
 import no.digipost.security.FilesAndDirs;
 import no.digipost.security.HttpClient;
 import no.digipost.security.ocsp.OcspLookup;
@@ -54,7 +53,6 @@ import java.time.LocalDateTime;
 
 import static java.util.Optional.ofNullable;
 import static no.digipost.DiggIO.autoClosing;
-import static no.digipost.security.cert.BuypassCommfidesCertificates.createTestTrustWithAdditionalCerts;
 import static no.digipost.security.cert.CertStatus.OK;
 import static no.digipost.security.cert.CertStatus.REVOKED;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
@@ -100,8 +98,11 @@ public class CertificateValidatorTest {
     private CertificateValidator qaValidator;
 
     private final ControllableClock clock = ControllableClock.freezedAt(LocalDateTime.of(2020, 2, 24, 12, 5));
-    private final Trust prodTrust = new DigipostTrusts(clock).buypassAndCommfidesEnterpriseCertificates();
-    private final Trust qaTrust = BuypassCommfidesCertificates.createTestTrust(clock);
+    private final TrustFactory trustFactory = new TrustFactory(clock);
+    private final Trust prodTrust = trustFactory.buypassAndCommfidesEnterpriseCertificates();
+    private final Trust qaTrust = Trust.merge(prodTrust, Trust.merge(
+            trustFactory.buypassAndCommfidesTestEnterpriseCertificates(),
+            trustFactory.buypassSeid2TestEnterpriseCertificates()));
 
 
     @BeforeEach
@@ -305,7 +306,7 @@ public class CertificateValidatorTest {
 
     @Test
     public void skipOcspForDigipostIssuedCertificate() throws Exception {
-        Trust trust = createTestTrustWithAdditionalCerts(clock, digipostTestRotsertifikat());
+        Trust trust = Trust.merge(qaTrust, Trust.from(clock, digipostTestRotsertifikat()));
 
         CertificateValidator skipOcspForDigipostCert = new CertificateValidator(
                 MOST_STRICT.withOcspPolicy(ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED),
@@ -336,7 +337,7 @@ public class CertificateValidatorTest {
     @Test
     public void validateBuypassSeid2Cert() throws IOException {
         ControllableClock clockForValidSeid2Certs = ControllableClock.freezedAt(LocalDateTime.of(2021, 8, 24, 12, 5));
-        Trust qaTrustForValidSeid2Certs = BuypassCommfidesCertificates.createTestTrust(ControllableClock.freezedAt(LocalDateTime.of(2021, 8, 24, 12, 5)));
+        Trust qaTrustForValidSeid2Certs = new TrustFactory(clockForValidSeid2Certs).buypassSeid2TestEnterpriseCertificates();
         CertificateValidator validator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrustForValidSeid2Certs, httpClient, clockForValidSeid2Certs);
 
         given(ocspResponseStatus.getStatusCode()).willReturn(200);

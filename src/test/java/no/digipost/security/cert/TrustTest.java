@@ -16,7 +16,6 @@
 package no.digipost.security.cert;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
-import no.digipost.security.DigipostTrusts;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -35,12 +34,12 @@ import java.util.Set;
 
 import static java.time.ZoneOffset.UTC;
 import static java.util.stream.Collectors.toSet;
-import static no.digipost.security.cert.Certificates.buypassClass3Ca3;
-import static no.digipost.security.cert.Certificates.buypassClass3RootCa;
-import static no.digipost.security.cert.Certificates.commfidesCa;
-import static no.digipost.security.cert.Certificates.commfidesRootCa;
 import static no.digipost.security.cert.CertificatesForTesting.digipostVirksomhetsTestsertifikat;
 import static no.digipost.security.cert.CertificatesForTesting.digipostVirksomhetssertifikat;
+import static no.digipost.security.cert.ProdEnvCertificates.buypassClass3Ca3;
+import static no.digipost.security.cert.ProdEnvCertificates.buypassClass3RootCa;
+import static no.digipost.security.cert.ProdEnvCertificates.commfidesCa;
+import static no.digipost.security.cert.ProdEnvCertificates.commfidesRootCa;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.contains;
@@ -60,7 +59,7 @@ import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
 class TrustTest {
 
     private static final Clock clockSetWhenCertificatesAreValid = Clock.fixed(LocalDateTime.of(2020, 2, 10, 12, 0).toInstant(UTC), UTC);
-    private static final DigipostTrusts trusts = new DigipostTrusts(clockSetWhenCertificatesAreValid);
+    private static final TrustFactory trusts = new TrustFactory(clockSetWhenCertificatesAreValid);
 
     private final Trust trust = trusts.buypassAndCommfidesEnterpriseCertificates();
 
