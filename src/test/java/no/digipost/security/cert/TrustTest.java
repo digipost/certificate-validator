@@ -59,9 +59,9 @@ import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
 class TrustTest {
 
     private static final Clock clockSetWhenCertificatesAreValid = Clock.fixed(LocalDateTime.of(2020, 2, 10, 12, 0).toInstant(UTC), UTC);
-    private static final TrustFactory trusts = new TrustFactory(clockSetWhenCertificatesAreValid);
+    private static final TrustFactory trustFactory = new TrustFactory(clockSetWhenCertificatesAreValid);
 
-    private final Trust trust = trusts.buypassAndCommfidesEnterpriseCertificates();
+    private final Trust trust = trustFactory.seid1.buypassAndCommfidesEnterpriseCertificates();
 
 
     @Test
@@ -154,8 +154,8 @@ class TrustTest {
 
         @Test
         void trusts_with_no_overlapping_certificates() {
-            Trust buypassTrust = trusts.buypassEnterpriseCertificates();
-            Trust commfidesTrust = trusts.commfidesEnterpriseCertificates();
+            Trust buypassTrust = trustFactory.seid1.buypassEnterpriseCertificates();
+            Trust commfidesTrust = trustFactory.seid1.commfidesEnterpriseCertificates();
             Trust merged = Trust.merge(buypassTrust, commfidesTrust);
             assertThat(merged, equalTo(Trust.from(clockSetWhenCertificatesAreValid, buypassClass3RootCa(), buypassClass3Ca3(), commfidesRootCa(), commfidesCa())));
         }

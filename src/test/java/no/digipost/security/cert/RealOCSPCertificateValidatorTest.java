@@ -39,7 +39,7 @@ public class RealOCSPCertificateValidatorTest {
     private final ControllableClock clock = ControllableClock.freezedAt(LocalDateTime.of(2020, 2, 10, 12, 0).atZone(UTC));
     private final Optional<HttpHost> proxy =  Optional.ofNullable(System.getProperty("https_proxy")).map(HttpHost::create);
     private final CertificateValidator validator = new CertificateValidator(
-            new TrustFactory(clock).buypassAndCommfidesEnterpriseCertificates(), HttpClient.create(proxy));
+            new TrustFactory(clock).seid1.buypassAndCommfidesEnterpriseCertificates(), HttpClient.create(proxy));
 
 
     @Test
@@ -62,7 +62,7 @@ public class RealOCSPCertificateValidatorTest {
     public void godtar_nytt_commfides_test_sertifikat() {
         CertificateValidator validatorQaEnv = new CertificateValidator(
                 CertificateValidatorConfig.MOST_STRICT.allowOcspResults(UNDECIDED),
-                new TrustFactory(Clock.systemUTC()).buypassAndCommfidesTestEnterpriseCertificates(),
+                new TrustFactory(Clock.systemUTC()).seid1.buypassAndCommfidesTestEnterpriseCertificates(),
                 HttpClient.create());
 
         assertThat(validatorQaEnv.validateCert(EBOKS_COMMFIDES_TEST), is(OK));

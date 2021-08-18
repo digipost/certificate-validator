@@ -32,40 +32,68 @@ import static no.digipost.security.cert.TestEnvCertificates.commfidesTestRootCa;
 
 public final class TrustFactory {
 
+    public final Seid1 seid1;
+    public final Seid2 seid2;
     private final Clock clock;
 
     public TrustFactory(Clock clock) {
+        this.seid1 = new Seid1();
+        this.seid2 = new Seid2();
         this.clock = clock;
     }
 
-    public Trust buypassAndCommfidesEnterpriseCertificates() {
-        return Trust.merge(buypassEnterpriseCertificates(), commfidesEnterpriseCertificates());
+
+    /**
+     * SEID 2.0 is the Norwegian standard for certificates aligning with the
+     * European eIDAS standard.
+     */
+    public final class Seid2 {
+
+        public Trust buypassTestEnterpriseCertificates() {
+            return Trust.from(clock,
+                    buypassClass3TestRootCaG2Psd2QWAC(), buypassClass3TestCaG2Psd2QWAC(),
+                    buypassClass3TestRootCaG2SoftToken(), buypassClass3TestCaG2SoftToken());
+        }
+
+        private Seid2() {
+        }
     }
 
-    public Trust buypassAndCommfidesTestEnterpriseCertificates() {
-        return Trust.merge(buypassTestEnterpriseCertificates(), commfidesTestEnterpriseCertificates());
+
+
+    /**
+     * SEID 1.0 is a Norwegian standard for certificates, which is
+     * currently being phased out, and to be replaced by {@link Seid2 SEID 2.0}.
+     */
+    public final class Seid1 {
+
+        public Trust buypassAndCommfidesEnterpriseCertificates() {
+            return Trust.merge(buypassEnterpriseCertificates(), commfidesEnterpriseCertificates());
+        }
+
+        public Trust buypassAndCommfidesTestEnterpriseCertificates() {
+            return Trust.merge(buypassTestEnterpriseCertificates(), commfidesTestEnterpriseCertificates());
+        }
+
+        public Trust buypassEnterpriseCertificates() {
+            return Trust.from(clock, buypassClass3RootCa(), buypassClass3Ca3());
+        }
+
+        public Trust buypassTestEnterpriseCertificates() {
+            return Trust.from(clock, buypassClass3Test4RootCa(), buypassClass3Test4Ca3());
+        }
+
+        public Trust commfidesEnterpriseCertificates() {
+            return Trust.from(clock, commfidesRootCa(), commfidesCa());
+        }
+
+        public Trust commfidesTestEnterpriseCertificates() {
+            return Trust.from(clock, commfidesTestRootCa(), commfidesTestCa());
+        }
+
+        private Seid1() {
+        }
     }
 
-    public Trust buypassEnterpriseCertificates() {
-        return Trust.from(clock, buypassClass3RootCa(), buypassClass3Ca3());
-    }
-
-    public Trust buypassTestEnterpriseCertificates() {
-        return Trust.from(clock, buypassClass3Test4RootCa(), buypassClass3Test4Ca3());
-    }
-
-    public Trust buypassSeid2TestEnterpriseCertificates() {
-        return Trust.from(clock,
-                buypassClass3TestRootCaG2Psd2QWAC(), buypassClass3TestCaG2Psd2QWAC(),
-                buypassClass3TestRootCaG2SoftToken(), buypassClass3TestCaG2SoftToken());
-    }
-
-    public Trust commfidesEnterpriseCertificates() {
-        return Trust.from(clock, commfidesRootCa(), commfidesCa());
-    }
-
-    public Trust commfidesTestEnterpriseCertificates() {
-        return Trust.from(clock, commfidesTestRootCa(), commfidesTestCa());
-    }
 
 }

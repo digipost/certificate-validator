@@ -99,10 +99,10 @@ public class CertificateValidatorTest {
 
     private final ControllableClock clock = ControllableClock.freezedAt(LocalDateTime.of(2020, 2, 24, 12, 5));
     private final TrustFactory trustFactory = new TrustFactory(clock);
-    private final Trust prodTrust = trustFactory.buypassAndCommfidesEnterpriseCertificates();
+    private final Trust prodTrust = trustFactory.seid1.buypassAndCommfidesEnterpriseCertificates();
     private final Trust qaTrust = Trust.merge(prodTrust, Trust.merge(
-            trustFactory.buypassAndCommfidesTestEnterpriseCertificates(),
-            trustFactory.buypassSeid2TestEnterpriseCertificates()));
+            trustFactory.seid1.buypassAndCommfidesTestEnterpriseCertificates(),
+            trustFactory.seid2.buypassTestEnterpriseCertificates()));
 
 
     @BeforeEach
@@ -337,7 +337,7 @@ public class CertificateValidatorTest {
     @Test
     public void validateBuypassSeid2Cert() throws IOException {
         ControllableClock clockForValidSeid2Certs = ControllableClock.freezedAt(LocalDateTime.of(2021, 8, 24, 12, 5));
-        Trust qaTrustForValidSeid2Certs = new TrustFactory(clockForValidSeid2Certs).buypassSeid2TestEnterpriseCertificates();
+        Trust qaTrustForValidSeid2Certs = new TrustFactory(clockForValidSeid2Certs).seid2.buypassTestEnterpriseCertificates();
         CertificateValidator validator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrustForValidSeid2Certs, httpClient, clockForValidSeid2Certs);
 
         given(ocspResponseStatus.getStatusCode()).willReturn(200);
