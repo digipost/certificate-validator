@@ -22,16 +22,6 @@ import java.security.cert.X509Certificate;
 public final class TestEnvCertificates {
 
     /**
-     * Buypass G2 Virksomhetssertifikater (SEID v2.0) og QC eSeal som 'Hard Token'
-     *
-     * <p>CN=Buypass Class 3 Test4 CA G2 HT Business, O=Buypass AS, 2.5.4.97=#0c0f4e54524e4f2d393833313633333237, C=NO
-     * <p>valid 2020-11-04 to 2040-11-04
-     */
-    public static X509Certificate buypassClass3TestCaG2HardToken() {
-        return BuypassClass3TestCaG2HardToken.cert;
-    }
-
-    /**
      * Buypass G2 Virksomhetssertifikater for Europa (SEID v2.0) og QC eSeal (fra Q3 2021) og PSD2 QC eSeal som 'Soft Token'
      *
      * <p>CN=Buypass Class 3 Test4 CA G2 ST Business, O=Buypass AS, 2.5.4.97=#0c0f4e54524e4f2d393833313633333237, C=NO
@@ -48,16 +38,6 @@ public final class TestEnvCertificates {
      */
     public static X509Certificate buypassClass3TestCaG2Psd2QWAC() {
         return BuypassClass3TestCaG2Psd2QWAC.cert;
-    }
-
-    /**
-     * Buypass G2 Virksomhetssertifikater (SEID v2.0) og QC eSeal som 'Hard Token'
-     *
-     * <p>CN=Buypass Class 3 Test4 Root CA G2 HT, O=Buypass AS, 2.5.4.97=#0c0f4e54524e4f2d393833313633333237, C=NO
-     * <p>valid 2020-11-03 to 2045-11-03
-     */
-    public static X509Certificate buypassClass3TestRootCaG2HardToken() {
-        return BuypassClass3TestRootCaG2HardToken.cert;
     }
 
     /**
@@ -144,11 +124,6 @@ public final class TestEnvCertificates {
         static final X509Certificate cert = readCertificate("BPCl3RootCaG2ST.cer");
     }
 
-    // Buypass G2 Virksomhetssertifikater (SEID v2.0) og QC eSeal som 'Hard Token'
-    private static final class BuypassClass3TestRootCaG2HardToken {
-        static final X509Certificate cert = readCertificate("BPCl3RootCaG2HT.cer");
-    }
-
     // Buypass G2 PSD2 QWAC
     private static final class BuypassClass3TestCaG2Psd2QWAC {
         static final X509Certificate cert = readCertificate("BPCl3CaG2QCWA.cer");
@@ -157,11 +132,6 @@ public final class TestEnvCertificates {
     // Buypass G2 Virksomhetssertifikater for Europa (SEID v2.0) og QC eSeal (fra Q3 2021) og PSD2 QC eSeal som 'Soft Token'
     private static final class BuypassClass3TestCaG2SoftToken {
         static final X509Certificate cert = readCertificate("BPCl3CaG2STBS.cer");
-    }
-
-    // Buypass G2 Virksomhetssertifikater (SEID v2.0) og QC eSeal som 'Hard Token'
-    private static final class BuypassClass3TestCaG2HardToken {
-        static final X509Certificate cert = readCertificate("BPCl3CaG2HTBS.cer");
     }
 
     private static final class CommfidesTestRootCa {

@@ -63,8 +63,7 @@ class CertificatesTest {
     void describeCertificate() {
         List<X509Certificate> certs = asList(
                 TestEnvCertificates.buypassClass3TestRootCaG2Psd2QWAC(),
-                TestEnvCertificates.buypassClass3TestRootCaG2SoftToken(),
-                TestEnvCertificates.buypassClass3TestRootCaG2HardToken());
+                TestEnvCertificates.buypassClass3TestRootCaG2SoftToken());
 
         for (X509Certificate cert : certs) {
             System.out.println(describe(cert));

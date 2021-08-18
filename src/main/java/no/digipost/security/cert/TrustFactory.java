@@ -23,10 +23,8 @@ import static no.digipost.security.cert.ProdEnvCertificates.commfidesCa;
 import static no.digipost.security.cert.ProdEnvCertificates.commfidesRootCa;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3Test4Ca3;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3Test4RootCa;
-import static no.digipost.security.cert.TestEnvCertificates.buypassClass3TestCaG2HardToken;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3TestCaG2Psd2QWAC;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3TestCaG2SoftToken;
-import static no.digipost.security.cert.TestEnvCertificates.buypassClass3TestRootCaG2HardToken;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3TestRootCaG2Psd2QWAC;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3TestRootCaG2SoftToken;
 import static no.digipost.security.cert.TestEnvCertificates.commfidesTestCa;
@@ -59,8 +57,7 @@ public final class TrustFactory {
     public Trust buypassSeid2TestEnterpriseCertificates() {
         return Trust.from(clock,
                 buypassClass3TestRootCaG2Psd2QWAC(), buypassClass3TestCaG2Psd2QWAC(),
-                buypassClass3TestRootCaG2SoftToken(), buypassClass3TestCaG2SoftToken(),
-                buypassClass3TestRootCaG2HardToken(), buypassClass3TestCaG2HardToken());
+                buypassClass3TestRootCaG2SoftToken(), buypassClass3TestCaG2SoftToken());
     }
 
     public Trust commfidesEnterpriseCertificates() {
