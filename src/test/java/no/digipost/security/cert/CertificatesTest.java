@@ -20,14 +20,17 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.security.cert.X509Certificate;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.lang.reflect.Modifier.isStatic;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toSet;
-import static no.digipost.security.DigipostSecurity.describe;
+import static java.time.ZoneOffset.UTC;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toCollection;
+import static no.digipost.DiggExceptions.getUnchecked;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.not;
@@ -47,28 +50,64 @@ class CertificatesTest {
         allCertificatesAreResolved(TestEnvCertificates.class);
     }
 
-    private static void allCertificatesAreResolved(Class<?> x509CertClass) {
-        Set<Method> certificateMethods = Stream.of(x509CertClass.getMethods())
-            .filter(method -> isStatic(method.getModifiers()))
-            .filter(method -> X509Certificate.class.isAssignableFrom(method.getReturnType()))
-            .collect(toSet());
-
-        assertThat("there are methods returning certificate in " + x509CertClass.getSimpleName(), certificateMethods, not(empty()));
-        assertAll(certificateMethods.stream()
-            .map(method -> assertDoesNotThrow(() -> method.invoke(x509CertClass)))
-            .map(resolvedCertificate -> () -> assertNotNull(resolvedCertificate)));
-    }
-
     @Disabled @Test
     void describeCertificate() {
-        List<X509Certificate> certs = asList(
-                TestEnvCertificates.buypassClass3TestRootCaG2Psd2QWAC(),
-                TestEnvCertificates.buypassClass3TestRootCaG2SoftToken());
-
-        for (X509Certificate cert : certs) {
-            System.out.println(describe(cert));
+        for (StaticMethod<X509Certificate> certMethod : allStaticCertifcateMethodsOf(ProdEnvCertificates.class)) {
+            X509Certificate certificate = certMethod.invoke();
+            System.out.println(
+                    " **  " + certMethod.getName() + ":\n" + certificate.getSubjectDN() + "\n" +
+                    "valid " + ISO_LOCAL_DATE.format(certificate.getNotBefore().toInstant().atZone(UTC)) +
+                    " to " + ISO_LOCAL_DATE.format(certificate.getNotAfter().toInstant().atZone(UTC)) + "\n");
         }
     }
 
+
+    private static void allCertificatesAreResolved(Class<?> x509CertClass) {
+        Set<StaticMethod<X509Certificate>> certificateMethods = allStaticCertifcateMethodsOf(x509CertClass);
+
+        assertThat("there are methods returning certificate in " + x509CertClass.getSimpleName(), certificateMethods, not(empty()));
+        assertAll(certificateMethods.stream()
+                .map(certificateMethod -> assertDoesNotThrow(() -> certificateMethod.invoke()))
+                .map(resolvedCertificate -> () -> assertNotNull(resolvedCertificate)));
+    }
+
+    private static Set<StaticMethod<X509Certificate>> allStaticCertifcateMethodsOf(Class<?> x509CertClass) {
+        return Stream.of(x509CertClass.getMethods())
+                .map(method -> StaticMethod.ifApplicable(method, X509Certificate.class))
+                .flatMap(staticMethod -> Stream.of(staticMethod).filter(Optional::isPresent).map(Optional::get))
+                .sorted(comparing(StaticMethod::getName))
+                .collect(toCollection(LinkedHashSet::new));
+    }
+
+    private static class StaticMethod<R> {
+        public static <R> Optional<StaticMethod<R>> ifApplicable(Method methodCandidate, Class<R> returnType) {
+            if (isStatic(methodCandidate.getModifiers()) && returnType.isAssignableFrom(methodCandidate.getReturnType())) {
+                return Optional.of(new StaticMethod<>(methodCandidate));
+            } else {
+                return Optional.empty();
+            }
+        }
+
+        private final Method method;
+
+        private StaticMethod(Method staticMethod) {
+            this.method = staticMethod;
+        }
+
+        R invoke(Object ... args) {
+            @SuppressWarnings("unchecked")
+            R returnedValue = (R) getUnchecked(() -> method.invoke(method.getDeclaringClass(), args));
+            return returnedValue;
+        }
+
+        @Override
+        public String toString() {
+            return method.toString();
+        }
+
+        public String getName() {
+            return method.getName();
+        }
+    }
 
 }

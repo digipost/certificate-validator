@@ -19,84 +19,97 @@ import no.digipost.security.DigipostSecurity;
 
 import java.security.cert.X509Certificate;
 
+
+/**
+ * Certificates applicable for use in production environment.
+ * <p>
+ * Sources:
+ * <ul>
+ *   <li><a href="https://www.buypass.no/sikkerhet/buypass-rotsertifikater">Buypass</a></li>
+ * </ul>
+ *
+ * @see TestEnvCertificates
+ */
 public final class ProdEnvCertificates {
 
     /**
-     * Buypass G2 Virksomhetssertifikater for Europa (SEID v2.0) og QC eSeal (fra Q3 2021) og PSD2 QC eSeal som 'Soft Token'
+     * Buypass Class 3 Root CA G2 'Soft Token'
      *
-     * <p>CN=Buypass Class 3 CA G2 ST Business, O=Buypass AS, 2.5.4.97=#0c0f4e54524e4f2d393833313633333237, C=NO
-     * <p>valid 2020-11-04 to 2040-11-04
-     */
-    public static X509Certificate buypassClass3CaG2SoftToken() {
-        return BuypassClass3CaG2SoftToken.cert;
-    }
-
-    /**
-     * Buypass G2 PSD2 QWAC
-     * <p>CN=Buypass Class 3 CA G2 QC WA, O=Buypass AS, 2.5.4.97=#0c0f4e54524e4f2d393833313633333237, C=NO
-     * <p>valid 2020-11-04 to 2040-11-04
-     */
-    public static X509Certificate buypassClass3CaG2Psd2QWAC() {
-        return BuypassClass3CaG2Psd2QWAC.cert;
-    }
-
-    /**
-     * Buypass G2 Virksomhetssertifikater for Europa (SEID v2.0) og QC eSeal (fra Q3 2021) og PSD2 QC eSeal som 'Soft Token'
-     *
-     * <p>CN=Buypass Class 3 Root CA G2 ST, O=Buypass AS, 2.5.4.97=#0c0f4e54524e4f2d393833313633333237, C=NO
-     * <p>valid 2020-11-03 to 2045-11-03
+     * <p>CN=Buypass Class 3 Root CA G2 ST, O=Buypass AS, OID.2.5.4.97=NTRNO-983163327, C=NO
+     * <p>valid 2020-11-10 to 2045-11-1
      */
     public static X509Certificate buypassClass3RootCaG2SoftToken() {
-        return BuypassClass3RootCaG2SoftToken.cert;
+        return BuypassClass3RootCaG2ST.cert;
     }
 
     /**
-     * Buypass G2 PSD2 QWAC
+     * Buypass SEID v2.0 Enterprise certificate issuer CA G2 'Soft Token' Business
      *
-     * <p>CN=Buypass Class 3 Root CA G2 QC, O=Buypass AS, 2.5.4.97=#0c0f4e54524e4f2d393833313633333237, C=NO
-     * <p>valid 2020-11-03 to 2045-11-03
+     * <p>CN=Buypass Class 3 CA G2 ST Business, O=Buypass AS, OID.2.5.4.97=NTRNO-983163327, C=NO
+     * <p>valid 2020-11-10 to 2040-11-10
      */
-    public static final X509Certificate buypassClass3RootCaG2Psd2QWAC() {
-        return BuypassClass3RootCaG2Psd2QWAC.cert;
+    public static X509Certificate buypassClass3CaG2SoftToken() {
+        return BuypassClass3CaG2ST.cert;
     }
 
     /**
-     * Buypass
+     * Buypass Class 3 Root CA G2 'Hard Token'
      *
-     * <p>C=NO, O=Buypass AS-983163327, CN=Buypass Class 3 Root CA
+     * <p>CN=Buypass Class 3 Root CA G2 HT, O=Buypass AS, OID.2.5.4.97=NTRNO-983163327, C=NO
+     * <p>valid 2020-11-10 to 2045-11-10
+     */
+    public static X509Certificate buypassClass3RootCaG2HardToken() {
+        return BuypassClass3RootCaG2HT.cert;
+    }
+
+    /**
+     * Buypass SEID v2.0 Enterprise certificate issuer CA G2 'Hard Token'
+     *
+     * <p>CN=Buypass Class 3 CA G2 HT Business, O=Buypass AS, OID.2.5.4.97=NTRNO-983163327, C=NO
+     * <p>valid 2020-11-10 to 2040-11-10
+     */
+    public static X509Certificate buypassClass3CaG2HardToken() {
+        return BuypassClass3CaG2HT.cert;
+    }
+
+
+    /**
+     * Buypass Root CA (SEID generation 1)
+     *
+     * <p>CN=Buypass Class 3 Root CA, O=Buypass AS-983163327, C=NO
      * <p>valid 2010-10-26 to 2040-10-26
      */
-    public static final X509Certificate buypassClass3RootCa() {
+    public static X509Certificate buypassClass3RootCa() {
         return BuypassClass3RootCa.cert;
     }
 
     /**
-     * Buypass
+     * Buypass certificate issuer CA (SEID generation 1)
      *
      * <p>CN=Buypass Class 3 CA 3, O=Buypass AS-983163327, C=NO
      * <p>valid 2012-09-25 to 2032-09-25
      */
-    public static final X509Certificate buypassClass3Ca3() {
+    public static X509Certificate buypassClass3Ca3() {
         return BuypassClass3Ca3.cert;
     }
 
     /**
-     * Commfides
+     * Commfides Root CA (SEID generaation 1)
      *
-     * <p>CN=CPN RootCA SHA256 Class 3, OU=Commfides Trust Environment (c) 2011 Commfides Norge AS, O=Commfides Norge AS - 988 312 495, C=NO
+     * <p>C=NO, O=Commfides Norge AS - 988 312 495, OU=Commfides Trust Environment (c) 2011 Commfides Norge AS, CN=CPN RootCA SHA256 Class 3
      * <p>valid 2011-02-28 to 2025-01-01
      */
-    public static final X509Certificate commfidesRootCa() {
+    public static X509Certificate commfidesRootCa() {
         return CommfidesRootCa.cert;
     }
 
     /**
-     * Commfides
+     * Commfides certificate issuer CA (SEID generation 1)
      *
      * <p>C=NO, O=Commfides Norge AS - 988 312 495, OU=Commfides Trust Environment (c) 2011 Commfides Norge AS, CN=CPN Enterprise SHA256 CLASS 3
      * <p>valid 2011-02-28 to 2024-12-31
      */
-    public static final X509Certificate commfidesCa() {
+    public static X509Certificate commfidesCa() {
         return CommfidesCa.cert;
     }
 
@@ -112,25 +125,22 @@ public final class ProdEnvCertificates {
         static final X509Certificate cert = readCertificate("BPClass3CA3.cer");
     }
 
-    // Buypass G2 PSD2 QWAC
-    private static final class BuypassClass3RootCaG2Psd2QWAC {
-        static final X509Certificate cert = readCertificate("BPCl3RootCaG2QC.cer");
-    }
-
-    // Buypass G2 Virksomhetssertifikater for Europa (SEID v2.0) og QC eSeal (fra Q3 2021) og PSD2 QC eSeal som 'Soft Token'
-    private static final class BuypassClass3RootCaG2SoftToken {
+    private static final class BuypassClass3RootCaG2ST {
         static final X509Certificate cert = readCertificate("BPCl3RootCaG2ST.cer");
     }
 
-    // Buypass G2 PSD2 QWAC
-    private static final class BuypassClass3CaG2Psd2QWAC {
-        static final X509Certificate cert = readCertificate("BPCl3CaG2QCWA.cer");
-    }
-
-    // Buypass G2 Virksomhetssertifikater for Europa (SEID v2.0) og QC eSeal (fra Q3 2021) og PSD2 QC eSeal som 'Soft Token'
-    private static final class BuypassClass3CaG2SoftToken {
+    private static final class BuypassClass3CaG2ST {
         static final X509Certificate cert = readCertificate("BPCl3CaG2STBS.cer");
     }
+
+    private static final class BuypassClass3RootCaG2HT {
+        static final X509Certificate cert = readCertificate("BPCl3RootCaG2HT.cer");
+    }
+
+    private static final class BuypassClass3CaG2HT {
+        static final X509Certificate cert = readCertificate("BPCl3CaG2HTBS.cer");
+    }
+
 
     private static final class CommfidesRootCa {
         static final X509Certificate cert = readCertificate("commfides_root_ca.cer");
@@ -139,6 +149,7 @@ public final class ProdEnvCertificates {
     private static final class CommfidesCa {
         static final X509Certificate cert = readCertificate("commfides_ca.cer");
     }
+
 
     private static X509Certificate readCertificate(String resourceName) {
         return DigipostSecurity.readCertificate("certificates/prod/" + resourceName);

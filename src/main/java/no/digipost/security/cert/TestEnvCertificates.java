@@ -19,87 +19,95 @@ import no.digipost.security.DigipostSecurity;
 
 import java.security.cert.X509Certificate;
 
+
+/**
+ * Certificates applicable for use in testing environments (not production).
+ *
+ * @see ProdEnvCertificates
+ */
 public final class TestEnvCertificates {
 
     /**
-     * Buypass G2 Virksomhetssertifikater for Europa (SEID v2.0) og QC eSeal (fra Q3 2021) og PSD2 QC eSeal som 'Soft Token'
+     * Buypass Class 3 Test Root CA G2 'Soft Token'
      *
-     * <p>CN=Buypass Class 3 Test4 CA G2 ST Business, O=Buypass AS, 2.5.4.97=#0c0f4e54524e4f2d393833313633333237, C=NO
-     * <p>valid 2020-11-04 to 2040-11-04
-     */
-    public static X509Certificate buypassClass3TestCaG2SoftToken() {
-        return BuypassClass3TestCaG2SoftToken.cert;
-    }
-
-    /**
-     * Buypass G2 PSD2 QWAC
-     * <p>CN=Buypass Class 3 Test4 CA G2 QC WA, O=Buypass AS, 2.5.4.97=#0c0f4e54524e4f2d393833313633333237, C=NO
-     * <p>valid 2020-11-04 to 2040-11-04
-     */
-    public static X509Certificate buypassClass3TestCaG2Psd2QWAC() {
-        return BuypassClass3TestCaG2Psd2QWAC.cert;
-    }
-
-    /**
-     * Buypass G2 Virksomhetssertifikater for Europa (SEID v2.0) og QC eSeal (fra Q3 2021) og PSD2 QC eSeal som 'Soft Token'
-     *
-     * <p>CN=Buypass Class 3 Test4 Root CA G2 ST, O=Buypass AS, 2.5.4.97=#0c0f4e54524e4f2d393833313633333237, C=NO
+     * <p>CN=Buypass Class 3 Test4 Root CA G2 ST, O=Buypass AS, OID.2.5.4.97=NTRNO-983163327, C=NO
      * <p>valid 2020-11-03 to 2045-11-03
      */
     public static X509Certificate buypassClass3TestRootCaG2SoftToken() {
-        return BuypassClass3TestRootCaG2SoftToken.cert;
+        return BuypassClass3TestRootCaG2ST.cert;
     }
 
     /**
-     * Buypass G2 PSD2 QWAC
+     * Buypass SEID v2.0 Enterprise certificate issuer Test CA G2 'Soft Token' Business
      *
-     * <p>CN=Buypass Class 3 Test4 Root CA G2 QC, O=Buypass AS, 2.5.4.97=#0c0f4e54524e4f2d393833313633333237, C=NO
+     * <p>CN=Buypass Class 3 Test4 CA G2 ST Business, O=Buypass AS, OID.2.5.4.97=NTRNO-983163327, C=NO
+     * <p>valid 2020-11-04 to 2040-11-04
+     */
+    public static X509Certificate buypassClass3TestCaG2SoftToken() {
+        return BuypassClass3TestCaG2ST.cert;
+    }
+
+    /**
+     * Buypass Class 3 Test Root CA G2 'Hard Token'
+     *
+     * <p>CN=Buypass Class 3 Test4 Root CA G2 HT, O=Buypass AS, OID.2.5.4.97=NTRNO-983163327, C=NO
      * <p>valid 2020-11-03 to 2045-11-03
      */
-    public static final X509Certificate buypassClass3TestRootCaG2Psd2QWAC() {
-        return BuypassClass3TestRootCaG2Psd2QWAC.cert;
+    public static X509Certificate buypassClass3TestRootCaG2HardToken() {
+        return BuypassClass3TestRootCaG2HT.cert;
     }
 
     /**
-     * Buypass
+     * Buypass SEID v2.0 Enterprise certificate issuer Test CA G2 'Hard Token'
+     *
+     * <p>CN=Buypass Class 3 Test4 CA G2 HT Business, O=Buypass AS, OID.2.5.4.97=NTRNO-983163327, C=NO
+     * <p>valid 2020-11-04 to 2040-11-04
+     */
+    public static X509Certificate buypassClass3TestCaG2HardToken() {
+        return BuypassClass3TestCaG2HT.cert;
+    }
+
+
+    /**
+     * Buypass Test Root CA (SEID generation 1)
      *
      * <p>CN=Buypass Class 3 Test4 Root CA, O=Buypass AS-983163327, C=NO
-     * <p>valid from 2010-10-06 to 2040-10-06
+     * <p>valid 2010-10-06 to 2040-10-06
      */
-    public static final X509Certificate buypassClass3Test4RootCa() {
+    public static X509Certificate buypassClass3Test4RootCa() {
         return BuypassClass3Test4RootCa.cert;
     }
 
     /**
-     * Buypass
+     * Buypass certificate issuer Test CA (SEID generation 1)
      *
      * <p>CN=Buypass Class 3 Test4 CA 3, O=Buypass AS-983163327, C=NO
-     * <p>valid from 2012-02-16 to 2032-02-16
+     * <p>valid 2012-02-16 to 2032-02-16
      */
-    public static final X509Certificate buypassClass3Test4Ca3() {
+    public static X509Certificate buypassClass3Test4Ca3() {
         return BuypassClass3Test4Ca3.cert;
     }
 
     /**
-     * Commfides
+     * Commfides Test Root CA (SEID generaation 1)
      *
-     * <p>C=NO, O=Commfides Norge AS - 988 312 495, OU=CPN Enterprise-Norwegian SHA256 CA- TEST2, OU=Commfides Trust Environment(C) 2014 Commfides Norge AS - TEST,
-     *    CN=Commfides CPN Enterprise-Norwegian SHA256 CA - TEST2
-     * <p>valid from 2014-10-17 to 2022-10-03
+     * <p>C=NO, O=Commfides Norge AS - 988 312 495, OU=CPN Primary Certificate Authority TEST, OU=CPN TEST - For authorized use only,
+     *    OU=Commfides Trust Environment(C) TEST 2010 Commfides Norge AS, CN=CPN Root SHA256 CA - TEST
+     * <p>valid 2012-10-02 to 2022-10-03
      */
-    public static final X509Certificate commfidesTestCa() {
-        return CommfidesTestCa.cert;
+    public static X509Certificate commfidesTestRootCa() {
+        return CommfidesTestRootCa.cert;
     }
 
     /**
-     * Commfides
+     * Commfides certificate issuer Test CA (SEID generation 1)
      *
-     * <p>C=NO, O=Commfides Norge AS - 988 312 495,OU=CPN Primary Certificate Authority TEST, OU=CPN TEST - For authorized use only,
-     *    OU=Commfides Trust Environment(C) TEST 2010 Commfides Norge AS,CN=CPN Root SHA256 CA - TEST
-     * <p>valid 2012-10-02 to 2022-10-03
+     * <p>C=NO, O=Commfides Norge AS - 988 312 495, OU=CPN Enterprise-Norwegian SHA256 CA- TEST2
+     *    OU=Commfides Trust Environment(C) 2014 Commfides Norge AS - TEST, CN=Commfides CPN Enterprise-Norwegian SHA256 CA - TEST2
+     * <p>valid 2014-10-17 to 2022-10-03
      */
-    public static final X509Certificate commfidesTestRootCa() {
-        return CommfidesTestRootCa.cert;
+    public static X509Certificate commfidesTestCa() {
+        return CommfidesTestCa.cert;
     }
 
 
@@ -114,25 +122,22 @@ public final class TestEnvCertificates {
         static final X509Certificate cert = readCertificate("Buypass_Class_3_Test4_Root_CA.cer");
     }
 
-    // Buypass G2 PSD2 QWAC
-    private static final class BuypassClass3TestRootCaG2Psd2QWAC {
-        static final X509Certificate cert = readCertificate("BPCl3RootCaG2QC.cer");
-    }
-
-    // Buypass G2 Virksomhetssertifikater for Europa (SEID v2.0) og QC eSeal (fra Q3 2021) og PSD2 QC eSeal som 'Soft Token'
-    private static final class BuypassClass3TestRootCaG2SoftToken {
+    private static final class BuypassClass3TestRootCaG2ST {
         static final X509Certificate cert = readCertificate("BPCl3RootCaG2ST.cer");
     }
 
-    // Buypass G2 PSD2 QWAC
-    private static final class BuypassClass3TestCaG2Psd2QWAC {
-        static final X509Certificate cert = readCertificate("BPCl3CaG2QCWA.cer");
-    }
-
-    // Buypass G2 Virksomhetssertifikater for Europa (SEID v2.0) og QC eSeal (fra Q3 2021) og PSD2 QC eSeal som 'Soft Token'
-    private static final class BuypassClass3TestCaG2SoftToken {
+    private static final class BuypassClass3TestCaG2ST {
         static final X509Certificate cert = readCertificate("BPCl3CaG2STBS.cer");
     }
+
+    private static final class BuypassClass3TestRootCaG2HT {
+        static final X509Certificate cert = readCertificate("BPCl3RootCaG2HT.cer");
+    }
+
+    private static final class BuypassClass3TestCaG2HT {
+        static final X509Certificate cert = readCertificate("BPCl3CaG2HTBS.cer");
+    }
+
 
     private static final class CommfidesTestRootCa {
         static final X509Certificate cert = readCertificate("commfides_test_root_ca.cer");
@@ -142,8 +147,12 @@ public final class TestEnvCertificates {
         static final X509Certificate cert = readCertificate("commfides_test_ca.cer");
     }
 
+
     private static X509Certificate readCertificate(String resourceName) {
         return DigipostSecurity.readCertificate("certificates/test/" + resourceName);
+    }
+
+    private TestEnvCertificates() {
     }
 
 }
