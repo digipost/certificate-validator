@@ -34,6 +34,7 @@ import java.util.Set;
 
 import static java.time.ZoneOffset.UTC;
 import static java.util.stream.Collectors.toSet;
+import static no.digipost.security.cert.CertificatesForTesting.BUYPASS_SEID_2_CERT;
 import static no.digipost.security.cert.CertificatesForTesting.digipostVirksomhetsTestsertifikat;
 import static no.digipost.security.cert.CertificatesForTesting.digipostVirksomhetssertifikat;
 import static no.digipost.security.cert.ProdEnvCertificates.buypassClass3Ca3;
@@ -123,6 +124,14 @@ class TrustTest {
         assertThat(reviewedPath, where(ReviewedCertPath::isTrusted));
         assertThat(reviewedPath.getPath(), where(CertPath::getCertificates, hasSize(2)));
     }
+
+    @Test
+    void resolve_cert_path_from_seid2_certificate() {
+        Clock clockForValidSeid2Certs = Clock.fixed(LocalDateTime.of(2021, 8, 24, 12, 5).toInstant(UTC), UTC);
+        ReviewedCertPath certPath = new TrustFactory(clockForValidSeid2Certs).seid2.buypassTestEnterpriseCertificates().resolveCertPath(BUYPASS_SEID_2_CERT);
+        assertThat(certPath, where(ReviewedCertPath::isTrusted));
+    }
+
 
     @Test
     void cert_path_of_qa_certificate_is_not_trusted_in_production() {
