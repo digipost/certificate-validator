@@ -25,6 +25,7 @@ import static no.digipost.security.cert.ProdEnvCertificates.buypassClass3RootCaG
 import static no.digipost.security.cert.ProdEnvCertificates.buypassClass3RootCaG2SoftToken;
 import static no.digipost.security.cert.ProdEnvCertificates.commfidesCa;
 import static no.digipost.security.cert.ProdEnvCertificates.commfidesRootCa;
+import static no.digipost.security.cert.ProdEnvCertificates.digipostRootCa;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3Test4Ca3;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3Test4RootCa;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3TestCaG2HardToken;
@@ -33,24 +34,37 @@ import static no.digipost.security.cert.TestEnvCertificates.buypassClass3TestRoo
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3TestRootCaG2SoftToken;
 import static no.digipost.security.cert.TestEnvCertificates.commfidesTestCa;
 import static no.digipost.security.cert.TestEnvCertificates.commfidesTestRootCa;
+import static no.digipost.security.cert.TestEnvCertificates.digipostTestRootCa;
 
 public final class TrustFactory {
 
+    /**
+     * SEID 1.0 is a Norwegian standard for certificates, which is
+     * currently being phased out, and to be replaced by {@link Seid2 SEID 2.0}.
+     */
     public final Seid1 seid1;
-    public final Seid2 seid2;
-    private final Clock clock;
-
-    public TrustFactory(Clock clock) {
-        this.seid1 = new Seid1();
-        this.seid2 = new Seid2();
-        this.clock = clock;
-    }
-
 
     /**
      * SEID 2.0 is the Norwegian standard for certificates aligning with the
      * European eIDAS standard.
      */
+    public final Seid2 seid2;
+
+    /**
+     * Trusts for certificates issued by Digipost
+     */
+    public final Digipost digipost;
+
+    private final Clock clock;
+
+    public TrustFactory(Clock clock) {
+        this.seid1 = new Seid1();
+        this.seid2 = new Seid2();
+        this.digipost = new Digipost();
+        this.clock = clock;
+    }
+
+
     public final class Seid2 {
 
         public Trust buypassEnterpriseCertificates() {
@@ -70,11 +84,6 @@ public final class TrustFactory {
     }
 
 
-
-    /**
-     * SEID 1.0 is a Norwegian standard for certificates, which is
-     * currently being phased out, and to be replaced by {@link Seid2 SEID 2.0}.
-     */
     public final class Seid1 {
 
         public Trust buypassAndCommfidesEnterpriseCertificates() {
@@ -105,5 +114,19 @@ public final class TrustFactory {
         }
     }
 
+
+    public final class Digipost {
+
+        public Trust digipostIssuedCertificates() {
+            return Trust.from(clock, digipostRootCa());
+        }
+
+        public Trust digipostIssuedTestCertificates() {
+            return Trust.from(clock, digipostTestRootCa());
+        }
+
+        private Digipost() {
+        }
+    }
 
 }

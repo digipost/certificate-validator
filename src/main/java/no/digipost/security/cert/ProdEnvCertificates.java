@@ -113,6 +113,15 @@ public final class ProdEnvCertificates {
         return CommfidesCa.cert;
     }
 
+    /**
+     * Digipost Root CA
+     *
+     * <p>CN=Digipost Root CA, OU=Digipost, O=Posten Norge AS, ST=Oslo, C=NO
+     * <p>valid 2017-10-06 to 2050-01-01
+     */
+    public static X509Certificate digipostRootCa() {
+        return DigipostRootCa.cert;
+    }
 
 
     // X509Certificate singletons
@@ -148,6 +157,11 @@ public final class ProdEnvCertificates {
 
     private static final class CommfidesCa {
         static final X509Certificate cert = readCertificate("commfides_ca.cer");
+    }
+
+
+    private static final class DigipostRootCa {
+        static final X509Certificate cert = readCertificate("digipost_root_ca.cert.pem");
     }
 
 
