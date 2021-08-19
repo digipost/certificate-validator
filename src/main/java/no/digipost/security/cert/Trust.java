@@ -90,9 +90,10 @@ public final class Trust {
      */
     public static Trust from(Clock clock, Stream<X509Certificate> trustedCertificates) {
         Map<TrustBasis, Set<X509Certificate>> grouped = trustedCertificates.collect(groupingBy(TrustBasis::determineFrom, toSet()));
-        return new Trust(clock,
+        return new Trust(
                 grouped.getOrDefault(TrustBasis.ANCHOR, emptySet()).stream(),
-                grouped.getOrDefault(TrustBasis.DERIVED, emptySet()).stream());
+                grouped.getOrDefault(TrustBasis.DERIVED, emptySet()).stream(),
+                clock);
     }
 
     /**
@@ -156,10 +157,10 @@ public final class Trust {
     private final Clock clock;
 
     public Trust(Stream<X509Certificate> trustAnchorCertificates, Stream<X509Certificate> intermediateCertificates) {
-        this(Clock.systemDefaultZone(), trustAnchorCertificates, intermediateCertificates);
+        this(trustAnchorCertificates, intermediateCertificates, Clock.systemDefaultZone());
     }
 
-    public Trust(Clock clock, Stream<X509Certificate> trustAnchorCertificates, Stream<X509Certificate> intermediateCertificates) {
+    public Trust(Stream<X509Certificate> trustAnchorCertificates, Stream<X509Certificate> intermediateCertificates, Clock clock) {
         this(
                 unmodifiableMap(trustAnchorCertificates.collect(groupingBy(X509Certificate::getSubjectX500Principal, toSet()))),
                 unmodifiableMap(intermediateCertificates.collect(groupingBy(X509Certificate::getSubjectX500Principal, toSet()))),
