@@ -71,7 +71,7 @@ public final class X509 {
 
     private static final Optional<String> tryFindOrgnr(CharSequence text, Pattern extractPattern) {
         Optional<String> extracted = Optional.of(text).map(extractPattern::matcher).filter(Matcher::find).map(m -> m.group(1));
-        if (!extracted.isPresent()) {
+        if (!extracted.isPresent() && LOG.isTraceEnabled()) {
             LOG.trace("Orgnr ikke funnet i '{}' v.h.a. regex '{}'", text, extractPattern);
         }
         return extracted;
