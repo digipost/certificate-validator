@@ -154,7 +154,7 @@ public final class Trust {
 
     private final Map<X500Principal, Set<X509Certificate>> trustAnchorCerts;
     private final Map<X500Principal, Set<X509Certificate>> trustedIntermediateCerts;
-    private final Clock clock;
+    final Clock clock;
 
     public Trust(Stream<X509Certificate> trustAnchorCertificates, Stream<X509Certificate> intermediateCertificates) {
         this(trustAnchorCertificates, intermediateCertificates, Clock.systemDefaultZone());

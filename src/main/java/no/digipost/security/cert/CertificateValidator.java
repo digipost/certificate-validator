@@ -73,14 +73,10 @@ public class CertificateValidator {
     }
 
     public CertificateValidator(CertificateValidatorConfig config, Trust trust, CloseableHttpClient httpClient) {
-        this(config, trust, httpClient, Clock.systemUTC());
-    }
-
-    CertificateValidator(CertificateValidatorConfig config, Trust trust, CloseableHttpClient httpClient, Clock clock) {
         this.config = config;
         this.trust = trust;
         this.client = httpClient;
-        this.clock = clock;
+        this.clock = trust.clock;
     }
 
 
