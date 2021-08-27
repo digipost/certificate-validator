@@ -68,13 +68,13 @@ public final class TrustFactory {
     public final class Seid2 {
 
         public Trust buypassEnterpriseCertificates() {
-            return Trust.from(clock,
+            return Trust.in(clock,
                     buypassClass3RootCaG2SoftToken(), buypassClass3CaG2SoftToken(),
                     buypassClass3RootCaG2HardToken(), buypassClass3CaG2HardToken());
         }
 
         public Trust buypassTestEnterpriseCertificates() {
-            return Trust.from(clock,
+            return Trust.in(clock,
                     buypassClass3TestRootCaG2SoftToken(), buypassClass3TestCaG2SoftToken(),
                     buypassClass3TestRootCaG2HardToken(), buypassClass3TestCaG2HardToken());
         }
@@ -95,19 +95,19 @@ public final class TrustFactory {
         }
 
         public Trust buypassEnterpriseCertificates() {
-            return Trust.from(clock, buypassClass3RootCa(), buypassClass3Ca3());
+            return Trust.in(clock, buypassClass3RootCa(), buypassClass3Ca3());
         }
 
         public Trust buypassTestEnterpriseCertificates() {
-            return Trust.from(clock, buypassClass3Test4RootCa(), buypassClass3Test4Ca3());
+            return Trust.in(clock, buypassClass3Test4RootCa(), buypassClass3Test4Ca3());
         }
 
         public Trust commfidesEnterpriseCertificates() {
-            return Trust.from(clock, commfidesRootCa(), commfidesCa());
+            return Trust.in(clock, commfidesRootCa(), commfidesCa());
         }
 
         public Trust commfidesTestEnterpriseCertificates() {
-            return Trust.from(clock, commfidesTestRootCa(), commfidesTestCa());
+            return Trust.in(clock, commfidesTestRootCa(), commfidesTestCa());
         }
 
         private Seid1() {
@@ -118,11 +118,11 @@ public final class TrustFactory {
     public final class Digipost {
 
         public Trust digipostIssuedCertificates() {
-            return Trust.from(clock, digipostRootCa());
+            return Trust.in(clock, digipostRootCa());
         }
 
         public Trust digipostIssuedTestCertificates() {
-            return Trust.from(clock, digipostTestRootCa());
+            return Trust.in(clock, digipostTestRootCa());
         }
 
         private Digipost() {

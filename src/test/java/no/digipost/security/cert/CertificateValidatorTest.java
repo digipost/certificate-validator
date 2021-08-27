@@ -306,7 +306,7 @@ public class CertificateValidatorTest {
 
     @Test
     public void skipOcspForDigipostIssuedCertificate() throws Exception {
-        Trust trust = Trust.merge(qaTrust, Trust.from(clock, digipostTestRotsertifikat()));
+        Trust trust = Trust.merge(qaTrust, Trust.in(clock, digipostTestRotsertifikat()));
 
         CertificateValidator skipOcspForDigipostCert = new CertificateValidator(
                 MOST_STRICT.withOcspPolicy(ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED),

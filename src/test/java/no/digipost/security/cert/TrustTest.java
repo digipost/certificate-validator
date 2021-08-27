@@ -78,12 +78,12 @@ class TrustTest {
     @Test
     void must_contain_trust_anchors_for_intermediate_certificates() {
         MissingTrustAnchorException missingAnchorsForAll =
-                assertThrows(MissingTrustAnchorException.class, () -> Trust.from(clockSetWhenCertificatesAreValid, buypassClass3Ca3(), commfidesCa()));
+                assertThrows(MissingTrustAnchorException.class, () -> Trust.in(clockSetWhenCertificatesAreValid, buypassClass3Ca3(), commfidesCa()));
         assertThat(missingAnchorsForAll.getCertificates(), containsInAnyOrder(buypassClass3Ca3(), commfidesCa()));
 
 
         MissingTrustAnchorException missingBuypassRoot =
-                assertThrows(MissingTrustAnchorException.class, () -> Trust.from(clockSetWhenCertificatesAreValid, commfidesRootCa(), buypassClass3Ca3(), commfidesCa()));
+                assertThrows(MissingTrustAnchorException.class, () -> Trust.in(clockSetWhenCertificatesAreValid, commfidesRootCa(), buypassClass3Ca3(), commfidesCa()));
         assertThat(missingBuypassRoot.getCertificates(), contains(buypassClass3Ca3()));
     }
 
@@ -156,8 +156,8 @@ class TrustTest {
 
         @Test
         void trusts_with_different_clocks_is_not_possible() {
-            Trust trust1 = Trust.from(Clock.fixed(Instant.ofEpochSecond(1_234_567), UTC));
-            Trust trust2 = Trust.from(Clock.fixed(Instant.ofEpochSecond(9_000_000), UTC));
+            Trust trust1 = Trust.in(Clock.fixed(Instant.ofEpochSecond(1_234_567), UTC));
+            Trust trust2 = Trust.in(Clock.fixed(Instant.ofEpochSecond(9_000_000), UTC));
             assertThrows(NonMatchingClocksException.class, () -> Trust.merge(trust1, trust2));
         }
 
@@ -166,13 +166,13 @@ class TrustTest {
             Trust buypassTrust = trustFactory.seid1.buypassEnterpriseCertificates();
             Trust commfidesTrust = trustFactory.seid1.commfidesEnterpriseCertificates();
             Trust merged = Trust.merge(buypassTrust, commfidesTrust);
-            assertThat(merged, equalTo(Trust.from(clockSetWhenCertificatesAreValid, buypassClass3RootCa(), buypassClass3Ca3(), commfidesRootCa(), commfidesCa())));
+            assertThat(merged, equalTo(Trust.in(clockSetWhenCertificatesAreValid, buypassClass3RootCa(), buypassClass3Ca3(), commfidesRootCa(), commfidesCa())));
         }
 
         @Test
         void trusts_with_some_overlapping_certificates() {
-            Trust buypassAndCommfidesRootTrust = Trust.from(clockSetWhenCertificatesAreValid, buypassClass3RootCa(), buypassClass3Ca3(), commfidesRootCa());
-            Trust commfidesTrust = Trust.from(clockSetWhenCertificatesAreValid, commfidesRootCa(), commfidesCa());
+            Trust buypassAndCommfidesRootTrust = Trust.in(clockSetWhenCertificatesAreValid, buypassClass3RootCa(), buypassClass3Ca3(), commfidesRootCa());
+            Trust commfidesTrust = Trust.in(clockSetWhenCertificatesAreValid, commfidesRootCa(), commfidesCa());
             Trust merged = Trust.merge(buypassAndCommfidesRootTrust, commfidesTrust);
             assertThat(merged, equalTo(trust));
         }

@@ -76,8 +76,8 @@ public final class Trust {
      * @param clock the clock to use for asserting certificate validity
      * @return the Trust for the given certificates
      */
-    public static Trust from(Clock clock, X509Certificate ... trustedCertificates) {
-        return Trust.from(clock, Stream.of(trustedCertificates));
+    public static Trust in(Clock clock, X509Certificate ... trustedCertificates) {
+        return Trust.in(clock, Stream.of(trustedCertificates));
     }
 
     /**
@@ -88,7 +88,7 @@ public final class Trust {
      * @param clock the clock to use for asserting certificate validity
      * @return the Trust for the given certificates
      */
-    public static Trust from(Clock clock, Stream<X509Certificate> trustedCertificates) {
+    public static Trust in(Clock clock, Stream<X509Certificate> trustedCertificates) {
         Map<TrustBasis, Set<X509Certificate>> grouped = trustedCertificates.collect(groupingBy(TrustBasis::determineFrom, toSet()));
         return new Trust(
                 grouped.getOrDefault(TrustBasis.ANCHOR, emptySet()).stream(),
