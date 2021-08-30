@@ -27,7 +27,6 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static java.time.ZoneOffset.UTC;
-import static no.digipost.security.cert.BuypassCommfidesCertificates.createProdTrust;
 import static no.digipost.security.cert.CertStatus.OK;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
 import static no.digipost.security.cert.CertStatus.UNTRUSTED;
@@ -39,7 +38,8 @@ public class RealOCSPCertificateValidatorTest {
 
     private final ControllableClock clock = ControllableClock.freezedAt(LocalDateTime.of(2020, 2, 10, 12, 0).atZone(UTC));
     private final Optional<HttpHost> proxy =  Optional.ofNullable(System.getProperty("https_proxy")).map(HttpHost::create);
-    private final CertificateValidator validator = new CertificateValidator(createProdTrust(clock), HttpClient.create(proxy));
+    private final CertificateValidator validator = new CertificateValidator(
+            new TrustFactory(clock).seid1.buypassAndCommfidesEnterpriseCertificates(), HttpClient.create(proxy));
 
 
     @Test
@@ -62,7 +62,7 @@ public class RealOCSPCertificateValidatorTest {
     public void godtar_nytt_commfides_test_sertifikat() {
         CertificateValidator validatorQaEnv = new CertificateValidator(
                 CertificateValidatorConfig.MOST_STRICT.allowOcspResults(UNDECIDED),
-                BuypassCommfidesCertificates.createTestTrust(Clock.systemUTC()),
+                new TrustFactory(Clock.systemUTC()).seid1.buypassAndCommfidesTestEnterpriseCertificates(),
                 HttpClient.create());
 
         assertThat(validatorQaEnv.validateCert(EBOKS_COMMFIDES_TEST), is(OK));

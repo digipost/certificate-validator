@@ -53,18 +53,17 @@ import java.time.LocalDateTime;
 
 import static java.util.Optional.ofNullable;
 import static no.digipost.DiggIO.autoClosing;
-import static no.digipost.security.cert.BuypassCommfidesCertificates.createTestTrustWithAdditionalCerts;
 import static no.digipost.security.cert.CertStatus.OK;
 import static no.digipost.security.cert.CertStatus.REVOKED;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
 import static no.digipost.security.cert.CertStatus.UNTRUSTED;
 import static no.digipost.security.cert.CertificateValidatorConfig.MOST_STRICT;
-import static no.digipost.security.cert.Certificates.BUYPASS_SEID_2_CERT;
-import static no.digipost.security.cert.Certificates.BUYPASS_SEID_2_E_SEAL_CERT;
-import static no.digipost.security.cert.Certificates.digipostTestRotsertifikat;
-import static no.digipost.security.cert.Certificates.digipostUtstedtTestsertifikat;
-import static no.digipost.security.cert.Certificates.digipostVirksomhetsTestsertifikat;
-import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;
+import static no.digipost.security.cert.CertificatesForTesting.BUYPASS_SEID_2_CERT;
+import static no.digipost.security.cert.CertificatesForTesting.BUYPASS_SEID_2_E_SEAL_CERT;
+import static no.digipost.security.cert.CertificatesForTesting.digipostTestRotsertifikat;
+import static no.digipost.security.cert.CertificatesForTesting.digipostUtstedtTestsertifikat;
+import static no.digipost.security.cert.CertificatesForTesting.digipostVirksomhetsTestsertifikat;
+import static no.digipost.security.cert.CertificatesForTesting.digipostVirksomhetssertifikat;
 import static no.digipost.security.cert.OcspPolicy.ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -99,8 +98,11 @@ public class CertificateValidatorTest {
     private CertificateValidator qaValidator;
 
     private final ControllableClock clock = ControllableClock.freezedAt(LocalDateTime.of(2020, 2, 24, 12, 5));
-    private final Trust prodTrust = BuypassCommfidesCertificates.createProdTrust(clock);
-    private final Trust qaTrust = BuypassCommfidesCertificates.createTestTrust(clock);
+    private final TrustFactory trustFactory = new TrustFactory(clock);
+    private final Trust prodTrust = trustFactory.seid1.buypassAndCommfidesEnterpriseCertificates();
+    private final Trust qaTrust = Trust.merge(prodTrust, Trust.merge(
+            trustFactory.seid1.buypassAndCommfidesTestEnterpriseCertificates(),
+            trustFactory.seid2.buypassTestEnterpriseCertificates()));
 
 
     @BeforeEach
@@ -110,8 +112,8 @@ public class CertificateValidatorTest {
         lenient().when(httpClient.execute(any(HttpUriRequest.class))).thenReturn(response);
         lenient().when(ocspResponseStatus.toString()).thenAnswer(i -> "status " + ocspResponseStatus.getStatusCode());
 
-        prodValidator = new CertificateValidator(MOST_STRICT, prodTrust, httpClient, clock);
-        qaValidator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrust, httpClient, clock);
+        prodValidator = new CertificateValidator(MOST_STRICT, prodTrust, httpClient);
+        qaValidator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrust, httpClient);
     }
 
 
@@ -202,7 +204,7 @@ public class CertificateValidatorTest {
 
         assertThat(new CertificateValidator(MOST_STRICT
                 .ignoreCustomSigningCertificatesInOcspResponses()
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, httpClient, clock)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(REVOKED));
     }
 
@@ -214,7 +216,7 @@ public class CertificateValidatorTest {
         CertificateValidator validator = new CertificateValidator(MOST_STRICT
                 .ignoreCustomSigningCertificatesInOcspResponses()
                 .validateOcspResponseSignatureUsing((resp, cert) -> true),
-                prodTrust, httpClient, clock);
+                prodTrust, httpClient);
         assertThat(validator.validateCert(digipostVirksomhetssertifikat()), is(REVOKED));
         verify(httpClient, times(1)).execute(any());
 
@@ -237,11 +239,11 @@ public class CertificateValidatorTest {
 
         assertThat(new CertificateValidator(MOST_STRICT
                 .ignoreCustomSigningCertificatesInOcspResponses()
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, httpClient, clock)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
         assertThat(new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED)
                 .ignoreCustomSigningCertificatesInOcspResponses()
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), qaTrust, httpClient, clock)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), qaTrust, httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(OK));
     }
 
@@ -251,10 +253,10 @@ public class CertificateValidatorTest {
         given(ocspResponseEntity.getContent()).willAnswer(i -> new ByteArrayInputStream(new byte[0]));
 
         assertThat(new CertificateValidator(MOST_STRICT
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, httpClient, clock)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
         assertThat(new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED)
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), qaTrust, httpClient, clock)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), qaTrust, httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(OK));
 
     }
@@ -266,11 +268,11 @@ public class CertificateValidatorTest {
 
         assertThat(new CertificateValidator(MOST_STRICT
                 .validateOcspResponseSignatureUsing((resp, cert) -> false),
-                prodTrust, httpClient, clock)
+                prodTrust, httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
         assertThat(new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED)
                 .validateOcspResponseSignatureUsing((resp, cert) -> false),
-                qaTrust, httpClient, clock)
+                qaTrust, httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(OK));
     }
 
@@ -304,11 +306,11 @@ public class CertificateValidatorTest {
 
     @Test
     public void skipOcspForDigipostIssuedCertificate() throws Exception {
-        Trust trust = createTestTrustWithAdditionalCerts(clock, digipostTestRotsertifikat());
+        Trust trust = Trust.merge(qaTrust, Trust.in(clock, digipostTestRotsertifikat()));
 
         CertificateValidator skipOcspForDigipostCert = new CertificateValidator(
                 MOST_STRICT.withOcspPolicy(ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED),
-                trust, httpClient, clock);
+                trust, httpClient);
 
         X509Certificate digipostCertWithoutOcspResponderUrl = digipostUtstedtTestsertifikat();
 
@@ -317,7 +319,7 @@ public class CertificateValidatorTest {
 
         CertificateValidator alwaysOcspValidator = new CertificateValidator(
                 MOST_STRICT.ignoreCustomSigningCertificatesInOcspResponses().validateOcspResponseSignatureUsing((ocspResponse, issuer) -> true),
-                trust, httpClient, clock);
+                trust, httpClient);
 
         given(ocspResponseStatus.getStatusCode()).willReturn(200);
         given(ocspResponseEntity.getContent()).will(i -> OcspResponses.revoked());
@@ -335,8 +337,8 @@ public class CertificateValidatorTest {
     @Test
     public void validateBuypassSeid2Cert() throws IOException {
         ControllableClock clockForValidSeid2Certs = ControllableClock.freezedAt(LocalDateTime.of(2021, 8, 24, 12, 5));
-        Trust qaTrustForValidSeid2Certs = BuypassCommfidesCertificates.createTestTrust(ControllableClock.freezedAt(LocalDateTime.of(2021, 8, 24, 12, 5)));
-        CertificateValidator validator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrustForValidSeid2Certs, httpClient, clockForValidSeid2Certs);
+        Trust qaTrustForValidSeid2Certs = new TrustFactory(clockForValidSeid2Certs).seid2.buypassTestEnterpriseCertificates();
+        CertificateValidator validator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrustForValidSeid2Certs, httpClient);
 
         given(ocspResponseStatus.getStatusCode()).willReturn(200);
         given(ocspResponseEntity.getContent()).will(i -> OcspResponses.okSeid2Buypass());
@@ -353,8 +355,8 @@ public class CertificateValidatorTest {
 
 
         try (CloseableHttpClient realClient = HttpClient.create()) {
-            X509Certificate certificate = Certificates.revoked();
-            X509Certificate issuer = Certificates.revokedIssuer();
+            X509Certificate certificate = CertificatesForTesting.revoked();
+            X509Certificate issuer = CertificatesForTesting.revokedIssuer();
 
             byte[] response = new TrustedCertificateAndIssuer(certificate, issuer)
                     .ocspLookupRequest

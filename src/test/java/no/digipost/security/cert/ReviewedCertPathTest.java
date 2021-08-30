@@ -26,17 +26,17 @@ import java.security.cert.CertificateParsingException;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
-import static uk.co.probablyfine.matchers.Java8Matchers.where;
-import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
 import static no.digipost.security.DigipostSecurity.asCertPath;
 import static no.digipost.security.DigipostSecurity.readCertificates;
-import static no.digipost.security.cert.Certificates.digipostVirksomhetssertifikat;
+import static no.digipost.security.cert.CertificatesForTesting.digipostVirksomhetssertifikat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static uk.co.probablyfine.matchers.Java8Matchers.where;
+import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
 
 public class ReviewedCertPathTest {
 
@@ -110,7 +110,7 @@ public class ReviewedCertPathTest {
 
     @Test
     public void toStringForUntrustedCertPath() {
-        CertPath certPath = asCertPath(Stream.of(Certificates.digipostVirksomhetssertifikat()));
+        CertPath certPath = asCertPath(Stream.of(CertificatesForTesting.digipostVirksomhetssertifikat()));
         String description = new ReviewedCertPath(certPath, c -> false).toString();
         assertThat(description, is("Untrusted: " + DigipostSecurity.describe(certPath)));
     }

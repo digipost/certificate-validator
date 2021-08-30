@@ -15,6 +15,7 @@
  */
 package no.digipost.security;
 
+import no.digipost.security.cert.BasicConstraints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,9 +70,20 @@ public final class X509 {
     }
 
 
+    /**
+     * Extract the basic constraints extension value of a certificate, which
+     * can be used to determine if certificate is a CA or not.
+     *
+     * @return the resolved {@link BasicConstraints}
+     */
+    public static final BasicConstraints getBasicConstraints(X509Certificate certificate) {
+        return BasicConstraints.from(certificate);
+    }
+
+
     private static final Optional<String> tryFindOrgnr(CharSequence text, Pattern extractPattern) {
         Optional<String> extracted = Optional.of(text).map(extractPattern::matcher).filter(Matcher::find).map(m -> m.group(1));
-        if (!extracted.isPresent()) {
+        if (!extracted.isPresent() && LOG.isTraceEnabled()) {
             LOG.trace("Orgnr ikke funnet i '{}' v.h.a. regex '{}'", text, extractPattern);
         }
         return extracted;
