@@ -275,12 +275,33 @@ public final class Trust {
 
 
     /**
-     * @return a {@link KeyStore} populated with the
+     * Get <em>only</em> the trust anchor certificates of this {@code Trust}
+     * as a {@link KeyStore}, a.k.a. a trust store. Consider using {@link #asKeyStore()}
+     * unless you have a very spesific need for only the trust anchors.
+     *
+     * @return a {@code KeyStore} populated with the
      *         {@link #getTrustAnchorCertificates() trust anchor certificates}
      *         of this {@code Trust}
+     *
+     * @see #asKeyStore()
      */
     public KeyStore getTrustAnchorsKeyStore() {
         return KeyStoreType.JCEKS.newKeyStore().containing(this.getTrustAnchorCertificates()).withNoPassword();
+    }
+
+
+    /**
+     * Get this {@code Trust} as a {@link KeyStore}, a.k.a. a trust store.
+     *
+     * @return a {@code KeyStore} populated with all the certificates
+     *         (both {@link #getTrustAnchorCertificates() trust anchors} and
+     *         {@link #getTrustedIntermediateCertificates() intermediate certificates})
+     *         of this {@code Trust}
+     */
+    public KeyStore asKeyStore() {
+        Stream<X509Certificate> trustAnchors = getTrustAnchorCertificates().stream();
+        Stream<X509Certificate> intermediateCerts = trustedIntermediateCerts.values().stream().flatMap(certs -> certs.stream());
+        return KeyStoreType.JCEKS.newKeyStore().containing(concat(trustAnchors, intermediateCerts)).withNoPassword();
     }
 
 
