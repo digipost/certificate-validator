@@ -17,9 +17,13 @@ package no.digipost.security;
 
 import org.junit.jupiter.api.Test;
 
+import javax.security.auth.x500.X500Principal;
+
 import java.security.cert.X509Certificate;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import static no.digipost.security.DigipostSecurity.describe;
 import static no.digipost.security.X509.findOrganisasjonsnummer;
 import static no.digipost.security.cert.CertificatesForTesting.BUYPASS_SEID_2_CERT;
 import static no.digipost.security.cert.CertificatesForTesting.DIFI;
@@ -47,21 +51,21 @@ public class X509Test {
     @Test
     public void findOrganisasjonsnummerInCommonName() {
         X509Certificate cert = mock(X509Certificate.class, RETURNS_DEEP_STUBS);
-        given(cert.getSubjectDN().getName()).willReturn("CN=123456789 acb, O=MyCorp");
+        given(cert.getSubjectX500Principal()).willReturn(new X500Principal("CN=123456789 acb, O=MyCorp"));
         assertThat(findOrganisasjonsnummer(cert).get(), is("123456789"));
     }
 
     @Test
     public void findOrganisasjonsnummerInSubjectWithoutPrefix() {
         X509Certificate cert = mock(X509Certificate.class, RETURNS_DEEP_STUBS);
-        given(cert.getSubjectDN().getName()).willReturn("OID.2.5.4.97=123456789, CN=MyCorp Fullname, OU=MyCorp Department, O=MyCorp, C=NO");
+        given(cert.getSubjectX500Principal()).willReturn(new X500Principal("OID.2.5.4.97=123456789, CN=MyCorp Fullname, OU=MyCorp Department, O=MyCorp, C=NO"));
         assertThat(findOrganisasjonsnummer(cert).get(), is("123456789"));
     }
 
     @Test
     public void doesNotFindOrganisasjonsnummer() {
         X509Certificate cert = mock(X509Certificate.class, RETURNS_DEEP_STUBS);
-        given(cert.getSubjectDN().getName()).willReturn("garbage");
+        given(cert.getSubjectX500Principal()).willReturn(new X500Principal("CN=MyCorp Fullname, OU=MyCorp Department, O=MyCorp, C=NO"));
         assertThat(findOrganisasjonsnummer(cert), is(Optional.empty()));
     }
 
@@ -72,7 +76,7 @@ public class X509Test {
 
     private String orgnr(String certificate) {
         X509Certificate cert = DigipostSecurity.readCertificate(certificate.getBytes());
-        return findOrganisasjonsnummer(cert).get();
+        return findOrganisasjonsnummer(cert).orElseThrow(() -> new NoSuchElementException("no orgnr found in " + describe(cert)));
 
     }
 }

@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static javax.security.auth.x500.X500Principal.RFC1779;
 
 public final class X509 {
 
@@ -39,11 +40,15 @@ public final class X509 {
 
     /**
      * Most common way to embed Norwegian "organisasjonsnummer" in certificates.
+     *
+     * @see <a href="http://www.oid-info.com/get/2.5.4.5">OID 2.5.4.5</a>
      */
-    private static final Pattern SERIALNUMBER_PATTERN = Pattern.compile("SERIALNUMBER=([0-9]{9})", CASE_INSENSITIVE);
+    private static final Pattern SERIALNUMBER_PATTERN = Pattern.compile("OID\\.2\\.5\\.4\\.5=([0-9]{9})", CASE_INSENSITIVE);
 
     /**
      * SEID 2 way to embed Norwegian "organisasjonsnummer" in certificates.
+     *
+     * @see <a href="http://www.oid-info.com/get/2.5.4.97">OID 2.5.4.97</a>
      */
     private static final Pattern SEID2_PATTERN = Pattern.compile("OID\\.2\\.5\\.4\\.97=(?:NTRNO-)?([0-9]{9})", CASE_INSENSITIVE);
 
@@ -52,7 +57,7 @@ public final class X509 {
      * Try to find Norwegian "organisasjonsnummer" in an {@link X509Certificate}.
      */
     public static final Optional<String> findOrganisasjonsnummer(X509Certificate certificate) {
-        String subjectDnName = certificate.getSubjectDN().getName();
+        String subjectDnName = certificate.getSubjectX500Principal().getName(RFC1779);
         return find(certificate,
                     cert -> tryFindOrgnr(subjectDnName, SEID2_PATTERN),
                     cert -> tryFindOrgnr(subjectDnName, SERIALNUMBER_PATTERN),
