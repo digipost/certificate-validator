@@ -38,7 +38,9 @@ import static no.digipost.security.cert.CertificatesForTesting.BUYPASS_SEID_2_CE
 import static no.digipost.security.cert.CertificatesForTesting.digipostVirksomhetsTestsertifikat;
 import static no.digipost.security.cert.CertificatesForTesting.digipostVirksomhetssertifikat;
 import static no.digipost.security.cert.ProdEnvCertificates.buypassClass3Ca3;
+import static no.digipost.security.cert.ProdEnvCertificates.buypassClass3CaG2HardToken;
 import static no.digipost.security.cert.ProdEnvCertificates.buypassClass3RootCa;
+import static no.digipost.security.cert.ProdEnvCertificates.buypassClass3RootCaG2HardToken;
 import static no.digipost.security.cert.ProdEnvCertificates.commfidesCa;
 import static no.digipost.security.cert.ProdEnvCertificates.commfidesRootCa;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -105,7 +107,7 @@ class TrustTest {
 
 
     @Test
-    void builds_keystore_with_certificates() throws KeyStoreException {
+    void builds_keystore_with_trust_anchor_certificates() throws KeyStoreException {
         Collection<X509Certificate> certificates = trust.getTrustAnchorCertificates();
         assertThat(certificates, hasSize(greaterThan(0)));
 
@@ -114,6 +116,18 @@ class TrustTest {
         assertThat(keystore.aliases(), where(Collections::list, hasSize(certificates.size())));
         for (String alias : Collections.list(keystore.aliases())) {
             assertTrue(keystore.isCertificateEntry(alias));
+        }
+    }
+
+    @Test
+    void convert_to_keystore() throws KeyStoreException {
+        Trust trust = Trust.in(clockSetWhenCertificatesAreValid, buypassClass3RootCaG2HardToken(), buypassClass3CaG2HardToken(), commfidesRootCa(), commfidesCa());
+        KeyStore keyStore = trust.asKeyStore();
+        assertThat(keyStore.aliases(), where(Collections::list, hasSize(4)));
+        assertThat(trust.getTrustAnchorsKeyStore().aliases(), where(Collections::list, hasSize(2)));
+
+        for (String alias : Collections.list(keyStore.aliases())) {
+            assertTrue(keyStore.isCertificateEntry(alias));
         }
     }
 

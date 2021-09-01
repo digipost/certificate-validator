@@ -43,6 +43,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
+import static javax.security.auth.x500.X500Principal.RFC1779;
 
 
 public final class DigipostSecurity {
@@ -244,10 +245,10 @@ public final class DigipostSecurity {
         }
         if (certificate instanceof X509Certificate) {
             X509Certificate x509 = (X509Certificate) certificate;
-            String subjectDescription = x509.getSubjectX500Principal().getName();
+            String subjectDescription = x509.getSubjectX500Principal().getName(RFC1779);
             String validityDescription = "valid from " + x509.getNotBefore().toInstant() + " to " + x509.getNotAfter().toInstant();
             String serialNumberDescription = "serial-number: " + x509.getSerialNumber().toString(16);
-            String issuerDescription = x509.getSubjectX500Principal().equals(x509.getIssuerX500Principal()) ? "self-issued" : "issuer: " + x509.getIssuerX500Principal().getName();
+            String issuerDescription = x509.getSubjectX500Principal().equals(x509.getIssuerX500Principal()) ? "self-issued" : "issuer: " + x509.getIssuerX500Principal().getName(RFC1779);
             return String.join(", ", subjectDescription, validityDescription, serialNumberDescription, issuerDescription);
         } else {
             return certificate.getType() + "-certificate";
