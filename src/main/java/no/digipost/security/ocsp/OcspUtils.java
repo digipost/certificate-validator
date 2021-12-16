@@ -72,7 +72,7 @@ public final class OcspUtils {
                     ASN1Encodable id = ((ASN1Sequence)elm).getObjectAt(0);
                     if (OCSPObjectIdentifiers.id_pkix_ocsp.equals(id)) {
                         ASN1TaggedObject dt = (ASN1TaggedObject)((DLSequence)elm).getObjectAt(1);
-                        ASN1OctetString dos =  (ASN1OctetString)dt.getObjectParser(dt.getTagNo(), true);
+                        ASN1OctetString dos =  ASN1OctetString.getInstance(dt, dt.isExplicit());
                         return Optional.of(URI.create(new String(dos.getOctets())));
                     }
                 }
