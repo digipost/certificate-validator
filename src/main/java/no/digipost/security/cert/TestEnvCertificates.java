@@ -89,6 +89,26 @@ public final class TestEnvCertificates {
     }
 
     /**
+     * Commfides G3 Test Root CA (SEID generation 2)
+     *
+     * <p>CN=Commfides Root CA - G3 - TEST, OID.2.5.4.97=NTRNO-988312495, O=Commfides Norge AS, C=NO
+     * <p>valid 2021-07-01 to 2051-07-08
+     */
+    public static X509Certificate commfidesG3TestRootCa() {
+        return CommfidesG3TestRootCa.cert;
+    }
+
+    /**
+     * Commfides G3 Legal Person certificate issuer Test CA (SEID generation 2)
+     *
+     * <p>CN=Commfides Legal Person - G3 - TEST, OID.2.5.4.97=NTRNO-988312495, O=Commfides Norge AS, C=NO
+     * <p>valid 2021-07-01 to 2041-07-10
+     */
+    public static X509Certificate commfidesG3LegalPersonTestCa() {
+        return CommfidesG3LegalPersonTestCa.cert;
+    }
+
+    /**
      * Commfides Test Root CA (SEID generaation 1)
      *
      * <p>C=NO, O=Commfides Norge AS - 988 312 495, OU=CPN Primary Certificate Authority TEST, OU=CPN TEST - For authorized use only,
@@ -148,6 +168,14 @@ public final class TestEnvCertificates {
         static final X509Certificate cert = readCertificate("BPCl3CaG2HTBS.cer");
     }
 
+
+    private static final class CommfidesG3TestRootCa {
+        static final X509Certificate cert = readCertificate("CommfidesRootCA-G3-TEST.cer");
+    }
+
+    private static final class CommfidesG3LegalPersonTestCa {
+        static final X509Certificate cert = readCertificate("CommfidesLegalPersonCA-G3-TEST.cer");
+    }
 
     private static final class CommfidesTestRootCa {
         static final X509Certificate cert = readCertificate("commfides_test_root_ca.cer");

@@ -24,6 +24,8 @@ import static no.digipost.security.cert.ProdEnvCertificates.buypassClass3RootCa;
 import static no.digipost.security.cert.ProdEnvCertificates.buypassClass3RootCaG2HardToken;
 import static no.digipost.security.cert.ProdEnvCertificates.buypassClass3RootCaG2SoftToken;
 import static no.digipost.security.cert.ProdEnvCertificates.commfidesCa;
+import static no.digipost.security.cert.ProdEnvCertificates.commfidesG3LegalPersonCa;
+import static no.digipost.security.cert.ProdEnvCertificates.commfidesG3RootCa;
 import static no.digipost.security.cert.ProdEnvCertificates.commfidesRootCa;
 import static no.digipost.security.cert.ProdEnvCertificates.digipostRootCa;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3Test4Ca3;
@@ -32,6 +34,8 @@ import static no.digipost.security.cert.TestEnvCertificates.buypassClass3TestCaG
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3TestCaG2SoftToken;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3TestRootCaG2HardToken;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3TestRootCaG2SoftToken;
+import static no.digipost.security.cert.TestEnvCertificates.commfidesG3LegalPersonTestCa;
+import static no.digipost.security.cert.TestEnvCertificates.commfidesG3TestRootCa;
 import static no.digipost.security.cert.TestEnvCertificates.commfidesTestCa;
 import static no.digipost.security.cert.TestEnvCertificates.commfidesTestRootCa;
 import static no.digipost.security.cert.TestEnvCertificates.digipostTestRootCa;
@@ -67,6 +71,14 @@ public final class TrustFactory {
 
     public final class Seid2 {
 
+        public Trust buypassAndCommfidesEnterpriseCertificates() {
+            return Trust.merge(buypassEnterpriseCertificates(), commfidesEnterpriseCertificates());
+        }
+
+        public Trust buypassAndCommfidesTestEnterpriseCertificates() {
+            return Trust.merge(buypassTestEnterpriseCertificates(), commfidesTestEnterpriseCertificates());
+        }
+
         public Trust buypassEnterpriseCertificates() {
             return Trust.in(clock,
                     buypassClass3RootCaG2SoftToken(), buypassClass3CaG2SoftToken(),
@@ -77,6 +89,14 @@ public final class TrustFactory {
             return Trust.in(clock,
                     buypassClass3TestRootCaG2SoftToken(), buypassClass3TestCaG2SoftToken(),
                     buypassClass3TestRootCaG2HardToken(), buypassClass3TestCaG2HardToken());
+        }
+
+        public Trust commfidesEnterpriseCertificates() {
+            return Trust.in(clock, commfidesG3RootCa(), commfidesG3LegalPersonCa());
+        }
+
+        public Trust commfidesTestEnterpriseCertificates() {
+            return Trust.in(clock, commfidesG3TestRootCa(), commfidesG3LegalPersonTestCa());
         }
 
         private Seid2() {
