@@ -94,6 +94,26 @@ public final class ProdEnvCertificates {
     }
 
     /**
+     * Commfides G3 Root CA (SEID generation 2)
+     *
+     * <p>CN=Commfides Root CA - G3, OID.2.5.4.97=NTRNO-988312495, O=Commfides Norge AS, C=NO
+     * <p>valid 2021-08-02 to 2051-08-09
+     */
+    public static X509Certificate commfidesG3RootCa() {
+        return CommfidesG3RootCa.cert;
+    }
+
+    /**
+     * Commfides G3 Legal Person certificate issuer CA (SEID generation 2)
+     *
+     * <p>CN=Commfides Legal Person - G3, OID.2.5.4.97=NTRNO-988312495, O=Commfides Norge AS, C=NO
+     * <p>valid 2021-08-05 to 2041-08-14
+     */
+    public static X509Certificate commfidesG3LegalPersonCa() {
+        return CommfidesG3LegalPersonCa.cert;
+    }
+
+    /**
      * Commfides Root CA (SEID generaation 1)
      *
      * <p>C=NO, O=Commfides Norge AS - 988 312 495, OU=Commfides Trust Environment (c) 2011 Commfides Norge AS, CN=CPN RootCA SHA256 Class 3
@@ -150,6 +170,14 @@ public final class ProdEnvCertificates {
         static final X509Certificate cert = readCertificate("BPCl3CaG2HTBS.cer");
     }
 
+
+    private static final class CommfidesG3RootCa {
+        static final X509Certificate cert = readCertificate("CommfidesRootCA-G3.cer");
+    }
+
+    private static final class CommfidesG3LegalPersonCa {
+        static final X509Certificate cert = readCertificate("CommfidesLegalPersonCA-G3.cer");
+    }
 
     private static final class CommfidesRootCa {
         static final X509Certificate cert = readCertificate("commfides_root_ca.cer");
