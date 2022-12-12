@@ -22,7 +22,6 @@ import org.apache.http.HttpHost;
 import org.junit.jupiter.api.Test;
 
 import java.security.cert.X509Certificate;
-import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -30,6 +29,7 @@ import static java.time.ZoneOffset.UTC;
 import static no.digipost.security.cert.CertStatus.OK;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
 import static no.digipost.security.cert.CertStatus.UNTRUSTED;
+import static no.digipost.security.cert.OcspPolicy.NEVER_DO_OCSP_LOOKUP;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -61,10 +61,13 @@ public class RealOCSPCertificateValidatorTest {
     @Test
     public void godtar_nytt_commfides_test_sertifikat() {
         CertificateValidator validatorQaEnv = new CertificateValidator(
-                CertificateValidatorConfig.MOST_STRICT.allowOcspResults(UNDECIDED),
-                new TrustFactory(Clock.systemUTC()).seid1.buypassAndCommfidesTestEnterpriseCertificates(),
+                CertificateValidatorConfig.MOST_STRICT.withOcspPolicy(NEVER_DO_OCSP_LOOKUP),
+                new TrustFactory(clock).seid1.buypassAndCommfidesTestEnterpriseCertificates(),
                 HttpClient.create());
 
+        clock.doWithTimeAdjusted(
+                clock -> clock.set(EBOKS_COMMFIDES_TEST.getNotAfter().toInstant().plusSeconds(600)),
+                now -> assertThat(validatorQaEnv.validateCert(EBOKS_COMMFIDES_TEST), is(UNTRUSTED)));
         assertThat(validatorQaEnv.validateCert(EBOKS_COMMFIDES_TEST), is(OK));
     }
 
