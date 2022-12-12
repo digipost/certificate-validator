@@ -188,10 +188,10 @@ public class CertificateValidator {
                                 if (cresp.getCertStatus() instanceof RevokedStatus) {
                                     RevokedStatus s = (RevokedStatus) cresp.getCertStatus();
                                     RevocationReason reason = Optional.of(s).filter(RevokedStatus::hasRevocationReason).map(r -> resolve(r.getRevocationReason())).orElse(unspecified);
-                                    LOG.warn("OCSP response for {} returned status revoked: {}, reason: '{}'", certificateAndIssuer, s.getRevocationTime(), reason);
+                                    LOG.info("OCSP response for {} returned status revoked: {}, reason: '{}'", certificateAndIssuer, s.getRevocationTime(), reason);
                                     return REVOKED;
                                 } else {
-                                    LOG.warn("OCSP response for {} returned status {}", certificateAndIssuer, cresp.getCertStatus().getClass().getSimpleName());
+                                    LOG.info("OCSP response for {} returned status {}", certificateAndIssuer, cresp.getCertStatus().getClass().getSimpleName());
                                     return UNDECIDED;
                                 }
                             }
