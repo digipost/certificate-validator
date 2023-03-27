@@ -15,12 +15,11 @@
  */
 package no.digipost.security;
 
+import jakarta.servlet.ServletRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import javax.servlet.ServletRequest;
 
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;

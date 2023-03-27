@@ -15,19 +15,19 @@
  */
 package no.digipost.security;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.security.cert.X509Certificate;
 
 /**
  * Utilities for working with certificates in secure (https) requests.
- * The class requires the Servlet API, i.e:
+ * The class requires the Jakarta Servlet API, i.e:
  * <pre>{@code
  * <dependency>
- *     <groupId>javax.servlet</groupId>
- *     <artifactId>javax.servlet-api</artifactId>
- *     <version>3.1.0</version>
+ *     <groupId>jakarta.servlet</groupId>
+ *     <artifactId>jakarta.servlet-api</artifactId>
+ *     <version>5.0.0</version> <!-- or 6.0.0 -->
  * </dependency>
  * }</pre>
  *
@@ -40,7 +40,7 @@ public class Https {
      *
      * @see ServletRequest#getAttribute(String)
      */
-    public static final String REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE = "javax.servlet.request.X509Certificate";
+    public static final String REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE = "jakarta.servlet.request.X509Certificate";
 
 
     public static X509Certificate extractClientCertificate(ServletRequest request) {
