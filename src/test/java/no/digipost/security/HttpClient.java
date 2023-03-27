@@ -15,13 +15,18 @@
  */
 package no.digipost.security;
 
-import org.apache.http.HttpHost;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.config.SocketConfig;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.io.HttpClientConnectionManager;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.io.SocketConfig;
 
 import java.util.Optional;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public final class HttpClient {
 
@@ -30,9 +35,13 @@ public final class HttpClient {
     }
 
     public static final CloseableHttpClient create(Optional<HttpHost> proxy) {
+        HttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+                .setDefaultConnectionConfig(ConnectionConfig.custom().setConnectTimeout(4, SECONDS).build())
+                .setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(4, SECONDS).build())
+                .build();
         HttpClientBuilder builder = HttpClientBuilder.create()
-            .setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(4000).build())
-            .setDefaultRequestConfig(RequestConfig.custom().setConnectionRequestTimeout(4000).setConnectTimeout(4000).setSocketTimeout(4000).build());
+                .setConnectionManager(connectionManager)
+                .setDefaultRequestConfig(RequestConfig.custom().setConnectionRequestTimeout(4, SECONDS).build());
         proxy.ifPresent(p -> builder.setProxy(p));
         return builder.build();
     }

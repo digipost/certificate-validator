@@ -18,7 +18,7 @@ package no.digipost.security.cert;
 import no.digipost.security.DigipostSecurity;
 import no.digipost.security.HttpClient;
 import no.digipost.time.ControllableClock;
-import org.apache.http.HttpHost;
+import org.apache.hc.core5.http.HttpHost;
 import org.junit.jupiter.api.Test;
 
 import java.security.cert.X509Certificate;
@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static java.time.ZoneOffset.UTC;
+import static no.digipost.DiggExceptions.applyUnchecked;
 import static no.digipost.security.cert.CertStatus.OK;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
 import static no.digipost.security.cert.CertStatus.UNTRUSTED;
@@ -33,17 +34,17 @@ import static no.digipost.security.cert.OcspPolicy.NEVER_DO_OCSP_LOOKUP;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@SuppressWarnings("unused")
-public class RealOCSPCertificateValidatorTest {
+
+class RealOCSPCertificateValidatorTest {
 
     private final ControllableClock clock = ControllableClock.freezedAt(LocalDateTime.of(2020, 2, 10, 12, 0).atZone(UTC));
-    private final Optional<HttpHost> proxy =  Optional.ofNullable(System.getProperty("https_proxy")).map(HttpHost::create);
+    private final Optional<HttpHost> proxy =  Optional.ofNullable(System.getProperty("https_proxy")).map(httpsProxy -> applyUnchecked(HttpHost::create, httpsProxy));
     private final CertificateValidator validator = new CertificateValidator(
             new TrustFactory(clock).seid1.buypassAndCommfidesEnterpriseCertificates(), HttpClient.create(proxy));
 
 
     @Test
-    public void validerer_gammelt_commfides_sertifikat() {
+    void validerer_gammelt_commfides_sertifikat() {
         X509Certificate commfidesSert = DigipostSecurity.readCertificate(GAMMELT_COMMFIDES_SERTIFIKAT_KS.getBytes());
 
         assertThat("Untrusted pga ocsp-response signert med utdatert sertifikat",
@@ -51,7 +52,7 @@ public class RealOCSPCertificateValidatorTest {
     }
 
     @Test
-    public void unknown_ocsprespone_gir_undecided_for_nytt_commfides_sertifikat() {
+    void unknown_ocsprespone_gir_undecided_for_nytt_commfides_sertifikat() {
         X509Certificate commfidesSert = NYTT_COMMFIDES_SERTIFIKAT_KS;
 
         clock.set(LocalDateTime.of(2021, 7, 19, 12, 0));
@@ -59,7 +60,7 @@ public class RealOCSPCertificateValidatorTest {
     }
 
     @Test
-    public void godtar_nytt_commfides_test_sertifikat() {
+    void godtar_nytt_commfides_test_sertifikat() {
         CertificateValidator validatorQaEnv = new CertificateValidator(
                 CertificateValidatorConfig.MOST_STRICT.withOcspPolicy(NEVER_DO_OCSP_LOOKUP),
                 new TrustFactory(clock).seid1.buypassAndCommfidesTestEnterpriseCertificates(),
@@ -73,7 +74,7 @@ public class RealOCSPCertificateValidatorTest {
 
 
     @Test
-    public void validerer_nytt_buypass_sertifikat() {
+    void validerer_nytt_buypass_sertifikat() {
         X509Certificate buypassSert = DigipostSecurity.readCertificate(BUYPASS_MF_PROD_SERTIFIKAT.getBytes());
 
         assertThat(validator.validateCert(buypassSert), is(OK));
@@ -229,6 +230,7 @@ public class RealOCSPCertificateValidatorTest {
                     "V4WRqeRSKdtXWz6TdsDT3jazcuk1fzcFlhek6ez0JmO/ePI92s0O2w==\n" +
                     "-----END CERTIFICATE-----";
 
+    @SuppressWarnings("unused")
     private static final String BUYPASS_MF_TEST_SERTIFIKAT =
                     "-----BEGIN CERTIFICATE-----\n" +
                     "MIIE7jCCA9agAwIBAgIKGBj1bv99Jpi+EzANBgkqhkiG9w0BAQsFADBRMQswCQYD\n" +

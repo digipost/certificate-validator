@@ -16,53 +16,41 @@
 package no.digipost.security.ocsp;
 
 import no.digipost.security.DigipostSecurity;
-import org.apache.http.HttpEntity;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.junit.jupiter.api.BeforeEach;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.net.SocketTimeoutException;
+import java.net.URI;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
-import static uk.co.probablyfine.matchers.Java8Matchers.where;
-import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.when;
+import static uk.co.probablyfine.matchers.Java8Matchers.where;
+import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
 
 @ExtendWith(MockitoExtension.class)
-public class OcspLookupTest {
+class OcspLookupTest {
 
-    @Mock
-    private CloseableHttpClient httpClient;
+    private static X509Certificate digipostCertificate;
 
-    @Mock
-    private CloseableHttpResponse response;
+    private static X509Certificate verisignCertificate;
 
-    @Mock
-    private StatusLine ocspResponseStatus;
+    private final OcspHttpClientMockitoHelper ocsp;
 
-    @Mock
-    private HttpEntity ocspResponseEntity;
+    public OcspLookupTest(@Mock CloseableHttpClient httpClient) {
+        this.ocsp = new OcspHttpClientMockitoHelper(httpClient);
+    }
 
-    private X509Certificate digipostCertificate;
-
-    private X509Certificate verisignCertificate;
-
-
-    @BeforeEach
-    public void loadCertificates() {
+    @BeforeAll
+    static void loadCertificates() {
         List<X509Certificate> certificates = DigipostSecurity.readCertificates("digipost.no-certchain.pem").collect(toList());
         assertThat(certificates, hasSize(3));
         digipostCertificate = certificates.get(0);
@@ -71,38 +59,31 @@ public class OcspLookupTest {
 
 
     @Test
-    public void exceptionFromHttpRequestAreRethrown() throws Exception {
-        given(httpClient.execute(any())).will(i -> { throw new SocketTimeoutException("timed out"); });
+    void exceptionFromHttpRequestAreRethrown() throws Exception {
+        ocsp.whenExecutingOcspLookupRequest().thenThrow(new SocketTimeoutException("timed out"));
 
         OcspLookup lookup = OcspLookupRequest.tryCreate(digipostCertificate, verisignCertificate).map(OcspLookup::new).get();
-        Exception thrown = assertThrows(Exception.class, () -> lookup.executeUsing(httpClient));
+        Exception thrown = assertThrows(Exception.class, () -> lookup.executeUsing(ocsp.httpClient));
         assertThat(thrown, where(Exception::getMessage, containsString(SocketTimeoutException.class.getSimpleName())));
         assertThat(thrown, where(Exception::getMessage, containsString("timed out")));
     }
 
     @Test
-    public void non200ResponseIsNotOk() throws Exception {
-        when(httpClient.execute(any())).thenReturn(response);
-        when(response.getStatusLine()).thenReturn(ocspResponseStatus);
-
-        given(ocspResponseStatus.getStatusCode()).willReturn(500);
+    void non200ResponseIsNotOk() throws Exception {
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("https://ocsp.ca.com"), 500, null));
 
         OcspLookup lookup = OcspLookupRequest.tryCreate(digipostCertificate, verisignCertificate).map(OcspLookup::new).get();
-        OcspResult result = lookup.executeUsing(httpClient);
+        OcspResult result = lookup.executeUsing(ocsp.httpClient);
         assertThat(result, whereNot(OcspResult::isOkResponse));
     }
 
     @Test
-    public void a200ResponseIsOk() throws Exception {
-        when(httpClient.execute(any())).thenReturn(response);
-        when(response.getStatusLine()).thenReturn(ocspResponseStatus);
-
-        given(ocspResponseStatus.getStatusCode()).willReturn(200);
+    void a200ResponseIsOk() throws Exception {
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("https://ocsp.ca.com"), 200, null));
 
         OcspLookup lookup = OcspLookupRequest.tryCreate(digipostCertificate, verisignCertificate).map(OcspLookup::new).get();
-        try (OcspResult result = lookup.executeUsing(httpClient)) {
-            assertThat(result, where(OcspResult::isOkResponse));
-        }
+        OcspResult result = lookup.executeUsing(ocsp.httpClient);
+        assertThat(result, where(OcspResult::isOkResponse));
     }
 
 }

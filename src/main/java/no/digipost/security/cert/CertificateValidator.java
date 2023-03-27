@@ -18,10 +18,8 @@ package no.digipost.security.cert;
 import no.digipost.security.DigipostSecurity;
 import no.digipost.security.DigipostSecurityException;
 import no.digipost.security.ocsp.OcspLookup;
-import no.digipost.security.ocsp.OcspResult;
 import no.digipost.security.ocsp.OcspUtils;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.bouncycastle.cert.CertIOException;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cert.ocsp.OCSPException;
 import org.bouncycastle.cert.ocsp.RevokedStatus;
@@ -29,7 +27,6 @@ import org.bouncycastle.cert.ocsp.SingleResp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.time.Clock;
@@ -146,22 +143,17 @@ public class CertificateValidator {
                         return Optional.empty();
                     }
                 })
-                .map(result -> {
-                    try (OcspResult ocspResult = result) {
+                .map(ocspResult -> {
+                    try {
                         if (!ocspResult.isOkResponse()) {
-                            LOG.warn("Unexpected OCSP response ({}) for {}.", ocspResult.response.getStatusLine(), certificateAndIssuer);
+                            LOG.warn("Unexpected {} for {}.", ocspResult, certificateAndIssuer);
                             return UNDECIDED;
                         }
                         BasicOCSPResp basix;
                         try {
                             basix = ocspResult.getResponseObject();
-                        } catch (OCSPException | CertIOException | IllegalStateException e) {
-                            LOG.warn("OCSP response for {}, error reading the response because: {} '{}'", certificateAndIssuer, e.getClass().getSimpleName(), e.getMessage());
-                            return UNDECIDED;
-                        }
-
-                        if(basix == null) {
-                            LOG.warn("OCSP response for {}, returned a null response, this could be a problem with the certificate issuer", certificateAndIssuer);
+                        } catch (DigipostSecurityException e) {
+                            LOG.warn("OCSP response for {}, error reading the response because {} '{}'", certificateAndIssuer, e.getClass().getSimpleName(), e.getMessage());
                             return UNDECIDED;
                         }
 
@@ -179,7 +171,7 @@ public class CertificateValidator {
                         }
 
                         if (!config.ocspSignatureValidator.isValidSignature(basix, ocspSignatureValidationCertificate)) {
-                            LOG.warn("OCSP response for {} returnerte et svar som feilet signaturvalidering", certificateAndIssuer);
+                            LOG.warn("OCSP response for {} failed signature validation", certificateAndIssuer);
                             return UNDECIDED;
                         }
 
@@ -198,7 +190,7 @@ public class CertificateValidator {
                         }
                         LOG.debug("OCSP response for {} returned status GOOD", certificateAndIssuer);
                         return OK;
-                    } catch (OCSPException | IOException e) {
+                    } catch (OCSPException e) {
                         throw new DigipostSecurityException(e);
                     }
                 })

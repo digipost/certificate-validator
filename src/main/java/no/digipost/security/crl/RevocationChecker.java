@@ -16,7 +16,7 @@
 package no.digipost.security.crl;
 
 import no.digipost.security.DigipostSecurity;
-import org.apache.http.ssl.TrustStrategy;
+import org.apache.hc.core5.ssl.TrustStrategy;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,15 +33,20 @@ import static java.lang.String.format;
 /**
  * Used for configuring a HTTP Client to check if the server's certificate is revoked.
  * The check is performed against a static Certificate Revocation List (CRL) file.
- *
- * When configuring the {@link javax.net.ssl.SSLContext} for a {@link org.apache.http.client.HttpClient},
- * the RevocationChecker is set up as follows:
+ * <p>
+ * The following code demonstrates how to configure a {@link org.apache.hc.client5.http.classic.HttpClient}
+ * with a {@code RevocationChecker}:
  *
  * <pre>{@code
- *  HttpClientBuilder.create()
- *      .setSSLContext(SSLContexts.custom()
- *          .loadTrustMaterial(trustStore, new RevocationChecker(crlPath))
- *      ).build();
+ *  SSLContext sslContext = SSLContexts.custom()
+ *          .loadTrustMaterial(new RevocationChecker(null))
+ *          .build();
+ *  HttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+ *          .setSSLSocketFactory(new SSLConnectionSocketFactory(sslContext))
+ *          .build();
+ *  CloseableHttpClient httpClient = HttpClientBuilder.create()
+ *          .setConnectionManager(connectionManager)
+ *          .build();
  * }</pre>
  *
  */

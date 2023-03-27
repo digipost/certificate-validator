@@ -21,13 +21,14 @@ import java.io.InputStream;
 
 import static com.google.common.io.ByteStreams.toByteArray;
 import static no.digipost.DiggBase.nonNull;
+import static no.digipost.DiggExceptions.asUnchecked;
 
 public final class OcspResponses {
 
-    private static final byte[] OK_OLD;
-    private static final byte[] UNKNOWN;
-    private static final byte[] REVOKED;
-    private static final byte[] OK_SEID2_BUYPASS;
+    public static final byte[] OK_OLD;
+    public static final byte[] UNKNOWN;
+    public static final byte[] REVOKED;
+    public static final byte[] OK_SEID2_BUYPASS;
 
     static {
         try {
@@ -37,7 +38,7 @@ public final class OcspResponses {
 
             OK_SEID2_BUYPASS = toByteArray(nonNull("/ocsp/ok_seid2_buypass.response", OcspResponses.class::getResourceAsStream));
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw asUnchecked(e);
         }
     }
 
