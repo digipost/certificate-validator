@@ -15,7 +15,6 @@
  */
 package no.digipost.security.ocsp;
 
-import no.digipost.security.DigipostSecurity;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.junit.jupiter.api.Test;
@@ -34,10 +33,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 class OcspUtilsTest {
-
-    static {
-        DigipostSecurity.ensureSecurityProvider();
-    }
 
     @Test
     void ocspResponseWithNoSigningCertificates() {
