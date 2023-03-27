@@ -71,13 +71,13 @@
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk15on</artifactId>
-            <version>1.70</version>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <version>1.73</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.70</version>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.73</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
@@ -199,9 +199,9 @@
                                     <include>org.slf4j:jcl-over-slf4j</include>
                                     <include>org.slf4j:slf4j-simple</include>
                                     <include>org.apache.commons:commons-lang3</include>
-                                    <include>org.bouncycastle:bcprov-jdk15on</include>
-                                    <include>org.bouncycastle:bcpkix-jdk15on</include>
-                                    <include>org.bouncycastle:bcutil-jdk15on</include>
+                                    <include>org.bouncycastle:bcprov-jdk18on</include>
+                                    <include>org.bouncycastle:bcpkix-jdk18on</include>
+                                    <include>org.bouncycastle:bcutil-jdk18on</include>
                                     <include>commons-codec:commons-codec</include>
                                     <include>org.apache.httpcomponents.core5</include>
                                     <include>org.apache.httpcomponents.client5</include>
