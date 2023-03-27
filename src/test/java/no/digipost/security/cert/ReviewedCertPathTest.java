@@ -38,21 +38,21 @@ import static org.mockito.Mockito.mock;
 import static uk.co.probablyfine.matchers.Java8Matchers.where;
 import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
 
-public class ReviewedCertPathTest {
+class ReviewedCertPathTest {
 
     @Test
-    public void exceptionIsUntrusted() {
+    void exceptionIsUntrusted() {
         ReviewedCertPath certPath = new ReviewedCertPath(new GeneralSecurityException());
         assertThat(certPath, whereNot(ReviewedCertPath::isTrusted));
     }
 
     @Test
-    public void nullCertificateIsNotAllowed() {
+    void nullCertificateIsNotAllowed() {
         assertThrows(NullPointerException.class, () -> new ReviewedCertPath(null, p -> true));
     }
 
     @Test
-    public void trustedCertificate() {
+    void trustedCertificate() {
         CertPath certpath = mock(CertPath.class);
         ReviewedCertPath reviewedPath = new ReviewedCertPath(certpath, p -> true);
         assertThat(reviewedPath, where(ReviewedCertPath::isTrusted));
@@ -60,12 +60,12 @@ public class ReviewedCertPathTest {
     }
 
     @Test
-    public void untrustedCertificate() {
+    void untrustedCertificate() {
         assertThat(new ReviewedCertPath(mock(CertPath.class), p -> false), whereNot(ReviewedCertPath::isTrusted));
     }
 
     @Test
-    public void cannotExtractCertificateAndIssuerWhenUntrusted() {
+    void cannotExtractCertificateAndIssuerWhenUntrusted() {
         CertPath certpath = asCertPath(DigipostSecurity.readCertificates("digipost.no-certchain.pem"));
         ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> false);
 
@@ -73,7 +73,7 @@ public class ReviewedCertPathTest {
     }
 
     @Test
-    public void extractsCertificateAndIssuerWhenTrusted() {
+    void extractsCertificateAndIssuerWhenTrusted() {
         CertPath certpath = asCertPath(readCertificates("digipost.no-certchain.pem"));
         ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> true);
 
@@ -84,7 +84,7 @@ public class ReviewedCertPathTest {
     }
 
     @Test
-    public void trustingCertificatePathWithOnlyOneCertificateIsInvalid() {
+    void trustingCertificatePathWithOnlyOneCertificateIsInvalid() {
         CertPath certpath = asCertPath(Stream.of(digipostVirksomhetssertifikat()));
         ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> true);
 
@@ -93,7 +93,7 @@ public class ReviewedCertPathTest {
     }
 
     @Test
-    public void trustingCertificatePathWithNocertificatesIsObviouslyInvalid() {
+    void trustingCertificatePathWithNocertificatesIsObviouslyInvalid() {
         CertPath certpath = mock(CertPath.class);
         ReviewedCertPath reviewedCertPath = new ReviewedCertPath(certpath, c -> true);
 
@@ -102,21 +102,21 @@ public class ReviewedCertPathTest {
     }
 
     @Test
-    public void toStringForTrustedCertPath() {
+    void toStringForTrustedCertPath() {
         CertPath certPath = asCertPath(Stream.of(digipostVirksomhetssertifikat()));
         String description = new ReviewedCertPath(certPath, c -> true).toString();
         assertThat(description, is("Trusted: " + DigipostSecurity.describe(certPath)));
     }
 
     @Test
-    public void toStringForUntrustedCertPath() {
+    void toStringForUntrustedCertPath() {
         CertPath certPath = asCertPath(Stream.of(CertificatesForTesting.digipostVirksomhetssertifikat()));
         String description = new ReviewedCertPath(certPath, c -> false).toString();
         assertThat(description, is("Untrusted: " + DigipostSecurity.describe(certPath)));
     }
 
     @Test
-    public void toStringForException() {
+    void toStringForException() {
         CertificateParsingException exception = new CertificateParsingException("bogus certificate");
         String description = new ReviewedCertPath(exception).toString();
         assertThat(description, is("Untrusted: " + CertificateParsingException.class.getSimpleName() + ": 'bogus certificate'"));

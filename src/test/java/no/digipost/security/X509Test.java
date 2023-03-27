@@ -37,10 +37,10 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static uk.co.probablyfine.matchers.Java8Matchers.where;
 
-public class X509Test {
+class X509Test {
 
     @Test
-    public void findOrganisasjonsnummerInRealPublicCertificates() {
+    void findOrganisasjonsnummerInRealPublicCertificates() {
         assertThat(orgnr(DIGIPOST_VIRKSOMHETSSERTIFIKAT), is("984661185"));
         assertThat(orgnr(DIFI), is("991825827"));
         assertThat(orgnr(EBOKS), is("996460320"));
@@ -49,32 +49,32 @@ public class X509Test {
 
 
     @Test
-    public void findOrganisasjonsnummerInCommonName() {
+    void findOrganisasjonsnummerInCommonName() {
         X509Certificate cert = mock(X509Certificate.class, RETURNS_DEEP_STUBS);
         given(cert.getSubjectX500Principal()).willReturn(new X500Principal("CN=123456789 acb, O=MyCorp"));
         assertThat(findOrganisasjonsnummer(cert).get(), is("123456789"));
     }
 
     @Test
-    public void findOrganisasjonsnummerInSubjectWithoutPrefix() {
+    void findOrganisasjonsnummerInSubjectWithoutPrefix() {
         X509Certificate cert = mock(X509Certificate.class, RETURNS_DEEP_STUBS);
         given(cert.getSubjectX500Principal()).willReturn(new X500Principal("OID.2.5.4.97=123456789, CN=MyCorp Fullname, OU=MyCorp Department, O=MyCorp, C=NO"));
         assertThat(findOrganisasjonsnummer(cert).get(), is("123456789"));
     }
 
     @Test
-    public void doesNotFindOrganisasjonsnummer() {
+    void doesNotFindOrganisasjonsnummer() {
         X509Certificate cert = mock(X509Certificate.class, RETURNS_DEEP_STUBS);
         given(cert.getSubjectX500Principal()).willReturn(new X500Principal("CN=MyCorp Fullname, OU=MyCorp Department, O=MyCorp, C=NO"));
         assertThat(findOrganisasjonsnummer(cert), is(Optional.empty()));
     }
 
     @Test
-    public void getOrgNumberBuypassSeid2Cert() {
+    void getOrgNumberBuypassSeid2Cert() {
         assertThat(X509.findOrganisasjonsnummer(BUYPASS_SEID_2_CERT), where(Optional::get, is("100101688")));
     }
 
-    private String orgnr(String certificate) {
+    private static String orgnr(String certificate) {
         X509Certificate cert = DigipostSecurity.readCertificate(certificate.getBytes());
         return findOrganisasjonsnummer(cert).orElseThrow(() -> new NoSuchElementException("no orgnr found in " + describe(cert)));
 

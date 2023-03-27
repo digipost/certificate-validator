@@ -32,7 +32,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
-public class HttpsTest {
+class HttpsTest {
 
     private static final X509Certificate x509Cert = DigipostSecurity.readCertificate("verisign.pem");
 
@@ -41,12 +41,12 @@ public class HttpsTest {
 
 
     @Test
-    public void doesNotAllowNonSecureRequest() {
+    void doesNotAllowNonSecureRequest() {
         assertThrows(NotSecure.class, () -> Https.extractClientCertificate(request));
     }
 
     @Test
-    public void extractsSingleX509Certificate() {
+    void extractsSingleX509Certificate() {
         given(request.isSecure()).willReturn(true);
         given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(x509Cert);
 
@@ -54,7 +54,7 @@ public class HttpsTest {
     }
 
     @Test
-    public void extractFirstOfMultipleX509Certificates() {
+    void extractFirstOfMultipleX509Certificates() {
         given(request.isSecure()).willReturn(true);
         given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[]{x509Cert, "garbage"});
 
@@ -62,7 +62,7 @@ public class HttpsTest {
     }
 
     @Test
-    public void failsIfNotX509Certificate() {
+    void failsIfNotX509Certificate() {
         given(request.isSecure()).willReturn(true);
         given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[]{mock(Certificate.class)});
 
@@ -70,7 +70,7 @@ public class HttpsTest {
     }
 
     @Test
-    public void failsOnEmptyArray() {
+    void failsOnEmptyArray() {
         given(request.isSecure()).willReturn(true);
         given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[0]);
 

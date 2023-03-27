@@ -18,9 +18,9 @@ package no.digipost.security.ocsp;
 import no.digipost.security.DigipostSecurity;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
-import org.bouncycastle.cert.ocsp.OCSPResp;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 
@@ -33,14 +33,14 @@ import static org.hamcrest.Matchers.not;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
-public class OcspUtilsTest {
+class OcspUtilsTest {
 
     static {
         DigipostSecurity.ensureSecurityProvider();
     }
 
     @Test
-    public void ocspResponseWithNoSigningCertificates() {
+    void ocspResponseWithNoSigningCertificates() {
         BasicOCSPResp ocspResponse = mock(BasicOCSPResp.class);
         given(ocspResponse.getCerts()).willReturn(null);
         assertThat(findOscpSigningCertificate(ocspResponse), is(empty()));
@@ -53,8 +53,8 @@ public class OcspUtilsTest {
     }
 
     @Test
-    public void findsSigningCertificateInOcspResponse() throws Exception {
-        BasicOCSPResp ocspResponse = (BasicOCSPResp) new OCSPResp(OcspResponses.revoked()).getResponseObject();
+    void findsSigningCertificateInOcspResponse() throws Exception {
+        BasicOCSPResp ocspResponse = new OcspResult(URI.create("ocsp.ca.com"), 200, OcspResponses.REVOKED).getResponseObject();
         Optional<X509Certificate> signingCertificate = findOscpSigningCertificate(ocspResponse);
         assertThat(signingCertificate, not(empty()));
         assertThat(signingCertificate.get().getSubjectDN().getName(), containsString("GlobalSign Domain Validation CA - G2 OCSP responder"));
