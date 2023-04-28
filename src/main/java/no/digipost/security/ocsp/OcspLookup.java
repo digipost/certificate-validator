@@ -16,18 +16,17 @@
 package no.digipost.security.ocsp;
 
 import no.digipost.security.DigipostSecurityException;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.bouncycastle.cert.ocsp.CertificateID;
 import org.bouncycastle.cert.ocsp.OCSPException;
 import org.bouncycastle.cert.ocsp.OCSPReqBuilder;
 
 import java.io.IOException;
 import java.net.URI;
-
-import static org.apache.http.client.methods.RequestBuilder.post;
 
 /**
  * <strong>Online Certificate Status Protocol (OCSP)</strong> is an automated certificate checking
@@ -37,6 +36,8 @@ import static org.apache.http.client.methods.RequestBuilder.post;
  * @see <a href="http://tools.ietf.org/html/rfc6960">Internet Engineering Task Force (IETF) RFC6960</a>
  */
 public final class OcspLookup {
+
+    private static final ContentType OCSP_REQUEST_CONTENT_TYPE = ContentType.create("application/ocsp-request");
 
     public final URI uri;
     public final CertificateID certificateId;
@@ -58,11 +59,10 @@ public final class OcspLookup {
      */
     public OcspResult executeUsing(CloseableHttpClient client) {
         try {
-            HttpEntity ocspRequestEntity = new ByteArrayEntity(new OCSPReqBuilder().addRequest(certificateId).build().getEncoded());
-            HttpUriRequest ocspRequest = post(uri)
-                    .addHeader("Content-Type", "application/ocsp-request")
-                    .setEntity(ocspRequestEntity).build();
-            return new OcspResult(uri, client.execute(ocspRequest));
+            ClassicHttpRequest ocspRequest = ClassicRequestBuilder.post(uri)
+                    .setEntity(new OCSPReqBuilder().addRequest(certificateId).build().getEncoded(), OCSP_REQUEST_CONTENT_TYPE)
+                    .build();
+            return client.execute(ocspRequest, res -> new OcspResult(uri, res.getCode(), EntityUtils.toByteArray(res.getEntity())));
         } catch (OCSPException | IOException e) {
             throw new DigipostSecurityException(e);
         }

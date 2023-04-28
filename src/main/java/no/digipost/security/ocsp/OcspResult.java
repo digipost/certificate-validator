@@ -15,13 +15,10 @@
  */
 package no.digipost.security.ocsp;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
+import no.digipost.security.DigipostSecurityException;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
-import org.bouncycastle.cert.ocsp.OCSPException;
 import org.bouncycastle.cert.ocsp.OCSPResp;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.net.URI;
 
 /**
@@ -30,13 +27,15 @@ import java.net.URI;
  *
  * @see BasicOCSPResp
  */
-public final class OcspResult implements Closeable {
+public final class OcspResult {
 
     public final URI uri;
-    public final CloseableHttpResponse response;
+    private final byte[] response;
+    private final int responseStatusCode;
 
-    OcspResult(URI uri, CloseableHttpResponse response) {
+    public OcspResult(URI uri, int responseStatusCode, byte[] response) {
         this.uri = uri;
+        this.responseStatusCode = responseStatusCode;
         this.response = response;
     }
 
@@ -44,20 +43,43 @@ public final class OcspResult implements Closeable {
     /**
      * @return a BasicOCSPResp
      */
-    public BasicOCSPResp getResponseObject() throws OCSPException, IllegalStateException, IOException {
-        OCSPResp oresp = new OCSPResp(response.getEntity().getContent());
-        return (BasicOCSPResp) oresp.getResponseObject();
+    public BasicOCSPResp getResponseObject() {
+        BasicOCSPResp responseObject;
+        try {
+            OCSPResp oresp = new OCSPResp(response);
+            responseObject = (BasicOCSPResp) oresp.getResponseObject();
+        } catch (Exception e) {
+            throw new DigipostSecurityException(
+                    "Error obtaining a " + BasicOCSPResp.class.getName() + " " +
+                    "from the response of " + this, e);
+        }
+        if (responseObject == null) {
+            throw new DigipostSecurityException(
+                    "OCSP result of " + this + " contained a null response. " +
+                    "This may be a problem with the certificate issuer");
+        }
+        return responseObject;
     }
 
     /**
      * @return whether the http status code from the request was OK.
      */
     public boolean isOkResponse() {
-        return response.getStatusLine().getStatusCode() == 200;
+        return responseStatusCode == 200;
+    }
+
+    /**
+     * @return the actual response body from the OCSP responder as raw bytes
+     */
+    public byte[] getRawResponse() {
+        return response;
     }
 
     @Override
-    public void close() throws IOException {
-        response.close();
+    public String toString() {
+        return "OCSP result from " + uri + " HTTP status " + responseStatusCode;
     }
+
+
+
 }

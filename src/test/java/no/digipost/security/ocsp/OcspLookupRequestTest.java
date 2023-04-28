@@ -22,12 +22,12 @@ import java.net.URI;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
-import static uk.co.probablyfine.matchers.Java8Matchers.where;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static uk.co.probablyfine.matchers.Java8Matchers.where;
 
-public class OcspLookupRequestTest {
+class OcspLookupRequestTest {
 
     private static final X509Certificate digipostCertificate;
     private static final X509Certificate verisignCertificate;
@@ -42,12 +42,12 @@ public class OcspLookupRequestTest {
 
 
     @Test
-    public void extractsTheOcspResponderUriFromCertificate() {
+    void extractsTheOcspResponderUriFromCertificate() {
         assertThat(ocspLookupRequest, where(request -> request.url, is(URI.create("http://sr.symcd.com"))));
     }
 
     @Test
-    public void certificateIdSerialnumberFromCertificate() {
+    void certificateIdSerialnumberFromCertificate() {
         assertThat(ocspLookupRequest.certificateSerialNumber, is(digipostCertificate.getSerialNumber()));
     }
 

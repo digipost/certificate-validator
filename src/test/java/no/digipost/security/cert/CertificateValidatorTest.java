@@ -15,21 +15,18 @@
  */
 package no.digipost.security.cert;
 
-import com.google.common.io.ByteStreams;
 import no.digipost.security.FilesAndDirs;
 import no.digipost.security.HttpClient;
+import no.digipost.security.ocsp.OcspHttpClientMockitoHelper;
 import no.digipost.security.ocsp.OcspLookup;
 import no.digipost.security.ocsp.OcspResponses;
 import no.digipost.security.ocsp.OcspResult;
 import no.digipost.time.ControllableClock;
-import org.apache.http.HttpEntity;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cert.ocsp.OCSPResp;
 import org.bouncycastle.cert.ocsp.SingleResp;
+import org.bouncycastle.util.Encodable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -40,9 +37,9 @@ import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,7 +49,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 import static java.util.Optional.ofNullable;
-import static no.digipost.DiggIO.autoClosing;
+import static no.digipost.DiggExceptions.applyUnchecked;
 import static no.digipost.security.cert.CertStatus.OK;
 import static no.digipost.security.cert.CertStatus.REVOKED;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
@@ -67,32 +64,13 @@ import static no.digipost.security.cert.CertificatesForTesting.digipostVirksomhe
 import static no.digipost.security.cert.OcspPolicy.ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.quicktheories.QuickTheory.qt;
 import static org.quicktheories.generators.SourceDSL.integers;
 
 @ExtendWith(MockitoExtension.class)
-public class CertificateValidatorTest {
-
-    @Mock
-    private CloseableHttpClient httpClient;
-
-    @Mock
-    private CloseableHttpResponse response;
-
-    @Mock
-    private StatusLine ocspResponseStatus;
-
-    @Mock
-    private HttpEntity ocspResponseEntity;
-
+class CertificateValidatorTest {
 
     private CertificateValidator prodValidator;
     private CertificateValidator qaValidator;
@@ -104,35 +82,34 @@ public class CertificateValidatorTest {
             trustFactory.seid1.buypassAndCommfidesTestEnterpriseCertificates(),
             trustFactory.seid2.buypassTestEnterpriseCertificates()));
 
+    private final OcspHttpClientMockitoHelper ocsp;
+
+    CertificateValidatorTest(@Mock CloseableHttpClient httpClient) {
+        this.ocsp = new OcspHttpClientMockitoHelper(httpClient);
+    }
 
     @BeforeEach
-    public void stubHttpClientAndInitCertificateValidator() throws Exception {
-        lenient().when(response.getStatusLine()).thenReturn(ocspResponseStatus);
-        lenient().when(response.getEntity()).thenReturn(ocspResponseEntity);
-        lenient().when(httpClient.execute(any(HttpUriRequest.class))).thenReturn(response);
-        lenient().when(ocspResponseStatus.toString()).thenAnswer(i -> "status " + ocspResponseStatus.getStatusCode());
-
-        prodValidator = new CertificateValidator(MOST_STRICT, prodTrust, httpClient);
-        qaValidator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrust, httpClient);
+    void stubHttpClientAndInitCertificateValidator() throws Exception {
+        prodValidator = new CertificateValidator(MOST_STRICT, prodTrust, ocsp.httpClient);
+        qaValidator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrust, ocsp.httpClient);
     }
 
 
     @Test
-    public void doesntTrustOtherCertificatesButX509() {
+    void doesntTrustOtherCertificatesButX509() {
         Certificate nonX509Certificate = mock(Certificate.class);
         assertThat(prodValidator.validateCert(nonX509Certificate), is(UNTRUSTED));
         assertThat(qaValidator.validateCert(nonX509Certificate), is(UNTRUSTED));
     }
 
     @Test
-    public void qaCertificatesAreUntrustedInProduction() {
+    void qaCertificatesAreUntrustedInProduction() {
         assertThat(prodValidator.validateCert(digipostVirksomhetsTestsertifikat()), is(UNTRUSTED));
     }
 
     @Test
-    public void prodCertificatesAreTrusted() throws Exception {
-        given(ocspResponseStatus.getStatusCode()).willReturn(200);
-        given(ocspResponseEntity.getContent()).willAnswer(i -> OcspResponses.ok());
+    void prodCertificatesAreTrusted() throws Exception {
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp-url"), 200, OcspResponses.OK_OLD));
 
         assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
         assertThat(qaValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
@@ -140,55 +117,52 @@ public class CertificateValidatorTest {
 
 
     @Test
-    public void ocspLookupReturningAnythingButStatus200IsUndecidedForProductionAndOKForOtherEnvironments() {
+    void ocspLookupReturningAnythingButStatus200IsUndecidedForProductionAndOKForOtherEnvironments() {
         qt()
             .forAll(integers().between(100, 599))
             .assuming(code -> code != 200)
             .checkAssert(otherThan200 -> {
-                lenient().when(ocspResponseStatus.getStatusCode()).thenReturn(otherThan200);
+                ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp.ca.com"), otherThan200, null));
 
                 assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
                 assertThat(qaValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
-                verify(ocspResponseStatus, times(2)).getStatusCode();
             });
     }
 
 
     @Test
-    public void undecidedOcspLookupsAreCachedForOneMinute() throws Exception {
-        given(ocspResponseStatus.getStatusCode()).willReturn(500);
+    void undecidedOcspLookupsAreCachedForOneMinute() throws Exception {
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp.ca.com"), 500, null));
 
         assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
-        verify(httpClient, times(1)).execute(any());
+        ocsp.verifyOcspLookupRequest(times(1));
 
-        given(ocspResponseStatus.getStatusCode()).willReturn(200);
-        given(ocspResponseEntity.getContent()).willAnswer(i -> OcspResponses.ok());
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp.ca.com"), 200, OcspResponses.OK_OLD));
         assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
-        verifyNoMoreInteractions(httpClient);
+        ocsp.verifyNoMoreRequests();
 
         clock.timePasses(Duration.ofMinutes(1));
         assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
-        verify(httpClient, times(2)).execute(any());
+        ocsp.verifyOcspLookupRequest(times(2));
     }
 
 
 
     @Test
-    public void undecidedOcspLookupWillUseOldOkResponseForUpTo48Hours() throws Exception {
-        given(ocspResponseStatus.getStatusCode()).willReturn(200);
-        given(ocspResponseEntity.getContent()).willAnswer(i -> OcspResponses.ok());
+    void undecidedOcspLookupWillUseOldOkResponseForUpTo48Hours() {
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp.ca.com"), 200, OcspResponses.OK_OLD));
 
         prodValidator.validateCert(digipostVirksomhetssertifikat());
         prodValidator.validateCert(digipostVirksomhetssertifikat());
         prodValidator.validateCert(digipostVirksomhetssertifikat());
-        verify(httpClient, times(1)).execute(any());
+        ocsp.verifyOcspLookupRequest(times(1));
 
 
-        given(ocspResponseStatus.getStatusCode()).willReturn(500);
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp.ca.com"), 500, null));
 
         clock.timePasses(Duration.ofMinutes(59));
         assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
-        verify(httpClient, times(2)).execute(any());
+        ocsp.verifyOcspLookupRequest(times(2));
 
         clock.timePasses(Duration.ofHours(47));
         assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
@@ -198,27 +172,25 @@ public class CertificateValidatorTest {
     }
 
     @Test
-    public void revokedCertificate() throws Exception {
-        given(ocspResponseStatus.getStatusCode()).willReturn(200);
-        given(ocspResponseEntity.getContent()).willAnswer(i -> OcspResponses.revoked());
+    void revokedCertificate() {
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp.ca.com"), 200, OcspResponses.REVOKED));
 
         assertThat(new CertificateValidator(MOST_STRICT
                 .ignoreCustomSigningCertificatesInOcspResponses()
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, httpClient)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, ocsp.httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(REVOKED));
     }
 
     @Test
-    public void cachesRevokedStatusForever() throws Exception {
-        given(ocspResponseStatus.getStatusCode()).willReturn(200);
-        given(ocspResponseEntity.getContent()).willAnswer(i -> OcspResponses.revoked());
+    void cachesRevokedStatusForever() {
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp.ca.com"), 200, OcspResponses.REVOKED));
 
         CertificateValidator validator = new CertificateValidator(MOST_STRICT
                 .ignoreCustomSigningCertificatesInOcspResponses()
                 .validateOcspResponseSignatureUsing((resp, cert) -> true),
-                prodTrust, httpClient);
+                prodTrust, ocsp.httpClient);
         assertThat(validator.validateCert(digipostVirksomhetssertifikat()), is(REVOKED));
-        verify(httpClient, times(1)).execute(any());
+        ocsp.verifyOcspLookupRequest(times(1));
 
         clock.timePasses(Duration.ofSeconds(59));
         assertThat(validator.validateCert(digipostVirksomhetssertifikat()), is(REVOKED));
@@ -229,55 +201,52 @@ public class CertificateValidatorTest {
         clock.timePasses(Duration.ofDays(365 * 100));
         assertThat(validator.validateCert(digipostVirksomhetssertifikat()), is(REVOKED));
 
-        verifyNoMoreInteractions(httpClient);
+        ocsp.verifyNoMoreRequests();
     }
 
     @Test
-    public void unknownCertificateFromOcspIsUndecidedInProductionAndOkForQA() throws Exception {
-        given(ocspResponseStatus.getStatusCode()).willReturn(200);
-        given(ocspResponseEntity.getContent()).willAnswer(i -> OcspResponses.unknown());
+    void unknownCertificateFromOcspIsUndecidedInProductionAndOkForQA() {
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp.ca.com"), 200, OcspResponses.UNKNOWN));
 
         assertThat(new CertificateValidator(MOST_STRICT
                 .ignoreCustomSigningCertificatesInOcspResponses()
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, httpClient)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, ocsp.httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
         assertThat(new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED)
                 .ignoreCustomSigningCertificatesInOcspResponses()
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), qaTrust, httpClient)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), qaTrust, ocsp.httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(OK));
     }
 
     @Test
-    public void malformedResponseFromOcspResponerIsUndecidedInProductionAndOkForQA() throws Exception {
-        given(ocspResponseStatus.getStatusCode()).willReturn(200);
-        given(ocspResponseEntity.getContent()).willAnswer(i -> new ByteArrayInputStream(new byte[0]));
+    void malformedResponseFromOcspResponerIsUndecidedInProductionAndOkForQA() {
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp.ca.com"), 200, new byte[0]));
 
         assertThat(new CertificateValidator(MOST_STRICT
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, httpClient)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), prodTrust, ocsp.httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
         assertThat(new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED)
-                .validateOcspResponseSignatureUsing((resp, cert) -> true), qaTrust, httpClient)
+                .validateOcspResponseSignatureUsing((resp, cert) -> true), qaTrust, ocsp.httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(OK));
 
     }
 
     @Test
-    public void signatureVerificationFailureIsUndecidedInProductionAndOkForQA() throws Exception {
-        given(ocspResponseStatus.getStatusCode()).willReturn(200);
-        given(ocspResponseEntity.getContent()).willAnswer(i -> OcspResponses.ok());
+    void signatureVerificationFailureIsUndecidedInProductionAndOkForQA() throws Exception {
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp.ca.com"), 200, OcspResponses.OK_OLD));
 
         assertThat(new CertificateValidator(MOST_STRICT
                 .validateOcspResponseSignatureUsing((resp, cert) -> false),
-                prodTrust, httpClient)
+                prodTrust, ocsp.httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
         assertThat(new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED)
                 .validateOcspResponseSignatureUsing((resp, cert) -> false),
-                qaTrust, httpClient)
+                qaTrust, ocsp.httpClient)
                 .validateCert(digipostVirksomhetssertifikat()), is(OK));
     }
 
     @Test
-    public void failingOcspHttpRequestResultsInUndecided() {
+    void failingOcspHttpRequestResultsInUndecided() {
         CloseableHttpClient brokenHttp = mock(CloseableHttpClient.class, (Answer<?>) (v -> {throw new SocketTimeoutException("timed out");}));
 
         assertThat(new CertificateValidator(prodTrust, brokenHttp).validateCert(digipostVirksomhetssertifikat()), is(UNDECIDED));
@@ -286,15 +255,13 @@ public class CertificateValidatorTest {
 
 
     @Test
-    public void alreadyKnownCertificatesIsOkEvenOnFailingOcspHttpRequest() throws Exception {
-        given(ocspResponseStatus.getStatusCode()).willReturn(200);
-        given(ocspResponseEntity.getContent()).will(i -> OcspResponses.ok());
+    void alreadyKnownCertificatesIsOkEvenOnFailingOcspHttpRequest() throws Exception {
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp.ca.com"), 200, OcspResponses.OK_OLD));
 
         assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
         assertThat(qaValidator.validateCert(digipostVirksomhetsTestsertifikat()), is(OK));
 
-        given(httpClient.execute(any())).will(v -> {throw new SocketTimeoutException("timed out");});
-        lenient().when(ocspResponseStatus.getStatusCode()).then(v -> {throw new IllegalStateException("should never be called");});
+        ocsp.whenExecutingOcspLookupRequest().thenThrow(new SocketTimeoutException("timed out"));
         clock.timePasses(Duration.ofHours(6));
         assertThat(prodValidator.validateCert(digipostVirksomhetssertifikat()), is(OK));
         assertThat(qaValidator.validateCert(digipostVirksomhetsTestsertifikat()), is(OK));
@@ -305,29 +272,26 @@ public class CertificateValidatorTest {
     }
 
     @Test
-    public void skipOcspForDigipostIssuedCertificate() throws Exception {
+    void skipOcspForDigipostIssuedCertificate() throws Exception {
         Trust trust = Trust.merge(qaTrust, Trust.in(clock, digipostTestRotsertifikat()));
 
         CertificateValidator skipOcspForDigipostCert = new CertificateValidator(
                 MOST_STRICT.withOcspPolicy(ALWAYS_DO_OCSP_LOOKUP_EXCEPT_DIGIPOST_ISSUED),
-                trust, httpClient);
+                trust, ocsp.httpClient);
 
         X509Certificate digipostCertWithoutOcspResponderUrl = digipostUtstedtTestsertifikat();
 
         assertThat(skipOcspForDigipostCert.validateCert(digipostCertWithoutOcspResponderUrl), is(OK));
-        verifyNoInteractions(httpClient);
+        ocsp.verifyNeverAnyRequests();
 
         CertificateValidator alwaysOcspValidator = new CertificateValidator(
                 MOST_STRICT.ignoreCustomSigningCertificatesInOcspResponses().validateOcspResponseSignatureUsing((ocspResponse, issuer) -> true),
-                trust, httpClient);
+                trust, ocsp.httpClient);
 
-        given(ocspResponseStatus.getStatusCode()).willReturn(200);
-        given(ocspResponseEntity.getContent()).will(i -> OcspResponses.revoked());
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp.ca.com"), 200, OcspResponses.REVOKED));
 
         assertThat(alwaysOcspValidator.validateCert(digipostCertWithoutOcspResponderUrl), is(UNDECIDED));
-
-        verifyNoInteractions(httpClient);
-        verifyNoInteractions(ocspResponseEntity);
+        ocsp.verifyNeverAnyRequests();
 
         X509Certificate dpVirksomhetsSertifikat = digipostVirksomhetsTestsertifikat();
         assertThat(alwaysOcspValidator.validateCert(dpVirksomhetsSertifikat), is(REVOKED));
@@ -335,13 +299,12 @@ public class CertificateValidatorTest {
     }
 
     @Test
-    public void validateBuypassSeid2Cert() throws IOException {
+    void validateBuypassSeid2Cert() throws IOException {
         ControllableClock clockForValidSeid2Certs = ControllableClock.freezedAt(LocalDateTime.of(2021, 8, 24, 12, 5));
         Trust qaTrustForValidSeid2Certs = new TrustFactory(clockForValidSeid2Certs).seid2.buypassTestEnterpriseCertificates();
-        CertificateValidator validator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrustForValidSeid2Certs, httpClient);
+        CertificateValidator validator = new CertificateValidator(MOST_STRICT.allowOcspResults(UNDECIDED), qaTrustForValidSeid2Certs, ocsp.httpClient);
 
-        given(ocspResponseStatus.getStatusCode()).willReturn(200);
-        given(ocspResponseEntity.getContent()).will(i -> OcspResponses.okSeid2Buypass());
+        ocsp.whenExecutingOcspLookupRequest().thenReturn(new OcspResult(URI.create("ocsp.ca.com"), 200, OcspResponses.OK_SEID2_BUYPASS));
 
         assertThat(validator.validateCert(BUYPASS_SEID_2_CERT), is(OK));
         assertThat(validator.validateCert(BUYPASS_SEID_2_E_SEAL_CERT), is(OK));
@@ -351,7 +314,7 @@ public class CertificateValidatorTest {
 
     @Test
     @Disabled("use this to do an actual OCSP-lookup to store the response")
-    public void doRealOcspLookup() throws Exception {
+    void doRealOcspLookup() throws Exception {
 
 
         try (CloseableHttpClient realClient = HttpClient.create()) {
@@ -362,7 +325,7 @@ public class CertificateValidatorTest {
                     .ocspLookupRequest
                     .map(OcspLookup::new)
                     .map(l -> l.executeUsing(realClient))
-                    .map(autoClosing((OcspResult res) -> ByteStreams.toByteArray(res.response.getEntity().getContent())))
+                    .map(ocspResult -> applyUnchecked(Encodable::getEncoded, ocspResult.getResponseObject()))
                     .get();
 
             BasicOCSPResp ocspResp = (BasicOCSPResp) new OCSPResp(response).getResponseObject();

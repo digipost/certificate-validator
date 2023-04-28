@@ -15,17 +15,11 @@
  */
 package no.digipost.security;
 
-public class DigipostSecurityException extends RuntimeException {
+import org.junit.jupiter.api.extension.Extension;
 
-    public DigipostSecurityException(String message) {
-        this(message, null);
-    }
+public class EnsureSecurityProviderExtension implements Extension {
 
-    public DigipostSecurityException(Throwable cause) {
-        this(null, cause);
-    }
-
-    public DigipostSecurityException(String message, Throwable cause) {
-        super(cause != null ? ((message != null ? message + " because " : "") + cause.getClass().getSimpleName() + ": " + cause.getMessage()) : message, cause);
+    static {
+        DigipostSecurity.ensureSecurityProvider();
     }
 }

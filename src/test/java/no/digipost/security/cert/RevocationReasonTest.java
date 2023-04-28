@@ -29,10 +29,10 @@ import static org.hamcrest.Matchers.is;
 import static org.quicktheories.QuickTheory.qt;
 import static org.quicktheories.generators.SourceDSL.integers;
 
-public class RevocationReasonTest {
+class RevocationReasonTest {
 
     @Test
-    public void managesToResolveAnyReason() {
+    void managesToResolveAnyReason() {
         qt()
             .forAll(integers().all())
             .as(RevocationReason::resolve)
@@ -40,7 +40,7 @@ public class RevocationReasonTest {
     }
 
     @Test
-    public void resolveParticularReason() {
+    void resolveParticularReason() {
         qt()
             .forAll(SourceDSL.arbitrary().enumValues(RevocationReason.class))
             .asWithPrecursor(reason -> RevocationReason.resolve(reason.code))
@@ -48,7 +48,7 @@ public class RevocationReasonTest {
     }
 
     @Test
-    public void unknownReasonCodes() {
+    void unknownReasonCodes() {
         Set<Integer> knownReasons = Stream.of(RevocationReason.values()).filter(r -> r != UNKNOWN).map(r -> r.code).collect(toSet());
         qt()
             .forAll(integers().all())

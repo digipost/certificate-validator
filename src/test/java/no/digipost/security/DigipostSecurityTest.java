@@ -31,29 +31,29 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
-public class DigipostSecurityTest {
+class DigipostSecurityTest {
 
     @Test
-    public void readOneCertificate() {
+    void readOneCertificate() {
         X509Certificate digipostCert = DigipostSecurity.readCertificate("digipost.no-certchain.pem");
         Principal subject = digipostCert.getSubjectDN();
         assertThat(subject.getName(), containsString("POSTEN NORGE AS"));
     }
 
     @Test
-    public void readAChainOfCertificatesFromOnePem() {
+    void readAChainOfCertificatesFromOnePem() {
         Stream<String> certs = DigipostSecurity.readCertificates("digipost.no-certchain.pem").map(c -> c.getSubjectDN().getName());
         assertThat(certs.collect(toList()), contains(containsString("POSTEN NORGE AS"), any(String.class), containsString("VeriSign")));
     }
 
     @Test
-    public void describeCertPathAndCertificateAreNullSafe() {
+    void describeCertPathAndCertificateAreNullSafe() {
         DigipostSecurity.describe((CertPath) null);
         DigipostSecurity.describe((Certificate) null);
     }
 
     @Test
-    public void failFastCastingOfX509Certificate() {
+    void failFastCastingOfX509Certificate() {
         assertThrows(IllegalCertificateType.class, () -> DigipostSecurity.requireX509(mock(Certificate.class)));
     }
 }

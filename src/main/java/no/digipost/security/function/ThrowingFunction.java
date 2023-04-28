@@ -13,19 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package no.digipost.security;
+package no.digipost.security.function;
 
-public class DigipostSecurityException extends RuntimeException {
+@FunctionalInterface
+public interface ThrowingFunction<T, R> {
 
-    public DigipostSecurityException(String message) {
-        this(message, null);
-    }
+    R apply(T t) throws Exception;
 
-    public DigipostSecurityException(Throwable cause) {
-        this(null, cause);
-    }
-
-    public DigipostSecurityException(String message, Throwable cause) {
-        super(cause != null ? ((message != null ? message + " because " : "") + cause.getClass().getSimpleName() + ": " + cause.getMessage()) : message, cause);
-    }
 }

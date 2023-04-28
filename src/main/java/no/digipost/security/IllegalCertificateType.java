@@ -28,7 +28,7 @@ public class IllegalCertificateType extends RuntimeException {
     }
 
     private static String message(Object unexpectedObject) {
-        return "Expected a " + DigipostSecurity.X509 + " certificate, but got a " + unexpectedObject.getClass().getName();
+        return "Expected a " + DigipostSecurity.X509 + " certificate, but got " + (unexpectedObject != null ? "a " + unexpectedObject.getClass().getName() : "null");
     }
 
     private static String message(Certificate illegalCertificate) {
