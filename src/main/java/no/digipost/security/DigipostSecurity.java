@@ -16,6 +16,7 @@
 package no.digipost.security;
 
 import no.digipost.security.cert.CertificateNotFound;
+import no.digipost.security.cert.internal.JavaSecurityUtils;
 import no.digipost.security.keystore.KeyStoreBuilder;
 import no.digipost.security.keystore.KeyStoreType;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -29,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
 import java.security.Security;
 import java.security.cert.CertPath;
 import java.security.cert.Certificate;
@@ -40,10 +40,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
-import static javax.security.auth.x500.X500Principal.RFC1779;
 
 
 public final class DigipostSecurity {
@@ -61,7 +59,7 @@ public final class DigipostSecurity {
     /**
      * String denoting the certificate type {@value #X509}.
      */
-    public static final String X509 = "X.509";
+    public static final String X509 = JavaSecurityUtils.X509;
 
 
     private static final Logger LOG = LoggerFactory.getLogger(DigipostSecurity.class);
@@ -71,13 +69,7 @@ public final class DigipostSecurity {
      * Retrieve a {@link CertificateFactory} for X.509 certificates.
      */
     public static CertificateFactory getX509CertificateFactory() {
-         try {
-            return CertificateFactory.getInstance(X509);
-        } catch (CertificateException e) {
-            throw new RuntimeException(
-                    "Could not create " + X509 + " certificate factory: '" + e.getMessage() + "'. " +
-                    "Available providers: " + Stream.of(Security.getProviders()).map(Provider::getName).collect(joining(", ")), e);
-        }
+        return JavaSecurityUtils.getX509CertificateFactory();
     }
 
     /**
@@ -222,15 +214,7 @@ public final class DigipostSecurity {
      * @return the multiline description.
      */
     public static String describe(CertPath certPath) {
-        if (certPath == null) {
-            return "(null)";
-        }
-        List<? extends Certificate> certificates = certPath.getCertificates();
-        if (!certificates.isEmpty()) {
-            return certificates.stream().map(DigipostSecurity::describe).collect(joining("\n ^-- Issued by: ", "CertPath with the following certificates:\nCertificate: ", ""));
-        } else {
-            return "CertPath with no certificates";
-        }
+        return JavaSecurityUtils.describe(certPath);
     }
 
     /**
@@ -240,19 +224,7 @@ public final class DigipostSecurity {
      * @return the description
      */
     public static String describe(Certificate certificate) {
-        if (certificate == null) {
-            return "(null)";
-        }
-        if (certificate instanceof X509Certificate) {
-            X509Certificate x509 = (X509Certificate) certificate;
-            String subjectDescription = x509.getSubjectX500Principal().getName(RFC1779);
-            String validityDescription = "valid from " + x509.getNotBefore().toInstant() + " to " + x509.getNotAfter().toInstant();
-            String serialNumberDescription = "serial-number: " + x509.getSerialNumber().toString(16);
-            String issuerDescription = x509.getSubjectX500Principal().equals(x509.getIssuerX500Principal()) ? "self-issued" : "issuer: " + x509.getIssuerX500Principal().getName(RFC1779);
-            return String.join(", ", subjectDescription, validityDescription, serialNumberDescription, issuerDescription);
-        } else {
-            return certificate.getType() + "-certificate";
-        }
+        return JavaSecurityUtils.describe(certificate);
     }
 
 
