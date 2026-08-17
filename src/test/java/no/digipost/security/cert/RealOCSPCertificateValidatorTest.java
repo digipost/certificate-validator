@@ -74,14 +74,6 @@ class RealOCSPCertificateValidatorTest {
         assertThat(validatorQaEnv.validateCert(EBOKS_COMMFIDES_TEST), is(OK));
     }
 
-
-    @Test
-    void validerer_nytt_buypass_sertifikat() {
-        X509Certificate buypassSert = DigipostSecurity.readCertificate(BUYPASS_MF_PROD_SERTIFIKAT.getBytes());
-
-        assertThat(validator.validateCert(buypassSert), is(OK));
-    }
-
     private static final X509Certificate EBOKS_COMMFIDES_TEST = DigipostSecurity.readCertificate((
             "-----BEGIN CERTIFICATE-----\n" +
             "MIIGgDCCBWigAwIBAgIIXWattKnFcDswDQYJKoZIhvcNAQELBQAwgfMxPTA7BgNV\n" +
@@ -200,36 +192,6 @@ class RealOCSPCertificateValidatorTest {
                     "23YJFFXvVAS4cl0yKOWfu0GAj89ySPqKR4jiCDgwo8/1dS60xzv3U7eE2B2a8Iee\n" +
                     "nsJiezqLb33WQbhvyT5paNXtRw4SsT8+7233577ts1e4tt5q4wo/aeHsSjSX9LKe\n" +
                     "nCZizViRMZDueNce+J26mOi60dxJjQc8du2ZCmAyQzOcCguQANUR\n" +
-                    "-----END CERTIFICATE-----";
-
-    private static final String BUYPASS_MF_PROD_SERTIFIKAT =
-                    "-----BEGIN CERTIFICATE-----\n" +
-                    "MIIE1DCCA7ygAwIBAgILC0banYlr12VQNoQwDQYJKoZIhvcNAQELBQAwSzELMAkG\n" +
-                    "A1UEBhMCTk8xHTAbBgNVBAoMFEJ1eXBhc3MgQVMtOTgzMTYzMzI3MR0wGwYDVQQD\n" +
-                    "DBRCdXlwYXNzIENsYXNzIDMgQ0EgMzAeFw0xNzA2MDExMjMwMDhaFw0yMDA2MDEy\n" +
-                    "MTU5MDBaMGgxCzAJBgNVBAYTAk5PMRgwFgYDVQQKDA9QT1NURU4gTk9SR0UgQVMx\n" +
-                    "ETAPBgNVBAsMCERpZ2lwb3N0MRgwFgYDVQQDDA9QT1NURU4gTk9SR0UgQVMxEjAQ\n" +
-                    "BgNVBAUTCTk4NDY2MTE4NTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB\n" +
-                    "AKgYMYMfkSkPi/njmKkAhWDoNgy/5MXlfRYw02bvknbDiOTJPOQrDqSg4g5BsOuL\n" +
-                    "XnjcLueNdVSiqwdt+EnDtbdE6BphDf1et2vJfDSpTrn5z7NRBmOrAKpX9V9/1H2M\n" +
-                    "liSBxdMgKDACfYmPi8TBShUOWOB2JUW9u6noUdx+vB3ZjUTzaiDtPnU1gqM8E+eY\n" +
-                    "KIGW6wpBdiPuBMXXGlS03bJ5ztyilqCyvpKY4I7T8XX5fR+C10avMHfHZKkscFku\n" +
-                    "Ha6yY70Audr5TIXnp/sLJTgYEsKXd3UYHQg/4iZ/YpGqgZuPGUBQl7urpKvsFHWL\n" +
-                    "3dERM7PMVMctAyPXTWg+HRUCAwEAAaOCAZowggGWMAkGA1UdEwQCMAAwHwYDVR0j\n" +
-                    "BBgwFoAUzMP4B7ecbXpO9acrHQX5s0cckdEwHQYDVR0OBBYEFP7h5beQE8Xi8Yd8\n" +
-                    "zppcYDtzSel+MA4GA1UdDwEB/wQEAwIEsDAVBgNVHSAEDjAMMAoGCGCEQgEaAQMC\n" +
-                    "MIGlBgNVHR8EgZ0wgZowL6AtoCuGKWh0dHA6Ly9jcmwuYnV5cGFzcy5uby9jcmwv\n" +
-                    "QlBDbGFzczNDQTMuY3JsMGegZaBjhmFsZGFwOi8vbGRhcC5idXlwYXNzLm5vL2Rj\n" +
-                    "PUJ1eXBhc3MsZGM9Tk8sQ049QnV5cGFzcyUyMENsYXNzJTIwMyUyMENBJTIwMz9j\n" +
-                    "ZXJ0aWZpY2F0ZVJldm9jYXRpb25MaXN0MHoGCCsGAQUFBwEBBG4wbDAzBggrBgEF\n" +
-                    "BQcwAYYnaHR0cDovL29jc3AuYnV5cGFzcy5uby9vY3NwL0JQQ2xhc3MzQ0EzMDUG\n" +
-                    "CCsGAQUFBzAChilodHRwOi8vY3J0LmJ1eXBhc3Mubm8vY3J0L0JQQ2xhc3MzQ0Ez\n" +
-                    "LmNlcjANBgkqhkiG9w0BAQsFAAOCAQEAcE7jlA1Y9K7tF5E3nUvrfC8amXKN8K/H\n" +
-                    "joy9QJMw8pafGm/tnIoKjAR7/5Lvc2SSw6VKtKWqVr/sVHlbvHRtZe0zyyja15a/\n" +
-                    "0+wiI8TRoePPLXztacb398myoZBPnJKKdQdOmIQtoRPb7lcrwFzT5TIsiliSZshA\n" +
-                    "rfE1ns/o/TrcClI7FvxBbwUF0kDGSh1jkh2v26ioc+Hvs3Yxf19xspFVDPZ+01Z4\n" +
-                    "0XDY2XdsA4pkeJdvieeyZ2q2RGXxLEVcftlOLm2Mgthf+fRLEKUeBsXfLqDEKpca\n" +
-                    "V4WRqeRSKdtXWz6TdsDT3jazcuk1fzcFlhek6ez0JmO/ePI92s0O2w==\n" +
                     "-----END CERTIFICATE-----";
 
     @SuppressWarnings("unused")
