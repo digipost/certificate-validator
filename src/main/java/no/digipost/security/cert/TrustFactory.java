@@ -38,6 +38,8 @@ import static no.digipost.security.cert.TestEnvCertificates.commfidesG3LegalPers
 import static no.digipost.security.cert.TestEnvCertificates.commfidesG3TestRootCa;
 import static no.digipost.security.cert.TestEnvCertificates.commfidesTestCa;
 import static no.digipost.security.cert.TestEnvCertificates.commfidesTestRootCa;
+import static no.digipost.security.cert.TestEnvCertificates.digipostIssuerTestIntermediate;
+import static no.digipost.security.cert.TestEnvCertificates.digipostIssuerTestRootCa;
 import static no.digipost.security.cert.TestEnvCertificates.digipostTestRootCa;
 
 public final class TrustFactory {
@@ -59,12 +61,15 @@ public final class TrustFactory {
      */
     public final Digipost digipost;
 
+    public final DigipostCa digipostCa;
+
     private final Clock clock;
 
     public TrustFactory(Clock clock) {
         this.seid1 = new Seid1();
         this.seid2 = new Seid2();
         this.digipost = new Digipost();
+        this.digipostCa = new DigipostCa();
         this.clock = clock;
     }
 
@@ -146,6 +151,16 @@ public final class TrustFactory {
         }
 
         private Digipost() {
+        }
+    }
+
+    public final class DigipostCa {
+        public Trust digipostCaIssuedTestCertificates() {
+            return Trust.in(clock, digipostIssuerTestRootCa(), digipostIssuerTestIntermediate());
+        }
+
+        private DigipostCa() {
+
         }
     }
 

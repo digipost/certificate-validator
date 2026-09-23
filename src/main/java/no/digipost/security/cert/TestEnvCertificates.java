@@ -140,6 +140,20 @@ public final class TestEnvCertificates {
         return DigipostTestRootCa.cert;
     }
 
+    /**
+     * Digipost certificate issuer test root CA
+     *
+     * <p>CN=Digipost API Root CA TEST G1,organizationIdentifier=NTRNO-984661185,OU=Digipost,O=POSTEN BRING AS,C=NO
+     * <p>valid 2026-07-02 to 2036-06-29
+     */
+    public static X509Certificate digipostIssuerTestRootCa() {
+        return DigipostCertIssuerTestRootCa.cert;
+    }
+
+    public static X509Certificate digipostIssuerTestIntermediate() {
+        return DigipostCertIssuerTestIntermediate.cert;
+    }
+
 
 
     // X509Certificate singletons
@@ -188,6 +202,14 @@ public final class TestEnvCertificates {
 
     private static final class DigipostTestRootCa {
         static final X509Certificate cert = readCertificate("digipost_test_root_ca.cert.pem");
+    }
+
+    private static final class DigipostCertIssuerTestRootCa {
+        static final X509Certificate cert = readCertificate("digipost_test_certificate_issuer_root.pem");
+    }
+
+    private static final class DigipostCertIssuerTestIntermediate {
+        static final X509Certificate cert = readCertificate("digipost_test_certificate_issuer_intermediate.pem");
     }
 
 
