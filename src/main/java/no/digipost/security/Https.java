@@ -19,6 +19,13 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.List;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Utilities for working with certificates in secure (https) requests.
@@ -44,6 +51,14 @@ public class Https {
 
 
     public static X509Certificate extractClientCertificate(ServletRequest request) {
+        List<X509Certificate> chain = extractClientCertificateChain(request);
+        if (chain.isEmpty()) {
+            throw new IllegalCertificateType(request.getAttribute(REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE));
+        }
+        return chain.get(0);
+    }
+
+    public static List<X509Certificate> extractClientCertificateChain(ServletRequest request) {
         if (!request.isSecure()) {
             String resourceDescription;
             if (request instanceof HttpServletRequest) {
@@ -56,14 +71,15 @@ public class Https {
         }
 
         Object certObj = request.getAttribute(REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE);
-        if(certObj instanceof Object[] && ((Object[]) certObj).length > 0) {
-            certObj = ((Object[])certObj)[0];
-        }
-
-        if (certObj instanceof X509Certificate) {
-            return (X509Certificate) certObj;
+        if (certObj instanceof Object[]) {
+            return unmodifiableList(Arrays.stream((Object[]) certObj)
+                    .filter(X509Certificate.class::isInstance)
+                    .map(X509Certificate.class::cast)
+                    .collect(toList()));
+        } else if (certObj instanceof X509Certificate) {
+            return singletonList((X509Certificate) certObj);
         } else {
-            throw new IllegalCertificateType(certObj);
+            return emptyList();
         }
     }
 

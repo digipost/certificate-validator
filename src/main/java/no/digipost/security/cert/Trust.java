@@ -38,6 +38,7 @@ import java.security.cert.TrustAnchor;
 import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.time.Clock;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,6 +50,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
@@ -194,9 +196,32 @@ public final class Trust {
      *         {@link ReviewedCertPath#getTrustedCertificateAndIssuer() trusted certificate and its issuer}.
      */
     public ReviewedCertPath resolveCertPath(X509Certificate certificate) {
+        return resolveCertPath(certificate, emptyList());
+    }
+
+    /**
+     * Resolve the certificate path of an X.509 certificate, additionally considering any
+     * intermediate certificates supplied only for this single resolution, e.g. the rest of a
+     * chain presented by a peer during a TLS handshake. This allows building a path to a trust
+     * anchor without having to permanently register every intermediate certificate a peer might
+     * present, as long as it can be traced back to an already trusted anchor.
+     *
+     * @param certificate the certificate to resolve the whole path for.
+     * @param additionalIntermediateCertificates extra certificates to use, alongside any
+     *        {@link #getTrustedIntermediateCertificates() already configured intermediate
+     *        certificates}, when trying to build the path from {@code certificate} to a trust
+     *        anchor. These are only used for this single call, and are not retained by this
+     *        {@code Trust}.
+     * @return the certificate path, wrapped as a {@link ReviewedCertPath}, with methods
+     *         to determine if it {@link ReviewedCertPath#isTrusted() is trusted}, and to retrieve the
+     *         {@link ReviewedCertPath#getTrustedCertificateAndIssuer() trusted certificate and its issuer}.
+     */
+    public ReviewedCertPath resolveCertPath(X509Certificate certificate, Collection<X509Certificate> additionalIntermediateCertificates) {
         try {
             CollectionCertStoreParameters certStoreParams = new CollectionCertStoreParameters(
-                    getTrustAnchorsAndAnyIntermediateCertificatesFor(certificate.getIssuerX500Principal()).collect(toSet()));
+                    concat(getTrustAnchorsAndAnyIntermediateCertificatesFor(certificate.getIssuerX500Principal()),
+                           additionalIntermediateCertificates.stream())
+                    .collect(toSet()));
 
             X509CertSelector certSelector = new X509CertSelector();
             certSelector.setCertificate(certificate);

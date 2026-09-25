@@ -156,7 +156,7 @@ public final class TrustFactory {
 
     public final class DigipostCa {
         public Trust digipostCaIssuedTestCertificates() {
-            return Trust.in(clock, digipostIssuerTestRootCa(), digipostIssuerTestIntermediate());
+            return Trust.in(clock, digipostIssuerTestRootCa());
         }
 
         private DigipostCa() {

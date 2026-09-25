@@ -32,8 +32,11 @@ import java.security.cert.X509Certificate;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static java.util.Collections.emptyList;
 
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -78,10 +81,24 @@ public class CertificateValidator {
 
 
     public CertStatus validateCert(Certificate certificate) {
-        return validateCert(certificate, config);
+        return validateCert(certificate, emptyList(), config);
     }
 
-    private CertStatus validateCert(Certificate certificate, CertificateValidatorConfig config) {
+    /**
+     * Validate a certificate, additionally considering intermediate certificates presented
+     * alongside it, e.g. the rest of a chain a peer presented during a TLS handshake. These
+     * are only used to help resolve the certificate path to an already trusted anchor, and
+     * are not trusted or validated on their own.
+     *
+     * @param certificate the certificate to validate.
+     * @param additionalChainCertificates any additional certificates presented together with
+     *        {@code certificate}, used only to help resolve its certificate path.
+     */
+    public CertStatus validateCert(Certificate certificate, List<X509Certificate> additionalChainCertificates) {
+        return validateCert(certificate, additionalChainCertificates, config);
+    }
+
+    private CertStatus validateCert(Certificate certificate, List<X509Certificate> additionalChainCertificates, CertificateValidatorConfig config) {
 
         if (!(certificate instanceof X509Certificate)) {
             LOG.warn("Tried to validate a non-" + X509Certificate.class.getSimpleName() + ": " + certificate.getType() + "(" + certificate.getClass().getName() + ")");
@@ -99,7 +116,7 @@ public class CertificateValidator {
             cachedResult = null;
         }
 
-        ReviewedCertPath certPath = trust.resolveCertPath(x509Certificate);
+        ReviewedCertPath certPath = trust.resolveCertPath(x509Certificate, additionalChainCertificates);
         if (!certPath.isTrusted()) {
             return CertStatus.UNTRUSTED;
         }
@@ -161,7 +178,7 @@ public class CertificateValidator {
                         Optional<X509Certificate> ocspSigningCertificate = findOcspSigningCertificate(basix, config);
                         if (ocspSigningCertificate.isPresent()) {
                             ocspSignatureValidationCertificate = ocspSigningCertificate.get();
-                            CertStatus certStatus = validateCert(ocspSignatureValidationCertificate, config.withOcspPolicy(NEVER_DO_OCSP_LOOKUP));
+                            CertStatus certStatus = validateCert(ocspSignatureValidationCertificate, emptyList(), config.withOcspPolicy(NEVER_DO_OCSP_LOOKUP));
                             if (certStatus != OK) {
                                 LOG.warn("OCSP signing certificate is '{}': {}", certStatus, describe(ocspSignatureValidationCertificate));
                                 return certStatus;
