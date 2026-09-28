@@ -58,6 +58,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.co.probablyfine.matchers.Java8Matchers.where;
 import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
+import static java.util.Collections.singleton;
 
 class TrustTest {
 
@@ -154,6 +155,25 @@ class TrustTest {
         assertThat(reviewedPath, whereNot(ReviewedCertPath::isTrusted));
         Exception thrown = assertThrows(Exception.class, reviewedPath::getPath);
         assertThat(thrown, where(Exception::getMessage, containsString("unable to find valid certification path")));
+    }
+
+    @Test
+    void cert_path_is_untrusted_without_the_issuing_intermediate_certificate() {
+        Trust rootOnly = Trust.in(clockSetWhenCertificatesAreValid, buypassClass3RootCa(), commfidesRootCa());
+        ReviewedCertPath reviewedPath = rootOnly.resolveCertPath(digipostVirksomhetssertifikat());
+        assertThat(reviewedPath, whereNot(ReviewedCertPath::isTrusted));
+    }
+
+    @Test
+    void resolves_cert_path_using_an_intermediate_certificate_supplied_only_for_that_single_resolution() {
+        Trust rootOnly = Trust.in(clockSetWhenCertificatesAreValid, buypassClass3RootCa(), commfidesRootCa());
+
+        ReviewedCertPath reviewedPath = rootOnly.resolveCertPath(digipostVirksomhetssertifikat(), singleton(buypassClass3Ca3()));
+
+        assertThat(reviewedPath, where(ReviewedCertPath::isTrusted));
+        assertThat(reviewedPath.getPath(), where(CertPath::getCertificates, hasSize(2)));
+        // The supplied intermediate is not retained; resolving without it again is untrusted.
+        assertThat(rootOnly.resolveCertPath(digipostVirksomhetssertifikat()), whereNot(ReviewedCertPath::isTrusted));
     }
 
     @Test
