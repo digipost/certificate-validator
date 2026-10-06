@@ -19,6 +19,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.security.cert.X509Certificate;
+import java.util.Optional;
 
 /**
  * Utilities for working with certificates in secure (https) requests.
@@ -43,6 +44,38 @@ public class Https {
     public static final String REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE = "jakarta.servlet.request.X509Certificate";
 
 
+    /**
+     * Try to find a client certificate in a {@link ServletRequest}.
+     * Unlike {@link #extractClientCertificate(ServletRequest)}, this method <em>does not</em>
+     * throw an exception if for any reason at all a client certificate can not be retrieved
+     * from the given request.
+     *
+     * @param request The request to find the certificate in
+     *
+     * @return the found certificate, or {@link Optional#empty()} if none could be retrieved.
+     */
+    public static Optional<X509Certificate> findClientCertificate(ServletRequest request) {
+        if (!request.isSecure()) {
+            return Optional.empty();
+        } else {
+            Object candidate = resolveAttributeInstanceOrFirstOfArray(request, REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE);
+            return candidate instanceof X509Certificate ? Optional.of((X509Certificate) candidate) : Optional.empty();
+        }
+    }
+
+
+    /**
+     * Extract an <em>expected present</em> client certificate from a {@link ServletRequest}, or
+     * throw an exception if a client certificate is not present in the request, or the request
+     * is not {@link ServletRequest#isSecure() secure} and contained certificates can not be trusted.
+     *
+     * @param request The request to extract the certificate from
+     *
+     * @return the found certificate
+     *
+     * @throws NotSecure if the request is not secure
+     * @throws IllegalCertificateType if the found instance is not a X509 certificate
+     */
     public static X509Certificate extractClientCertificate(ServletRequest request) {
         if (!request.isSecure()) {
             String resourceDescription;
@@ -55,16 +88,20 @@ public class Https {
             throw new NotSecure(ServletRequest.class, resourceDescription);
         }
 
+        Object candidate = resolveAttributeInstanceOrFirstOfArray(request, REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE);
+        if (candidate instanceof X509Certificate) {
+            return (X509Certificate) candidate;
+        } else {
+            throw new IllegalCertificateType(candidate);
+        }
+    }
+
+    private static Object resolveAttributeInstanceOrFirstOfArray(ServletRequest request, String attributeName) {
         Object certObj = request.getAttribute(REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE);
-        if(certObj instanceof Object[] && ((Object[]) certObj).length > 0) {
+        if (certObj instanceof Object[] && ((Object[]) certObj).length > 0) {
             certObj = ((Object[])certObj)[0];
         }
-
-        if (certObj instanceof X509Certificate) {
-            return (X509Certificate) certObj;
-        } else {
-            throw new IllegalCertificateType(certObj);
-        }
+        return certObj;
     }
 
 

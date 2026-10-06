@@ -23,12 +23,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static uk.co.probablyfine.matchers.Java8Matchers.whereNot;
+import static uk.co.probablyfine.matchers.OptionalMatchers.contains;
 
 @ExtendWith(MockitoExtension.class)
 class HttpsTest {
@@ -42,6 +45,7 @@ class HttpsTest {
     @Test
     void doesNotAllowNonSecureRequest() {
         assertThrows(NotSecure.class, () -> Https.extractClientCertificate(request));
+        assertThat(Https.findClientCertificate(request), whereNot(Optional::isPresent));
     }
 
     @Test
@@ -50,6 +54,7 @@ class HttpsTest {
         given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(x509Cert);
 
         assertThat(Https.extractClientCertificate(request), is(x509Cert));
+        assertThat(Https.findClientCertificate(request), contains(x509Cert));
     }
 
     @Test
@@ -58,6 +63,7 @@ class HttpsTest {
         given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[]{x509Cert, "garbage"});
 
         assertThat(Https.extractClientCertificate(request), is(x509Cert));
+        assertThat(Https.findClientCertificate(request), contains(x509Cert));
     }
 
     @Test
@@ -66,6 +72,7 @@ class HttpsTest {
         given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[]{mock(Certificate.class)});
 
         assertThrows(IllegalCertificateType.class, () -> Https.extractClientCertificate(request));
+        assertThat(Https.findClientCertificate(request), whereNot(Optional::isPresent));
     }
 
     @Test
@@ -74,6 +81,7 @@ class HttpsTest {
         given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[0]);
 
         assertThrows(IllegalCertificateType.class, () -> Https.extractClientCertificate(request));
+        assertThat(Https.findClientCertificate(request), whereNot(Optional::isPresent));
     }
 
 
