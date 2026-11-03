@@ -38,6 +38,7 @@ import static no.digipost.security.cert.TestEnvCertificates.commfidesG3LegalPers
 import static no.digipost.security.cert.TestEnvCertificates.commfidesG3TestRootCa;
 import static no.digipost.security.cert.TestEnvCertificates.commfidesTestCa;
 import static no.digipost.security.cert.TestEnvCertificates.commfidesTestRootCa;
+import static no.digipost.security.cert.TestEnvCertificates.digipostApiTestRootCa;
 import static no.digipost.security.cert.TestEnvCertificates.digipostTestRootCa;
 
 public final class TrustFactory {
@@ -142,7 +143,7 @@ public final class TrustFactory {
         }
 
         public Trust digipostIssuedTestCertificates() {
-            return Trust.in(clock, digipostTestRootCa());
+            return Trust.in(clock, digipostTestRootCa(), digipostApiTestRootCa());
         }
 
         private Digipost() {

@@ -84,6 +84,21 @@ class HttpsTest {
         assertThat(Https.findClientCertificate(request), whereNot(Optional::isPresent));
     }
 
+    @Test
+    void failsIfNoCertificateAttribute() {
+        given(request.isSecure()).willReturn(true);
 
+        assertThrows(IllegalCertificateType.class, () -> Https.extractClientCertificate(request));
+        assertThat(Https.findClientCertificate(request), whereNot(Optional::isPresent));
+    }
+
+    @Test
+    void onlyConsidersFirstElementOfArray() {
+        given(request.isSecure()).willReturn(true);
+        given(request.getAttribute(Https.REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE)).willReturn(new Object[]{mock(Certificate.class), x509Cert});
+
+        assertThrows(IllegalCertificateType.class, () -> Https.extractClientCertificate(request));
+        assertThat(Https.findClientCertificate(request), whereNot(Optional::isPresent));
+    }
 
 }
