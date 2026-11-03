@@ -97,7 +97,7 @@ public class Https {
     }
 
     private static Object resolveAttributeInstanceOrFirstOfArray(ServletRequest request, String attributeName) {
-        Object certObj = request.getAttribute(REQUEST_CLIENT_CERTIFICATE_ATTRIBUTE);
+        Object certObj = request.getAttribute(attributeName);
         if (certObj instanceof Object[] && ((Object[]) certObj).length > 0) {
             certObj = ((Object[])certObj)[0];
         }
