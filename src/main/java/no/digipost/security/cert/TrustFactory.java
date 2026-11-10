@@ -27,6 +27,7 @@ import static no.digipost.security.cert.ProdEnvCertificates.commfidesCa;
 import static no.digipost.security.cert.ProdEnvCertificates.commfidesG3LegalPersonCa;
 import static no.digipost.security.cert.ProdEnvCertificates.commfidesG3RootCa;
 import static no.digipost.security.cert.ProdEnvCertificates.commfidesRootCa;
+import static no.digipost.security.cert.ProdEnvCertificates.digipostApiRootCa;
 import static no.digipost.security.cert.ProdEnvCertificates.digipostRootCa;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3Test4Ca3;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3Test4RootCa;
@@ -139,7 +140,7 @@ public final class TrustFactory {
     public final class Digipost {
 
         public Trust digipostIssuedCertificates() {
-            return Trust.in(clock, digipostRootCa());
+            return Trust.in(clock, digipostRootCa(), digipostApiRootCa());
         }
 
         public Trust digipostIssuedTestCertificates() {
