@@ -143,6 +143,16 @@ public final class ProdEnvCertificates {
         return DigipostRootCa.cert;
     }
 
+    /**
+     * Digipost API Root CA G1
+     *
+     * <p>CN=Digipost API Root CA G1, OU=Digipost, ORG_ID=NTRNO-984661185, O=POSTEN BRING AS, C=NO
+     * <p>valid 2026-11-10 to 2036-11-07
+     */
+    public static X509Certificate digipostApiRootCa() {
+        return DigipostApiRootCa.cert;
+    }
+
 
     // X509Certificate singletons
 
@@ -192,6 +202,9 @@ public final class ProdEnvCertificates {
         static final X509Certificate cert = readCertificate("digipost_root_ca.cert.pem");
     }
 
+    private static final class DigipostApiRootCa {
+        static final X509Certificate cert = readCertificate("digipost_api_root_ca.cert.pem");
+    }
 
     private static X509Certificate readCertificate(String resourceName) {
         return DigipostSecurity.readCertificate("certificates/prod/" + resourceName);
