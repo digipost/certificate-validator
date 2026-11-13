@@ -31,7 +31,7 @@ import static no.digipost.security.DigipostSecurity.asStream;
 public final class ReviewedCertPath {
 
     private final Optional<CertPath> path;
-    private final Predicate<CertPath> isTrusted;
+    private final boolean trusted;
 
     public final Optional<GeneralSecurityException> exception;
 
@@ -45,7 +45,8 @@ public final class ReviewedCertPath {
 
     private ReviewedCertPath(Optional<CertPath> path, Predicate<CertPath> trusted, Optional<GeneralSecurityException> exception) {
         this.path = path;
-        this.isTrusted = trusted;
+        // Evaluated once, as determining trust may involve validating the whole path
+        this.trusted = path.filter(trusted).isPresent();
         this.exception = exception;
     }
 
@@ -55,7 +56,7 @@ public final class ReviewedCertPath {
     }
 
     public boolean isTrusted() {
-        return path.filter(isTrusted).isPresent();
+        return trusted;
     }
 
     public CertPath getTrustedPath() {

@@ -24,6 +24,7 @@ import java.security.cert.CertPath;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateParsingException;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static no.digipost.security.DigipostSecurity.asCertPath;
@@ -57,6 +58,18 @@ class ReviewedCertPathTest {
         ReviewedCertPath reviewedPath = new ReviewedCertPath(certpath, p -> true);
         assertThat(reviewedPath, where(ReviewedCertPath::isTrusted));
         assertThat(reviewedPath, where(ReviewedCertPath::getTrustedPath, sameInstance(certpath)));
+    }
+
+    @Test
+    void trustIsOnlyDeterminedOnce() {
+        CertPath certpath = asCertPath(readCertificates("digipost.no-certchain.pem"));
+        AtomicInteger evaluations = new AtomicInteger();
+        ReviewedCertPath reviewedPath = new ReviewedCertPath(certpath, p -> evaluations.incrementAndGet() > 0);
+
+        reviewedPath.isTrusted();
+        reviewedPath.getTrustedPath();
+        reviewedPath.getTrustedCertificateAndIssuer();
+        assertThat(evaluations.get(), is(1));
     }
 
     @Test
