@@ -74,8 +74,9 @@ public class CertificateValidatorConfig {
     }
 
     /**
-     * Use CRLs provided by the application when checking revocation status of intermediate certificates
-     * supplied with {@link CertificateValidator#validateCert(java.security.cert.Certificate, java.util.Collection)}.
+     * Use CRLs provided by the application when checking revocation status with CRL: for intermediate certificates
+     * supplied with {@link CertificateValidator#validateCert(java.security.cert.Certificate, java.util.Collection)},
+     * and for the validated certificate when OCSP does not give a result.
      * If no usable CRL is provided for an issuer, the CRL is downloaded from the certificate's CRL distribution points.
      *
      * @param crlProvider the provider of CRLs

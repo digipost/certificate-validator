@@ -177,6 +177,24 @@ class SuppliedChainValidationTest {
     }
 
     @Test
+    void leafIsCheckedWithCrlWhenOcspIsNotPossible() {
+        Trust rootAndIntermediate = Trust.in(clock, pki.root, pki.intermediate);
+        CertificateValidator okValidator = new CertificateValidator(MOST_STRICT.withCrlProvider(CrlProvider.of(singletonList(pki.intermediateCrl()))), rootAndIntermediate, httpClient);
+        CertificateValidator revokedValidator = new CertificateValidator(MOST_STRICT.withCrlProvider(CrlProvider.of(singletonList(pki.intermediateCrl(pki.leaf)))), rootAndIntermediate, httpClient);
+
+        assertThat(okValidator.validateCert(pki.leaf), is(OK));
+        assertThat(revokedValidator.validateCert(pki.leaf), is(REVOKED));
+        verifyNoInteractions(httpClient);
+    }
+
+    @Test
+    void leafIsNotCheckedWithCrlWhenOcspPolicySkipsIt() {
+        Trust rootAndIntermediate = Trust.in(clock, pki.root, pki.intermediate);
+        CertificateValidator validator = new CertificateValidator(CONFIG.withCrlProvider(CrlProvider.of(singletonList(pki.intermediateCrl(pki.leaf)))), rootAndIntermediate, httpClient);
+        assertThat(validator.validateCert(pki.leaf), is(OK));
+    }
+
+    @Test
     void emptyChainIsUntrusted() {
         assertThat(validator(CONFIG).validateCertChain(emptyList()), is(UNTRUSTED));
         verifyNoInteractions(httpClient);

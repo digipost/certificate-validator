@@ -103,8 +103,8 @@ public class CertificateValidator {
      * The chain is not trusted in itself. Intermediate certificates from the chain are checked for revocation
      * using CRL (from the {@link CertificateValidatorConfig#withCrlProvider(no.digipost.security.crl.CrlProvider) CRL provider}
      * or the certificate's CRL distribution points), falling back to OCSP if allowed by the
-     * OCSP policy. If the status can not be
-     * determined, the result is {@link CertStatus#UNDECIDED}, unless allowed by
+     * OCSP policy. The {@code leaf} is checked with OCSP, falling back to CRL, if allowed by the OCSP policy.
+     * If the status can not be determined, the result is {@link CertStatus#UNDECIDED}, unless allowed by
      * {@link CertificateValidatorConfig#allowOcspResults(CertStatus...)}.
      * <p>
      * The chain is only used as candidates for building the path, so it may be given as received, e.g. from TLS
@@ -190,6 +190,9 @@ public class CertificateValidator {
             return OK;
         }
         CertStatus ocspStatus = ocspLookup(trustedCertificateAndIssuer, chain, config);
+        if (ocspStatus == UNDECIDED) {
+            ocspStatus = crlChecker.check(trustedCertificateAndIssuer.certificate, trustedCertificateAndIssuer.issuer, config.crlProvider).orElse(UNDECIDED);
+        }
         if (ocspStatus != OK && config.allowsOcspResult(ocspStatus)) {
             LOG.info("Status {} for certificate {} is configured as {}", ocspStatus, describe(trustedCertificateAndIssuer.certificate), OK);
             return OK;

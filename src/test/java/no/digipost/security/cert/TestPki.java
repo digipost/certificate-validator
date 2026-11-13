@@ -159,21 +159,25 @@ final class TestPki {
 
 
     X509CRL rootCrl(X509Certificate ... revoked) {
-        return crl(rootKeys.getPrivate(), now.minus(Duration.ofHours(1)), now.plus(Duration.ofDays(1)), revoked);
+        return crl(root, rootKeys.getPrivate(), now.minus(Duration.ofHours(1)), now.plus(Duration.ofDays(1)), revoked);
     }
 
     X509CRL expiredRootCrl(X509Certificate ... revoked) {
-        return crl(rootKeys.getPrivate(), now.minus(Duration.ofDays(2)), now.minus(Duration.ofDays(1)), revoked);
+        return crl(root, rootKeys.getPrivate(), now.minus(Duration.ofDays(2)), now.minus(Duration.ofDays(1)), revoked);
     }
 
     X509CRL rootCrlSignedWithWrongKey(X509Certificate ... revoked) {
-        return crl(intermediateKeys.getPrivate(), now.minus(Duration.ofHours(1)), now.plus(Duration.ofDays(1)), revoked);
+        return crl(root, intermediateKeys.getPrivate(), now.minus(Duration.ofHours(1)), now.plus(Duration.ofDays(1)), revoked);
+    }
+
+    X509CRL intermediateCrl(X509Certificate ... revoked) {
+        return crl(intermediate, intermediateKeys.getPrivate(), now.minus(Duration.ofHours(1)), now.plus(Duration.ofDays(1)), revoked);
     }
 
 
-    private X509CRL crl(PrivateKey signingKey, Instant thisUpdate, Instant nextUpdate, X509Certificate ... revoked) {
+    private X509CRL crl(X509Certificate issuer, PrivateKey signingKey, Instant thisUpdate, Instant nextUpdate, X509Certificate ... revoked) {
         try {
-            X509v2CRLBuilder builder = new X509v2CRLBuilder(X500Name.getInstance(root.getSubjectX500Principal().getEncoded()), Date.from(thisUpdate));
+            X509v2CRLBuilder builder = new X509v2CRLBuilder(X500Name.getInstance(issuer.getSubjectX500Principal().getEncoded()), Date.from(thisUpdate));
             builder.setNextUpdate(Date.from(nextUpdate));
             for (X509Certificate cert : asList(revoked)) {
                 builder.addCRLEntry(cert.getSerialNumber(), Date.from(thisUpdate), CRLReason.keyCompromise);
