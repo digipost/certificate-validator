@@ -27,20 +27,33 @@ import org.bouncycastle.cert.ocsp.SingleResp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.SignatureException;
+import java.security.cert.CertPath;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static no.digipost.security.DigipostSecurity.asStream;
 import static no.digipost.security.DigipostSecurity.describe;
 import static no.digipost.security.cert.CertStatus.OK;
 import static no.digipost.security.cert.CertStatus.REVOKED;
 import static no.digipost.security.cert.CertStatus.UNDECIDED;
+import static no.digipost.security.cert.CertStatus.UNTRUSTED;
 import static no.digipost.security.cert.OcspPolicy.NEVER_DO_OCSP_LOOKUP;
 import static no.digipost.security.cert.RevocationReason.resolve;
 import static no.digipost.security.cert.RevocationReason.unspecified;
@@ -54,7 +67,10 @@ public class CertificateValidator {
 
     private final CertificateValidatorConfig config;
     private final CloseableHttpClient client;
-    private final Map<X509Certificate, ResultWithTime> cache = new HashMap<>();
+    private final Map<CertPath, ResultWithTime> cache = new HashMap<>();
+    private final Set<X509Certificate> revokedCertificates = ConcurrentHashMap.newKeySet();
+    private final Map<List<X509Certificate>, ResultWithTime> intermediateCache = new ConcurrentHashMap<>();
+    private final CrlChecker crlChecker;
     private final Trust trust;
     private final Clock clock;
 
@@ -74,14 +90,53 @@ public class CertificateValidator {
         this.trust = trust;
         this.client = httpClient;
         this.clock = trust.clock;
+        this.crlChecker = new CrlChecker(httpClient, clock);
     }
 
 
     public CertStatus validateCert(Certificate certificate) {
-        return validateCert(certificate, config);
+        return validateCert(certificate, emptyList(), config);
     }
 
-    private CertStatus validateCert(Certificate certificate, CertificateValidatorConfig config) {
+    /**
+     * Validate a leaf certificate, using the given chain to build the certificate path up to a trust anchor.
+     * The chain is not trusted in itself. Intermediate certificates from the chain are checked for revocation
+     * using CRL (from the {@link CertificateValidatorConfig#withCrlProvider(no.digipost.security.crl.CrlProvider) CRL provider}
+     * or the certificate's CRL distribution points), falling back to OCSP if allowed by the
+     * OCSP policy. The {@code leaf} is checked with OCSP, falling back to CRL, if allowed by the OCSP policy.
+     * If the status can not be determined, the result is {@link CertStatus#UNDECIDED}, unless allowed by
+     * {@link CertificateValidatorConfig#allowOcspResults(CertStatus...)}.
+     * <p>
+     * The chain is only used as candidates for building the path, so it may be given as received, e.g. from TLS
+     * or a signature: in any order, including the {@code leaf} itself, duplicates or unrelated certificates.
+     * Certificates in the chain which are not part of the resolved path are ignored.
+     *
+     * @param leaf the certificate to validate
+     * @param chain additional certificates, typically intermediate certificates sent along with {@code leaf}
+     * @return the status of the {@code leaf} certificate
+     *
+     * @see Trust#resolveCertPath(X509Certificate, Collection)
+     */
+    public CertStatus validateCert(Certificate leaf, Collection<? extends Certificate> chain) {
+        return validateCert(leaf, chain, config);
+    }
+
+    /**
+     * Validate a certificate chain where the first certificate is the leaf, as sent in TLS.
+     * See {@link #validateCert(Certificate, Collection)}.
+     *
+     * @param chain the leaf certificate, followed by intermediate certificates
+     * @return the status of the leaf certificate, or {@link CertStatus#UNTRUSTED} if the chain is empty
+     */
+    public CertStatus validateCertChain(List<? extends Certificate> chain) {
+        if (chain.isEmpty()) {
+            LOG.debug("Tried to validate an empty certificate chain");
+            return CertStatus.UNTRUSTED;
+        }
+        return validateCert(chain.get(0), chain, config);
+    }
+
+    private CertStatus validateCert(Certificate certificate, Collection<? extends Certificate> chain, CertificateValidatorConfig config) {
 
         if (!(certificate instanceof X509Certificate)) {
             LOG.warn("Tried to validate a non-" + X509Certificate.class.getSimpleName() + ": " + certificate.getType() + "(" + certificate.getClass().getName() + ")");
@@ -89,46 +144,127 @@ public class CertificateValidator {
         }
 
         X509Certificate x509Certificate = DigipostSecurity.requireX509(certificate);
-        final ResultWithTime cachedResult;
-        if (cache.containsKey(x509Certificate)) {
-            cachedResult = cache.get(x509Certificate);
-            if (!cachedResult.isExpiredAt(clock.instant()) || cachedResult.status == REVOKED) {
-                return cachedResult.status;
-            }
-        } else {
-            cachedResult = null;
+        if (revokedCertificates.contains(x509Certificate)) {
+            return REVOKED;
         }
 
-        ReviewedCertPath certPath = trust.resolveCertPath(x509Certificate);
+        ReviewedCertPath certPath = trust.resolveCertPath(x509Certificate, chain);
         if (!certPath.isTrusted()) {
             return CertStatus.UNTRUSTED;
         }
 
-        TrustedCertificateAndIssuer trustedCertificateAndIssuer = certPath.getTrustedCertificateAndIssuer();
-        if (config.ocspPolicy.decideFor(trustedCertificateAndIssuer) == OcspDecision.LOOKUP_OCSP) {
-            CertStatus ocspStatus = ocspLookup(trustedCertificateAndIssuer, config);
-            if (ocspStatus != OK && config.allowsOcspResult(ocspStatus)) {
-                LOG.info("Status {} for certificate {} is configured as {}", ocspStatus, describe(certificate), OK);
-                ocspStatus = OK;
+        // Keyed on the resolved trusted path, not the supplied (untrusted) chain, so that
+        // extraneous certificates in the chain can not bypass cached results.
+        return cached(cache, certPath.getTrustedPath(), x509Certificate, () -> {
+            // Intermediates first, so their status is cached for the OCSP signer of the leaf
+            CertStatus intermediatesStatus = checkSuppliedIntermediateCertificates(certPath.getTrustedPath(), chain, config);
+            CertStatus certificateStatus = checkCertificate(certPath.getTrustedCertificateAndIssuer(), chain, config);
+            if (certificateStatus == REVOKED) {
+                revokedCertificates.add(x509Certificate);
             }
-            if (ocspStatus == UNDECIDED) {
-                if (cachedResult != null && cachedResult.isValidAsStaleValueForFailedResolvingOfNewValue(clock.instant())) {
-                    if (cachedResult.shouldLogIfUsedAsStaleValue(clock.instant())) {
-                        LOG.error("OCSP older than 2 hours: {}", describe(x509Certificate));
-                    }
-                    cachedResult.setUnexpiredFrom(clock.instant());
-                    return cachedResult.status;
-                }
-            }
-            cache.put(x509Certificate, new ResultWithTime(clock.instant(), ocspStatus));
-            return ocspStatus;
-        } else {
-            cache.put(x509Certificate, new ResultWithTime(clock.instant(), OK));
-            return OK;
-        }
+            return mostSevere(intermediatesStatus, certificateStatus);
+        });
     }
 
-    private CertStatus ocspLookup(TrustedCertificateAndIssuer certificateAndIssuer, CertificateValidatorConfig config) {
+    private <K> CertStatus cached(Map<K, ResultWithTime> cache, K key, X509Certificate certificate, Supplier<CertStatus> resolveStatus) {
+        final ResultWithTime cachedResult = cache.get(key);
+        if (cachedResult != null && (!cachedResult.isExpiredAt(clock.instant()) || cachedResult.status == REVOKED)) {
+            return cachedResult.status;
+        }
+
+        CertStatus status = resolveStatus.get();
+
+        if (status == UNDECIDED && cachedResult != null && cachedResult.isValidAsStaleValueForFailedResolvingOfNewValue(clock.instant())) {
+            if (cachedResult.shouldLogIfUsedAsStaleValue(clock.instant())) {
+                LOG.error("Revocation status older than 2 hours: {}", describe(certificate));
+            }
+            cachedResult.setUnexpiredFrom(clock.instant());
+            return cachedResult.status;
+        }
+        cache.put(key, new ResultWithTime(clock.instant(), status));
+        return status;
+    }
+
+    private CertStatus checkCertificate(TrustedCertificateAndIssuer trustedCertificateAndIssuer, Collection<? extends Certificate> chain, CertificateValidatorConfig config) {
+        if (config.ocspPolicy.decideFor(trustedCertificateAndIssuer) != OcspDecision.LOOKUP_OCSP) {
+            return OK;
+        }
+        CertStatus ocspStatus = ocspLookup(trustedCertificateAndIssuer, chain, config);
+        if (ocspStatus == UNDECIDED) {
+            ocspStatus = crlChecker.check(trustedCertificateAndIssuer.certificate, trustedCertificateAndIssuer.issuer, config.crlProvider).orElse(UNDECIDED);
+        }
+        if (ocspStatus != OK && config.allowsOcspResult(ocspStatus)) {
+            LOG.info("Status {} for certificate {} is configured as {}", ocspStatus, describe(trustedCertificateAndIssuer.certificate), OK);
+            return OK;
+        }
+        return ocspStatus;
+    }
+
+    /**
+     * Check revocation status of the intermediate certificates in the path which are not already
+     * part of the {@link Trust}, i.e. intermediate certificates supplied with the certificate to validate.
+     * CRL is used if available, either from the {@link CertificateValidatorConfig#withCrlProvider(no.digipost.security.crl.CrlProvider) CRL provider}
+     * or the CRL distribution points of the certificate, and otherwise OCSP.
+     */
+    private CertStatus checkSuppliedIntermediateCertificates(CertPath path, Collection<? extends Certificate> chain, CertificateValidatorConfig config) {
+        List<X509Certificate> certificates = asStream(path).collect(toList());
+        Set<X509Certificate> alreadyTrusted = new HashSet<>(trust.getTrustAnchorCertificates());
+        trust.getTrustedIntermediateCertificates().values().forEach(alreadyTrusted::addAll);
+
+        CertStatus result = OK;
+        for (int i = 1; i < certificates.size(); i++) {
+            X509Certificate intermediate = certificates.get(i);
+            if (alreadyTrusted.contains(intermediate)) {
+                continue;
+            }
+            Optional<X509Certificate> issuer;
+            if (i + 1 < certificates.size()) {
+                issuer = Optional.of(certificates.get(i + 1));
+            } else {
+                try {
+                    issuer = CertHelper.findTrustAnchorCert(intermediate, trust.getTrustAnchors());
+                } catch (SignatureException e) {
+                    LOG.warn("Unable to find issuer of intermediate certificate {}: {} '{}'", describe(intermediate), e.getClass().getSimpleName(), e.getMessage());
+                    issuer = Optional.empty();
+                }
+            }
+            CertStatus status = issuer
+                    .map(iss -> cached(intermediateCache, asList(intermediate, iss), intermediate, () -> revocationStatus(intermediate, iss, chain, config)))
+                    .orElse(UNDECIDED);
+            if (status != OK && config.allowsOcspResult(status)) {
+                LOG.info("Status {} for intermediate certificate {} is configured as {}", status, describe(intermediate), OK);
+                status = OK;
+            }
+            result = mostSevere(result, status);
+        }
+        return result;
+    }
+
+    private CertStatus revocationStatus(X509Certificate certificate, X509Certificate issuer, Collection<? extends Certificate> chain, CertificateValidatorConfig config) {
+        Optional<CertStatus> crlStatus = crlChecker.check(certificate, issuer, config.crlProvider);
+        if (crlStatus.isPresent()) {
+            return crlStatus.get();
+        }
+        TrustedCertificateAndIssuer certificateAndIssuer = new TrustedCertificateAndIssuer(certificate, issuer);
+        if (config.ocspPolicy.decideFor(certificateAndIssuer) != OcspDecision.LOOKUP_OCSP) {
+            // Also bounds recursion: OCSP signing certificates are validated with NEVER_DO_OCSP_LOOKUP
+            LOG.warn("Unable to determine revocation status of intermediate certificate {}, no usable CRL and OCSP lookup is not allowed by policy", describe(certificate));
+            return UNDECIDED;
+        }
+        if (certificateAndIssuer.ocspLookupRequest.isPresent()) {
+            return ocspLookup(certificateAndIssuer, chain, config);
+        }
+        LOG.warn("Unable to determine revocation status of intermediate certificate {}, no usable CRL or OCSP responder", describe(certificate));
+        return UNDECIDED;
+    }
+
+    private static CertStatus mostSevere(CertStatus s1, CertStatus s2) {
+        return SEVERITY.indexOf(s1) >= SEVERITY.indexOf(s2) ? s1 : s2;
+    }
+
+    private static final List<CertStatus> SEVERITY = asList(OK, UNDECIDED, UNTRUSTED, REVOKED);
+
+    private CertStatus ocspLookup(TrustedCertificateAndIssuer certificateAndIssuer, Collection<? extends Certificate> chain, CertificateValidatorConfig config) {
         return certificateAndIssuer
                 .ocspLookupRequest
                 .map(OcspLookup::new)
@@ -161,7 +297,7 @@ public class CertificateValidator {
                         Optional<X509Certificate> ocspSigningCertificate = findOcspSigningCertificate(basix, config);
                         if (ocspSigningCertificate.isPresent()) {
                             ocspSignatureValidationCertificate = ocspSigningCertificate.get();
-                            CertStatus certStatus = validateCert(ocspSignatureValidationCertificate, config.withOcspPolicy(NEVER_DO_OCSP_LOOKUP));
+                            CertStatus certStatus = validateCert(ocspSignatureValidationCertificate, chain, config.withOcspPolicy(NEVER_DO_OCSP_LOOKUP));
                             if (certStatus != OK) {
                                 LOG.warn("OCSP signing certificate is '{}': {}", certStatus, describe(ocspSignatureValidationCertificate));
                                 return certStatus;

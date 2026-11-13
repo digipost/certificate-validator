@@ -16,7 +16,9 @@
 package no.digipost.security.ocsp;
 
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.stubbing.OngoingStubbing;
 import org.mockito.verification.VerificationMode;
@@ -24,6 +26,8 @@ import org.mockito.verification.VerificationMode;
 import static no.digipost.DiggExceptions.getUnchecked;
 import static no.digipost.DiggExceptions.runUnchecked;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -43,18 +47,27 @@ public final class OcspHttpClientMockitoHelper {
     }
 
     public OngoingStubbing<OcspResult> whenExecutingOcspLookupRequest() {
-        return getUnchecked(() -> when(httpClient.execute(any(), Mockito.<HttpClientResponseHandler<OcspResult>>any())));
+        return getUnchecked(() -> when(httpClient.execute(ocspRequest(), Mockito.<HttpClientResponseHandler<OcspResult>>any())));
     }
 
     public void verifyOcspLookupRequest(VerificationMode verification) {
-        runUnchecked(() -> verify(httpClient, verification).execute(any(), Mockito.<HttpClientResponseHandler<OcspResult>>any()));
+        runUnchecked(() -> verify(httpClient, verification).execute(ocspRequest(), Mockito.<HttpClientResponseHandler<OcspResult>>any()));
     }
 
     public void verifyNeverAnyRequests() {
         verifyNoInteractions(httpClient);
     }
 
+    /**
+     * Verify that there are no more OCSP requests. Other requests, i.e. CRL downloads, are ignored.
+     */
     public void verifyNoMoreRequests() {
+        runUnchecked(() -> verify(httpClient, atLeast(0)).execute(
+                ArgumentMatchers.<ClassicHttpRequest>argThat(request -> request != null && !"POST".equals(request.getMethod())), Mockito.<HttpClientResponseHandler<?>>any()));
         verifyNoMoreInteractions(httpClient);
+    }
+
+    private static ClassicHttpRequest ocspRequest() {
+        return argThat(request -> request != null && "POST".equals(request.getMethod()));
     }
 }

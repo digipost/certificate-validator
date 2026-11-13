@@ -15,6 +15,8 @@
  */
 package no.digipost.security.cert;
 
+import no.digipost.security.crl.CrlProvider;
+
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -34,7 +36,7 @@ public class CertificateValidatorConfig {
      * {@link #withOcspPolicy(OcspPolicy)} or {@link #allowOcspResults(CertStatus...)}.
      */
     public static final CertificateValidatorConfig MOST_STRICT =
-            new CertificateValidatorConfig(ALWAYS_DO_OCSP_LOOKUP, EnumSet.of(OK), OcspSignatureValidator.DEFAULT, false);
+            new CertificateValidatorConfig(ALWAYS_DO_OCSP_LOOKUP, EnumSet.of(OK), OcspSignatureValidator.DEFAULT, false, CrlProvider.NONE);
 
     final OcspPolicy ocspPolicy;
 
@@ -42,6 +44,8 @@ public class CertificateValidatorConfig {
 
     final OcspSignatureValidator ocspSignatureValidator;
     final boolean ignoreCustomSigningCertificatesInOcspResponses;
+
+    final CrlProvider crlProvider;
 
     public boolean allowsOcspResult(CertStatus status) {
         return allowedOcspResults.contains(status);
@@ -51,28 +55,43 @@ public class CertificateValidatorConfig {
             OcspPolicy ocspPolicy,
             Set<CertStatus> allowedOcspResults,
             OcspSignatureValidator ocspSignatureValidator,
-            boolean ignoreCustomSigningCertificatesInOcspResponses) {
+            boolean ignoreCustomSigningCertificatesInOcspResponses,
+            CrlProvider crlProvider) {
 
         this.ocspPolicy = ocspPolicy;
         this.allowedOcspResults = unmodifiableSet(allowedOcspResults);
         this.ocspSignatureValidator = ocspSignatureValidator;
         this.ignoreCustomSigningCertificatesInOcspResponses = ignoreCustomSigningCertificatesInOcspResponses;
+        this.crlProvider = crlProvider;
     }
 
     public CertificateValidatorConfig withOcspPolicy(OcspPolicy ocspPolicy) {
-        return new CertificateValidatorConfig(ocspPolicy, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
+        return new CertificateValidatorConfig(ocspPolicy, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses, crlProvider);
     }
 
     public CertificateValidatorConfig allowOcspResults(CertStatus ... allowedOcspResults) {
-        return new CertificateValidatorConfig(ocspPolicy, EnumSet.of(OK, allowedOcspResults), ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
+        return new CertificateValidatorConfig(ocspPolicy, EnumSet.of(OK, allowedOcspResults), ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses, crlProvider);
+    }
+
+    /**
+     * Use CRLs provided by the application when checking revocation status with CRL: for intermediate certificates
+     * supplied with {@link CertificateValidator#validateCert(java.security.cert.Certificate, java.util.Collection)},
+     * and for the validated certificate when OCSP does not give a result.
+     * If no usable CRL is provided for an issuer, the CRL is downloaded from the certificate's CRL distribution points.
+     *
+     * @param crlProvider the provider of CRLs
+     * @return the new config
+     */
+    public CertificateValidatorConfig withCrlProvider(CrlProvider crlProvider) {
+        return new CertificateValidatorConfig(ocspPolicy, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses, crlProvider);
     }
 
     CertificateValidatorConfig validateOcspResponseSignatureUsing(OcspSignatureValidator ocspSignatureValidator) {
-        return new CertificateValidatorConfig(ocspPolicy, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses);
+        return new CertificateValidatorConfig(ocspPolicy, allowedOcspResults, ocspSignatureValidator, ignoreCustomSigningCertificatesInOcspResponses, crlProvider);
     }
 
     CertificateValidatorConfig ignoreCustomSigningCertificatesInOcspResponses() {
-        return new CertificateValidatorConfig(ocspPolicy, allowedOcspResults, ocspSignatureValidator, true);
+        return new CertificateValidatorConfig(ocspPolicy, allowedOcspResults, ocspSignatureValidator, true, crlProvider);
     }
 
 }

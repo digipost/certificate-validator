@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import static java.time.ZoneOffset.UTC;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static no.digipost.security.cert.CertificatesForTesting.BUYPASS_SEID_2_CERT;
 import static no.digipost.security.cert.CertificatesForTesting.digipostVirksomhetsTestsertifikat;
@@ -137,6 +138,24 @@ class TrustTest {
         ReviewedCertPath reviewedPath = trust.resolveCertPath(digipostVirksomhetssertifikat());
         assertThat(reviewedPath, where(ReviewedCertPath::isTrusted));
         assertThat(reviewedPath.getPath(), where(CertPath::getCertificates, hasSize(2)));
+    }
+
+    @Test
+    void resolves_cert_path_using_supplied_intermediate_certificate_when_only_trust_anchor_is_known() {
+        Trust onlyRoot = Trust.in(clockSetWhenCertificatesAreValid, buypassClass3RootCa());
+
+        assertThat(onlyRoot.resolveCertPath(digipostVirksomhetssertifikat()), whereNot(ReviewedCertPath::isTrusted));
+
+        ReviewedCertPath reviewedPath = onlyRoot.resolveCertPath(digipostVirksomhetssertifikat(), asList(digipostVirksomhetssertifikat(), buypassClass3Ca3()));
+        assertThat(reviewedPath, where(ReviewedCertPath::isTrusted));
+        assertThat(reviewedPath.getPath(), where(CertPath::getCertificates, contains(digipostVirksomhetssertifikat(), buypassClass3Ca3())));
+    }
+
+    @Test
+    void supplied_chain_is_not_trusted_without_a_matching_trust_anchor() {
+        Trust onlyCommfides = Trust.in(clockSetWhenCertificatesAreValid, commfidesRootCa());
+        ReviewedCertPath reviewedPath = onlyCommfides.resolveCertPath(digipostVirksomhetssertifikat(), asList(buypassClass3Ca3(), buypassClass3RootCa()));
+        assertThat(reviewedPath, whereNot(ReviewedCertPath::isTrusted));
     }
 
     @Test
