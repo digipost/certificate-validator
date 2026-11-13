@@ -31,6 +31,7 @@ import java.security.cert.CertPathValidator;
 import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertStore;
 import java.security.cert.CertificateFactory;
+import java.security.cert.Certificate;
 import java.security.cert.CollectionCertStoreParameters;
 import java.security.cert.PKIXBuilderParameters;
 import java.security.cert.PKIXParameters;
@@ -38,6 +39,7 @@ import java.security.cert.TrustAnchor;
 import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.time.Clock;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,6 +51,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
@@ -194,16 +197,31 @@ public final class Trust {
      *         {@link ReviewedCertPath#getTrustedCertificateAndIssuer() trusted certificate and its issuer}.
      */
     public ReviewedCertPath resolveCertPath(X509Certificate certificate) {
+        return resolveCertPath(certificate, emptyList());
+    }
+
+
+    /**
+     * Resolve the certificate path of {@code leaf}, using {@code chain} as candidates for the path.
+     * The chain is not trusted in itself, and may be in any order and include unrelated certificates.
+     *
+     * @param leaf the certificate to resolve the path for
+     * @param chain untrusted certificates, typically intermediates sent along with {@code leaf}
+     * @return the certificate path, wrapped as a {@link ReviewedCertPath}
+     */
+    public ReviewedCertPath resolveCertPath(X509Certificate leaf, Collection<? extends Certificate> chain) {
         try {
-            CollectionCertStoreParameters certStoreParams = new CollectionCertStoreParameters(
-                    getTrustAnchorsAndAnyIntermediateCertificatesFor(certificate.getIssuerX500Principal()).collect(toSet()));
+            Set<Certificate> candidates = new HashSet<>();
+            candidates.addAll(getTrustAnchorCertificates());
+            getTrustedIntermediateCertificates().values().forEach(candidates::addAll);
+            candidates.addAll(chain);
 
             X509CertSelector certSelector = new X509CertSelector();
-            certSelector.setCertificate(certificate);
-            certSelector.setSubject(certificate.getSubjectX500Principal());
+            certSelector.setCertificate(leaf);
+            certSelector.setSubject(leaf.getSubjectX500Principal());
             certSelector.setCertificateValid(Date.from(clock.instant()));
 
-            CertStore certStore = CertStore.getInstance("Collection", certStoreParams);
+            CertStore certStore = CertStore.getInstance("Collection", new CollectionCertStoreParameters(candidates));
             PKIXBuilderParameters params = new PKIXBuilderParameters(getTrustAnchors(), certSelector);
             params.addCertStore(certStore);
             params.setSigProvider(DigipostSecurity.PROVIDER_NAME);
@@ -216,13 +234,13 @@ public final class Trust {
                 // Use alternative method to create certpath. This is used for non-buypass certificates, for example
                 // certificates issues by Digipost's own CA-certificate
                 CertificateFactory cf = DigipostSecurity.getX509CertificateFactory();
-                Optional<X509Certificate> issuer = CertHelper.findTrustAnchorCert(certificate, getTrustAnchors());
-                return new ReviewedCertPath(cf.generateCertPath(concat(Stream.of(certificate), issuer.map(Stream::of).orElse(Stream.empty())).collect(toList())), path -> issuer.isPresent());
+                Optional<X509Certificate> issuer = CertHelper.findTrustAnchorCert(leaf, getTrustAnchors());
+                return new ReviewedCertPath(cf.generateCertPath(concat(Stream.of(leaf), issuer.map(Stream::of).orElse(Stream.empty())).collect(toList())), path -> issuer.isPresent());
             }
 
         } catch (GeneralSecurityException e) {
             LOG.warn("Error generating cert path for certificate, because the issuer is not trusted. {}: {}. certificate: {}",
-                    e.getClass().getSimpleName(), e.getMessage(), describe(certificate));
+                    e.getClass().getSimpleName(), e.getMessage(), describe(leaf));
             if (LOG.isDebugEnabled()) {
                 LOG.debug(e.getClass().getSimpleName() + ": '" + e.getMessage() + "'", e);
             }
@@ -309,10 +327,6 @@ public final class Trust {
         return trustedIntermediateCerts;
     }
 
-
-    Stream<X509Certificate> getTrustAnchorsAndAnyIntermediateCertificatesFor(X500Principal principal) {
-        return concat(getTrustAnchorCertificates().stream(), getTrustedIntermediateCertificates().getOrDefault(principal, emptySet()).stream());
-    }
 
     @Override
     public boolean equals(Object other) {
