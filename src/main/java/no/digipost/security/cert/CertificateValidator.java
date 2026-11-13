@@ -105,7 +105,8 @@ public class CertificateValidator {
     /**
      * Validate a leaf certificate, using the given chain to build the path up to a trust anchor.
      * The chain is not trusted in itself, and may be in any order and include unrelated certificates.
-     * Supplied intermediates are checked with CRL, falling back to OCSP if allowed by the OCSP policy.
+     * Supplied intermediates are checked with CRL, falling back to OCSP. The {@code leaf} is checked
+     * with OCSP, falling back to CRL. OCSP is only used if allowed by the OCSP policy.
      *
      * @param leaf the certificate to validate
      * @param chain additional certificates, typically intermediates sent along with {@code leaf}
@@ -217,6 +218,9 @@ public class CertificateValidator {
             return OK;
         }
         CertStatus ocspStatus = ocspLookup(trustedCertificateAndIssuer, chain, config);
+        if (ocspStatus == UNDECIDED) {
+            ocspStatus = crlChecker.check(trustedCertificateAndIssuer.certificate, trustedCertificateAndIssuer.issuer, config.crlProvider).orElse(UNDECIDED);
+        }
         if (ocspStatus != OK && config.allowsOcspResult(ocspStatus)) {
             LOG.info("Status {} for certificate {} is configured as {}", ocspStatus, describe(trustedCertificateAndIssuer.certificate), OK);
             return OK;
