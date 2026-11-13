@@ -121,6 +121,21 @@ public class CertificateValidator {
         return validateCert(leaf, chain, config);
     }
 
+    /**
+     * Validate a certificate chain where the first certificate is the leaf, as sent in TLS.
+     * See {@link #validateCert(Certificate, Collection)}.
+     *
+     * @param chain the leaf certificate, followed by intermediate certificates
+     * @return the status of the leaf certificate, or {@link CertStatus#UNTRUSTED} if the chain is empty
+     */
+    public CertStatus validateCertChain(List<? extends Certificate> chain) {
+        if (chain.isEmpty()) {
+            LOG.debug("Tried to validate an empty certificate chain");
+            return CertStatus.UNTRUSTED;
+        }
+        return validateCert(chain.get(0), chain, config);
+    }
+
     private CertStatus validateCert(Certificate certificate, Collection<? extends Certificate> chain, CertificateValidatorConfig config) {
 
         if (!(certificate instanceof X509Certificate)) {
