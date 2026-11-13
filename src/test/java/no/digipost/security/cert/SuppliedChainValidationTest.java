@@ -38,6 +38,7 @@ import java.util.Map;
 
 import static java.time.ZoneOffset.UTC;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static no.digipost.security.cert.CertStatus.OK;
@@ -165,6 +166,20 @@ class SuppliedChainValidationTest {
         CertificateValidator validator = validator(CONFIG.withCrlProvider(CrlProvider.of(singletonList(pki.rootCrl()))));
         assertThat(validator.validateCert(pki.leaf, singletonList(pki.intermediate)), is(OK));
         assertThat(validator.validateCert(pki.leaf), is(UNTRUSTED));
+    }
+
+    @Test
+    void validatesTheFirstCertificateOfTheChainAsLeaf() {
+        CertificateValidator validator = validator(CONFIG.withCrlProvider(CrlProvider.of(singletonList(pki.rootCrl()))));
+        assertThat(validator.validateCertChain(asList(pki.leaf, pki.intermediate)), is(OK));
+        assertThat(validator.validateCertChain(singletonList(pki.leaf)), is(UNTRUSTED));
+        verifyNoInteractions(httpClient);
+    }
+
+    @Test
+    void emptyChainIsUntrusted() {
+        assertThat(validator(CONFIG).validateCertChain(emptyList()), is(UNTRUSTED));
+        verifyNoInteractions(httpClient);
     }
 
     @Test
