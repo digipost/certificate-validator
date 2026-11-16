@@ -27,6 +27,7 @@ import static no.digipost.security.cert.ProdEnvCertificates.commfidesCa;
 import static no.digipost.security.cert.ProdEnvCertificates.commfidesG3LegalPersonCa;
 import static no.digipost.security.cert.ProdEnvCertificates.commfidesG3RootCa;
 import static no.digipost.security.cert.ProdEnvCertificates.commfidesRootCa;
+import static no.digipost.security.cert.ProdEnvCertificates.digipostApiIntermediateCa;
 import static no.digipost.security.cert.ProdEnvCertificates.digipostApiRootCa;
 import static no.digipost.security.cert.ProdEnvCertificates.digipostRootCa;
 import static no.digipost.security.cert.TestEnvCertificates.buypassClass3Test4Ca3;
@@ -39,6 +40,10 @@ import static no.digipost.security.cert.TestEnvCertificates.commfidesG3LegalPers
 import static no.digipost.security.cert.TestEnvCertificates.commfidesG3TestRootCa;
 import static no.digipost.security.cert.TestEnvCertificates.commfidesTestCa;
 import static no.digipost.security.cert.TestEnvCertificates.commfidesTestRootCa;
+import static no.digipost.security.cert.TestEnvCertificates.digipostApiIntermediateCaDifitest;
+import static no.digipost.security.cert.TestEnvCertificates.digipostApiIntermediateCaOpstest;
+import static no.digipost.security.cert.TestEnvCertificates.digipostApiIntermediateCaQa;
+import static no.digipost.security.cert.TestEnvCertificates.digipostApiIntermediateCaTest;
 import static no.digipost.security.cert.TestEnvCertificates.digipostApiTestRootCa;
 import static no.digipost.security.cert.TestEnvCertificates.digipostTestRootCa;
 
@@ -140,11 +145,14 @@ public final class TrustFactory {
     public final class Digipost {
 
         public Trust digipostIssuedCertificates() {
-            return Trust.in(clock, digipostRootCa(), digipostApiRootCa());
+            return Trust.in(clock, digipostRootCa(), digipostApiRootCa(), digipostApiIntermediateCa());
         }
 
         public Trust digipostIssuedTestCertificates() {
-            return Trust.in(clock, digipostTestRootCa(), digipostApiTestRootCa());
+            return Trust.in(clock,
+                    digipostTestRootCa(), digipostApiTestRootCa(),
+                    digipostApiIntermediateCaDifitest(), digipostApiIntermediateCaOpstest(),
+                    digipostApiIntermediateCaQa(), digipostApiIntermediateCaTest());
         }
 
         private Digipost() {
