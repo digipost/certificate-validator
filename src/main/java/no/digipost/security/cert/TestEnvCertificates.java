@@ -150,6 +150,46 @@ public final class TestEnvCertificates {
         return DigipostApiRootCaTest.cert;
     }
 
+    /**
+     * Digipost API Intermediate CA TEST (difitest)
+     *
+     * <p>CN=Digipost API Intermediate CA TEST G1 (difitest), OU=Digipost, O=POSTEN BRING AS, C=NO, ORG_ID=NTRNO-984661185
+     * <p>valid 2026-11-03 to 2036-10-31
+     */
+    public static X509Certificate digipostApiIntermediateCaDifitest() {
+        return DigipostApiIntermediateCaDifitest.cert;
+    }
+
+    /**
+     * Digipost API Intermediate CA TEST (opstest)
+     *
+     * <p>CN=Digipost API Intermediate CA TEST G1 (opstest), OU=Digipost, O=POSTEN BRING AS, C=NO, ORG_ID=NTRNO-984661185
+     * <p>valid 2026-11-03 to 2036-10-31
+     */
+    public static X509Certificate digipostApiIntermediateCaOpstest() {
+        return DigipostApiIntermediateCaOpstest.cert;
+    }
+
+    /**
+     * Digipost API Intermediate CA TEST (qa)
+     *
+     * <p>CN=Digipost API Intermediate CA TEST G1 (qa), OU=Digipost, O=POSTEN BRING AS, C=NO, ORG_ID=NTRNO-984661185
+     * <p>valid 2026-11-03 to 2036-10-31
+     */
+    public static X509Certificate digipostApiIntermediateCaQa() {
+        return DigipostApiIntermediateCaQa.cert;
+    }
+
+    /**
+     * Digipost API Intermediate CA TEST (test)
+     *
+     * <p>CN=Digipost API Intermediate CA TEST G1 (test), OU=Digipost, O=POSTEN BRING AS, C=NO, ORG_ID=NTRNO-984661185
+     * <p>valid 2026-11-03 to 2036-10-31
+     */
+    public static X509Certificate digipostApiIntermediateCaTest() {
+        return DigipostApiIntermediateCaTest.cert;
+    }
+
 
 
     // X509Certificate singletons
@@ -201,7 +241,23 @@ public final class TestEnvCertificates {
     }
 
     private static final class DigipostApiRootCaTest {
-        static final X509Certificate cert = readCertificate("digipost_api_root_ca_test.cert.pem");
+        static final X509Certificate cert = readCertificate("digiport/digipost_api_root_ca_test.cert.pem");
+    }
+
+    private static final class DigipostApiIntermediateCaDifitest {
+        static final X509Certificate cert = readCertificate("digiport/intermediate_difitest_ca.pem");
+    }
+
+    private static final class DigipostApiIntermediateCaOpstest {
+        static final X509Certificate cert = readCertificate("digiport/intermediate_opstest_ca.pem");
+    }
+
+    private static final class DigipostApiIntermediateCaQa {
+        static final X509Certificate cert = readCertificate("digiport/intermediate_qa_ca.pem");
+    }
+
+    private static final class DigipostApiIntermediateCaTest {
+        static final X509Certificate cert = readCertificate("digiport/intermediate_test_ca.pem");
     }
 
     private static X509Certificate readCertificate(String resourceName) {
