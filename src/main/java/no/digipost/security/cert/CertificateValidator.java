@@ -330,8 +330,9 @@ public class CertificateValidator {
                             }
                             CertStatus certStatus = validateCert(ocspSignatureValidationCertificate, chain, config.withOcspPolicy(NEVER_DO_OCSP_LOOKUP));
                             if (certStatus != OK) {
-                                LOG.warn("OCSP signing certificate is '{}': {}", certStatus, describe(ocspSignatureValidationCertificate));
-                                return certStatus;
+                                // The response can not be trusted, but it says nothing about the status of the certificate itself
+                                LOG.warn("OCSP signing certificate is '{}', so the OCSP response for {} can not be trusted: {}", certStatus, certificateAndIssuer, describe(ocspSignatureValidationCertificate));
+                                return UNDECIDED;
                             }
                         } else {
                             ocspSignatureValidationCertificate = certificateAndIssuer.issuer;

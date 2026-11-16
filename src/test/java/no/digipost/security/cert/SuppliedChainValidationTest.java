@@ -302,6 +302,19 @@ class SuppliedChainValidationTest {
         assertThat(validator.validateCert(ocspSigner, singletonList(intermediate)), is(UNDECIDED));
     }
 
+    @Test
+    void revokedOcspSigningCertificateDoesNotRevokeTheLeaf() throws Exception {
+        X509Certificate leaf = pki.leafWithOcspResponder();
+        X509Certificate reissuedIntermediate = pki.intermediateWithOcspResponder();
+        X509Certificate ocspSigner = pki.ocspSignerIssuedByIntermediate();
+        servingOcspResponse(TestPki.LEAF_OCSP_RESPONDER, pki.goodOcspResponse(leaf, pki.intermediate, ocspSigner, pki.ocspSignerKeys.getPrivate()));
+        CertificateValidator validator = validator(MOST_STRICT.withCrlProvider(CrlProvider.of(singletonList(pki.rootCrl(pki.intermediate)))));
+
+        // the path of the OCSP signer includes the revoked intermediate
+        assertThat(validator.validateCert(leaf, singletonList(pki.intermediate)), is(REVOKED));
+        assertThat(validator.validateCert(leaf, singletonList(reissuedIntermediate)), is(OK));
+    }
+
 
     private CertificateValidator validator(CertificateValidatorConfig config) {
         return new CertificateValidator(config, onlyRoot, httpClient);
