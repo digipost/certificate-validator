@@ -37,7 +37,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +69,7 @@ public class CertificateValidator {
 
     private final CertificateValidatorConfig config;
     private final CloseableHttpClient client;
-    private final Map<CertPath, ResultWithTime> cache = new HashMap<>();
+    private final Map<CertPath, ResultWithTime> cache = new ConcurrentHashMap<>();
     private final Set<X509Certificate> revokedCertificates = ConcurrentHashMap.newKeySet();
     private final Map<List<X509Certificate>, ResultWithTime> intermediateCache = new ConcurrentHashMap<>();
     private final Map<List<Certificate>, ResolvedCertPath> resolvedCertPaths = new ConcurrentHashMap<>();
@@ -427,7 +426,7 @@ public class CertificateValidator {
 
         private final Instant reallyExpires;
         private final Instant warnAfter;
-        private Instant expires;
+        private volatile Instant expires;
 
         public ResultWithTime(final Instant validated, final CertStatus status) {
             this.status = status;
